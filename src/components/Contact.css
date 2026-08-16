@@ -1,0 +1,45 @@
+.contact {
+  border-top: 1px solid var(--line);
+}
+
+.contact__mail {
+  display: inline-block;
+  font-size: clamp(1.7rem, 5.6vw, 4.6rem);
+  color: var(--fog);
+  text-decoration: none;
+  text-transform: lowercase;
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 0.12em;
+  transition: color 160ms ease;
+  overflow-wrap: anywhere;
+}
+
+.contact__mail:hover {
+  color: var(--accent);
+}
+
+.contact__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  margin: var(--space-4) 0 0;
+}
+
+.contact__meta dt {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: 0.3rem;
+}
+
+.contact__meta dd {
+  margin: 0;
+  color: var(--cloud);
+}
+
+.contact__meta dd a {
+  color: inherit;
+  text-decoration-color: var(--accent);
+}

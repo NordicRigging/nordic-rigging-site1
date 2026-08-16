@@ -1,0 +1,157 @@
+/* ————————————————————————————————————————————
+   Nordic Rigging — design system
+   Ink-dark maritime palette, one signal accent,
+   condensed display type over quiet body text.
+   ———————————————————————————————————————————— */
+
+:root {
+  /* colour */
+  --ink: #0a1016;        /* page ground */
+  --abyss: #06090d;      /* deepest panels */
+  --hull: #101922;       /* raised surfaces */
+  --fog: #f2f5f6;        /* near-white, matches the cloud band of the film */
+  --cloud: #c7d1d6;      /* secondary text on dark */
+  --slate: #7c8b94;      /* muted text */
+  --line: rgba(242, 245, 246, 0.14);
+  --accent: #ff5a28;     /* signal orange — sparingly */
+  --accent-soft: rgba(255, 90, 40, 0.14);
+
+  /* type */
+  --font-display: 'Anton', 'Arial Narrow', sans-serif;
+  --font-text: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* rhythm */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.75rem;
+  --space-4: 3rem;
+  --space-5: 5.5rem;
+  --radius: 14px;
+  --page-pad: clamp(1.25rem, 4vw, 3.5rem);
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--fog);
+  font-family: var(--font-text);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+img,
+video {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+/* type scale */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 var(--space-2);
+}
+
+.section {
+  padding: var(--space-5) var(--page-pad);
+  max-width: 90rem;
+  margin: 0 auto;
+}
+
+.section__head {
+  margin-bottom: var(--space-4);
+}
+
+.section__title {
+  font-size: clamp(2.6rem, 6.5vw, 5rem);
+  color: var(--fog);
+}
+
+.section__lede {
+  max-width: 44ch;
+  color: var(--cloud);
+  margin: var(--space-2) 0 0;
+}
+
+/* buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.85em 1.6em;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--fog);
+  font-family: var(--font-text);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.btn:hover {
+  border-color: var(--fog);
+  transform: translateY(-1px);
+}
+
+.btn--solid {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.btn--solid:hover {
+  border-color: var(--accent);
+  background: #ff6d42;
+}
+
+.btn:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
