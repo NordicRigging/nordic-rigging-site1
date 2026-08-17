@@ -1,19 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import AccordionGallery from './AccordionGallery.jsx';
-import { SERVICES } from '../lib/services.js';
-
-const ITEMS = SERVICES.map(s => ({
-  slug: s.slug,
-  label: s.label,
-  sub: s.sub,
-  image: s.image,
-  fallback: s.fallback,
-  link: `/services/${s.slug}`,
-  alt: `${s.label} — Nordic Rigging`
-}));
+import { SERVICES } from '../lib/content.js';
+import { useLang } from '../lib/LanguageContext.jsx';
 
 export default function Services() {
+  const { lang, t } = useLang();
   const [vertical, setVertical] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(max-width: 760px)').matches
   );
@@ -25,20 +17,32 @@ export default function Services() {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
+  const items = useMemo(
+    () =>
+      SERVICES.map((s, i) => ({
+        slug: s.slug,
+        label: s[lang].tag,
+        sub: `0${i + 1} · ${s[lang].title}`,
+        image: s.image,
+        fallback: s.fallback,
+        link: `/services/${s.slug}`,
+        alt: `${s[lang].tag} — Nordic Rigging`
+      })),
+    [lang]
+  );
+
   return (
     <section className="section" id="services" aria-labelledby="services-title">
       <div className="section__head">
-        <p className="eyebrow">Services</p>
+        <p className="eyebrow">{t.services.eyebrow}</p>
         <h2 className="display section__title" id="services-title">
-          What we do
+          {t.services.title}
         </h2>
-        <p className="section__lede">
-          Three lines of work, one standard: your rig leaves our hands ready for weather. Open a
-          panel to read more.
-        </p>
+        <p className="section__lede">{t.services.lede}</p>
       </div>
       <AccordionGallery
-        items={ITEMS}
+        key={lang}
+        items={items}
         defaultIndex={0}
         orientation={vertical ? 'vertical' : 'horizontal'}
         height={vertical ? 340 : 500}

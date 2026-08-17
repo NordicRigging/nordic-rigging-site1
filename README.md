@@ -51,6 +51,35 @@ site shows designed solid-colour fallbacks:
 - `public/images/spinlock-rig-sense.png` (floating gauge in the Spinlock
   section; a drawn instrument stands in meanwhile)
 
+## Open items from the port
+
+- **Phone number.** The old site displayed `+358 50 548 7766` in its footer and
+  quick-contact card, but its Call/WhatsApp actions used `+358 50 547 7277`.
+  The actionable number is the one in use here (`CONTACT.phoneDisplay`) —
+  confirm which is correct.
+- **Spinlock "Watch video".** The old site had CSS for a "Katso video" link but
+  no markup and no URL anywhere in its source. Set `WATCH_VIDEO_URL` in
+  `src/components/Spinlock.jsx` and the button renders automatically.
+- **Newsletter strings.** `footerJoin` / `footerNews` / `footerJoinBtn` existed
+  in the old translations but were never rendered, and there was no signup
+  backend — not carried over. Say the word and it goes in.
+
+## Content & languages
+
+All copy lives in `src/lib/content.js`, ported from the previous build
+(`translations.js` + `App.jsx`) — nothing is hard-coded in components:
+
+- `CONTACT` — company name, business ID, email, phone, WhatsApp, address.
+  Single-sourced, so the contact section, service pages and footer cannot drift.
+- `CONTENT.fi` / `CONTENT.en` — every visible string in both languages.
+- `SERVICES` — the three service lines with per-language tag, title, lead,
+  process steps and pricing checks. Add a language by extending both objects.
+
+Language handling (`src/lib/LanguageContext.jsx`) follows the old pattern:
+Finnish default, a saved choice in `localStorage.userLang` wins, and a visitor
+whose browser is not Finnish gets the picker once. The persistent FI/EN toggle
+in the corner is new — the old site could only be switched on that overlay.
+
 ## Tuning the film sequence
 
 Everything lives in `src/lib/filmConfig.js`:

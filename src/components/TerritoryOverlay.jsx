@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import { SEQ, TERRITORY_MARKS } from '../lib/filmConfig.js';
+import { useLang } from '../lib/LanguageContext.jsx';
 
 const clamp01 = v => Math.min(1, Math.max(0, v));
 const smooth = v => {
@@ -17,6 +18,7 @@ const smooth = v => {
  * at any viewport shape.
  */
 export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticMode = false }) {
+  const { t } = useLang();
   const rootRef = useRef(null);
   const coverRef = useRef(null);
   const baseRef = useRef(null);
@@ -92,13 +94,13 @@ export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticM
             className="territory__region"
             style={{ left: `${turku.x + (midX - turku.x) * 0.45}%`, top: `${turku.y + 11}%` }}
           >
-            Varsinais-Suomi
+            {t.territory.regionA}
           </span>
           <span
             className="territory__region"
             style={{ left: `${helsinki.x - (helsinki.x - midX) * 0.35}%`, top: `${helsinki.y + 9}%` }}
           >
-            Uusimaa
+            {t.territory.regionB}
           </span>
         </div>
 
@@ -111,7 +113,7 @@ export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticM
           <span className="territory__dot" aria-hidden="true" />
           <span className="territory__tag">
             <strong>{turku.label}</strong>
-            <em>{turku.role}</em>
+            <em>{t.territory.base}</em>
             <code>{turku.coords}</code>
           </span>
         </div>
@@ -131,7 +133,7 @@ export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticM
 
       <p className="territory__legend" ref={legendRef}>
         <span className="territory__legend-key" aria-hidden="true" />
-        Service area — Varsinais-Suomi &amp; Uusimaa
+        {t.territory.legend}
       </p>
     </div>
   );

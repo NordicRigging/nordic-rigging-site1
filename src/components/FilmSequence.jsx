@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { SEQ, DEFAULT_MANIFEST, loadManifest } from '../lib/filmConfig.js';
+import { useLang } from '../lib/LanguageContext.jsx';
 import TerritoryOverlay from './TerritoryOverlay.jsx';
 import './FilmSequence.css';
 
@@ -59,6 +60,7 @@ export default function FilmSequence() {
   const overlayApiRef = useRef(null);
   const hintRef = useRef(null);
 
+  const { t } = useLang();
   const [manifest, setManifest] = useState(DEFAULT_MANIFEST);
   const [reduced] = useState(
     () =>
@@ -208,7 +210,7 @@ export default function FilmSequence() {
       ref={wrapRef}
       className={`film${reduced ? ' film--static' : ''}`}
       style={reduced ? undefined : { height: `${SEQ.SCROLL_VH}vh` }}
-      aria-label="Nordic Rigging — from the deck to the archipelago"
+      aria-label={`Nordic Rigging — ${t.hero.tagline}`}
     >
       <div className="film__stage" ref={stageRef}>
         {/* designed ground: even with zero media the stage reads as sky→cloud */}
@@ -267,12 +269,12 @@ export default function FilmSequence() {
             <br />
             Rigging
           </h1>
-          <p className="film__tag">Your Sailboat’s Best Crew on Land.</p>
+          <p className="film__tag">{t.hero.tagline}</p>
         </header>
 
         <div className="film__hint" ref={hintRef} aria-hidden="true">
           <span className="film__hint-line" />
-          Scroll
+          {t.hero.scroll}
         </div>
       </div>
     </section>

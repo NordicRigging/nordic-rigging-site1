@@ -47,19 +47,18 @@ export const SEQ = {
  * Adjust x/y against the real orbital footage.
  */
 export const TERRITORY_MARKS = {
+  // Labels that need translating (e.g. "Home base") come from content.js.
   turku: {
     x: 38,
     y: 54,
     label: 'Turku',
-    coords: '60°27′N 22°16′E',
-    role: 'Home base'
+    coords: '60°27′N 22°16′E'
   },
   helsinki: {
     x: 63,
     y: 61,
     label: 'Helsinki',
-    coords: '60°10′N 24°56′E',
-    role: null
+    coords: '60°10′N 24°56′E'
   }
 };
 

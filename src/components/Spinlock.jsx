@@ -1,20 +1,30 @@
 import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+import { useLang } from '../lib/LanguageContext.jsx';
 import './Spinlock.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// The original targets were lost with the previous build — swap these for the
-// exact product page / film when known.
-const READ_MORE_URL = 'https://www.spinlock.co.uk';
-const WATCH_VIDEO_URL = 'https://www.youtube.com/results?search_query=spinlock+rig-sense';
+/**
+ * "Read more" went to the mast-work service page on the old site (the glass
+ * card's LUE LISÄÄ opened the mastotyöt view) — kept pointing there.
+ *
+ * "Watch video": the old site had styling for a "Katso video" link but no
+ * markup and no URL anywhere in its source, so there is no original target to
+ * restore. Paste the film's URL here and the button appears automatically.
+ */
+const READ_MORE_TO = '/services/mast-work';
+const WATCH_VIDEO_URL = '';
 
 export default function Spinlock() {
   const sectionRef = useRef(null);
   const gaugeRef = useRef(null);
   const gaugeInnerRef = useRef(null);
+  const { t } = useLang();
+  const s = t.spinlock;
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -31,12 +41,7 @@ export default function Spinlock() {
             opacity: 1,
             rotate: 0,
             ease: 'none',
-            scrollTrigger: {
-              trigger: section,
-              start: 'top 80%',
-              end: 'top 30%',
-              scrub: true
-            }
+            scrollTrigger: { trigger: section, start: 'top 80%', end: 'top 30%', scrub: true }
           }
         );
         // …then follow scroll with a slow parallax
@@ -46,12 +51,7 @@ export default function Spinlock() {
           {
             yPercent: 14,
             ease: 'none',
-            scrollTrigger: {
-              trigger: section,
-              start: 'top bottom',
-              end: 'bottom top',
-              scrub: true
-            }
+            scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true }
           }
         );
       });
@@ -64,31 +64,34 @@ export default function Spinlock() {
     <section className="section spinlock" id="spinlock" ref={sectionRef} aria-labelledby="spinlock-title">
       <div className="spinlock__grid">
         <div className="spinlock__copy">
-          <p className="eyebrow">Partner gear</p>
+          <p className="eyebrow">{s.eyebrow}</p>
           <h2 className="display section__title" id="spinlock-title">
-            Spinlock
-            <br />
-            Rig-Sense Pro
+            {s.title}
           </h2>
-          <p className="section__lede">
-            Rig tune you can repeat. We set shrouds by numbers, not by feel — measured with
-            Spinlock&rsquo;s Rig-Sense tension gauge, logged, and the same after every re-step.
+          <p className="section__lede">{s.body}</p>
+
+          <p className="spinlock__badge">
+            <span className="spinlock__badge-dot" aria-hidden="true" />
+            {s.badge}
           </p>
+
           <div className="spinlock__actions">
-            <a className="btn btn--solid" href={READ_MORE_URL} target="_blank" rel="noreferrer">
-              Read more
-            </a>
-            <a className="btn" href={WATCH_VIDEO_URL} target="_blank" rel="noreferrer">
-              Watch video
-            </a>
+            <Link className="btn btn--solid" to={READ_MORE_TO}>
+              {s.readMore}
+            </Link>
+            {WATCH_VIDEO_URL && (
+              <a className="btn" href={WATCH_VIDEO_URL} target="_blank" rel="noreferrer">
+                {s.watchVideo}
+              </a>
+            )}
           </div>
         </div>
 
-        <figure className="spinlock__gauge" ref={gaugeRef} aria-hidden="true">
+        <figure className="spinlock__gauge" ref={gaugeRef}>
           <div className="spinlock__gauge-inner" ref={gaugeInnerRef}>
             <img
               src="/images/spinlock-rig-sense.png"
-              alt=""
+              alt={s.gaugeAlt}
               loading="lazy"
               decoding="async"
               onError={e => {
@@ -98,12 +101,7 @@ export default function Spinlock() {
             />
             {/* Designed stand-in until the product photo lands at
                 public/images/spinlock-rig-sense.png */}
-            <svg
-              className="spinlock__dial"
-              viewBox="0 0 220 300"
-              role="img"
-              aria-label="Rig tension gauge"
-            >
+            <svg className="spinlock__dial" viewBox="0 0 220 300" role="img" aria-label={s.gaugeAlt}>
               <rect x="10" y="10" width="200" height="280" rx="26" fill="#101922" stroke="rgba(242,245,246,0.16)" />
               <rect x="26" y="26" width="168" height="150" rx="16" fill="#06090d" stroke="rgba(242,245,246,0.1)" />
               {Array.from({ length: 21 }, (_, i) => {
