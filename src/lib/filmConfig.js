@@ -1,16 +1,15 @@
 /**
- * Single tuning point for the hero→territory film sequence.
+ * ────────────────────────────────────────────────────────────────────────
+ *  CALIBRATION FILE — every number you may want to nudge against the real
+ *  footage lives here. Nothing else needs editing.
+ * ────────────────────────────────────────────────────────────────────────
  *
  * All `p` values are overall sequence progress in [0, 1]:
- * 0 = top of page, 1 = the sticky stage releases into the contact section.
- *
- * The crossfade window [ORBIT_START, CLIMB_END] is where the climb sits in
- * near-white cloud and the orbit clip (which opens from cloud) fades in on
- * top of it. Tune these two numbers against the real footage.
+ * 0 = top of page, 1 = the sticky stage releases into the next section.
  */
 export const SEQ = {
   /** Total scroll length of the sequence, in viewport-heights. */
-  SCROLL_VH: 560,
+  SCROLL_VH: 640,
 
   /** Hero type is fully gone by here. */
   HERO_FADE_START: 0.03,
@@ -19,7 +18,7 @@ export const SEQ = {
   /** Climb scrub maps [0, CLIMB_END] → [0, climb duration]. */
   CLIMB_END: 0.6,
 
-  /** Orbit fades in from ORBIT_START and scrubs [ORBIT_START, 1] → [0, orbit duration]. */
+  /** Orbit fades in from here (both clips are in cloud across this window). */
   ORBIT_START: 0.52,
 
   /** Progress at which orbit.mp4 starts loading ("as its section approaches"). */
@@ -32,22 +31,53 @@ export const SEQ = {
   VEIL_COLOR: '#edf1f3',
   VEIL_MAX: 0.55,
 
-  /** Territory overlay staging (fade-in points). */
+  ORBIT: {
+    /**
+     * The one landmark that drives the whole territory beat: the moment in
+     * orbit.mp4 at which the cloud has mostly cleared.
+     *
+     * The clip scrubs from its first frame to this mark and then STOPS — it
+     * never plays past it, so the terrain under the markers is a fixed frame.
+     * The leftward drift is driven by the playhead's progress toward this same
+     * mark, so the movement begins as the footage emerges from cloud and ends
+     * exactly when the cloud has cleared.
+     *
+     * Set CLOUD_CLEAR_SECONDS once you can watch the real clip (seconds into
+     * orbit.mp4). While it is null, the fraction below is used instead.
+     */
+    CLOUD_CLEAR_SECONDS: null,
+    CLOUD_CLEAR_FRACTION: 0.6,
+
+    /** Scroll progress at which the playhead reaches the cloud-clear mark. */
+    SETTLE_AT: 0.72,
+
+    /** Leftward travel of the whole orbit stage while the cloud clears, in vw. */
+    DRIFT_VW: 8
+  },
+
+  /**
+   * Territory overlay staging. Every value must sit AFTER ORBIT.SETTLE_AT —
+   * the overlays are only allowed to appear once the footage has stopped.
+   */
   TERRITORY: {
-    BASE_IN: 0.66, // Turku
-    SECOND_IN: 0.73, // Helsinki
-    AREA_IN: 0.79, // service-area arc + region labels
-    LEGEND_IN: 0.85
+    GLOW_IN: 0.74, // radial weight + region labels
+    BASE_IN: 0.77, // Turku
+    SECOND_IN: 0.82, // Helsinki
+    CARD_IN: 0.85, // Turku card — opens itself, then stays open
+    LEGEND_IN: 0.9
   }
 };
 
 /**
- * Marker positions in percent of the VIDEO FRAME (not the viewport) so they
- * stay glued to the footage under object-fit: cover cropping.
- * Adjust x/y against the real orbital footage.
+ * ── MARKER COORDINATES ──────────────────────────────────────────────────
+ * Percentages of the STOPPED video frame (the frame at the cloud-clear mark),
+ * measured from its top-left corner. They are converted to screen space
+ * through the same object-fit: cover box the video uses, so they stay glued
+ * to the terrain at any viewport shape.
+ *
+ * To calibrate: scroll until the footage stops, then adjust x/y here.
  */
 export const TERRITORY_MARKS = {
-  // Labels that need translating (e.g. "Home base") come from content.js.
   turku: {
     x: 38,
     y: 54,
@@ -57,9 +87,36 @@ export const TERRITORY_MARKS = {
   helsinki: {
     x: 63,
     y: 61,
-    label: 'Helsinki',
-    coords: '60°10′N 24°56′E'
+    label: 'Helsinki'
   }
+};
+
+/**
+ * Region labels — these belong on LAND, i.e. inland (north) of the two coastal
+ * cities, not out on the water to the south.
+ */
+export const TERRITORY_REGIONS = {
+  varsinaisSuomi: { x: 27, y: 37 },
+  uusimaa: { x: 70, y: 45 }
+};
+
+/**
+ * The soft radial weight: strongest over Turku, falling away eastward toward
+ * Helsinki. Sizes are percentages of the video frame.
+ */
+export const TERRITORY_GLOW = {
+  x: 42,
+  y: 55,
+  width: 78,
+  height: 46,
+  rotate: -6
+};
+
+/** Radar rings emanating from Turku. */
+export const TERRITORY_RADAR = {
+  rings: 3,
+  duration: 6, // seconds for one ring to travel out and fade
+  maxScale: 13
 };
 
 /**

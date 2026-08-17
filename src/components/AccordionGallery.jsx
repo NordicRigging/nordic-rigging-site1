@@ -189,14 +189,14 @@ const AccordionGallery = ({
     >
       {items.map((item, i) => {
         const isActive = i === active;
-        const Tag = item.link ? 'a' : 'div';
         return (
-          <Tag
+          // A div, not an anchor: each panel carries its own explicit CTA link,
+          // and an anchor inside an anchor would be invalid.
+          <div
             key={item.slug || i}
             ref={el => (panelRefs.current[i] = el)}
             className={`ag-panel${isActive ? ' ag-panel--active' : ''}`}
             style={{ borderRadius: `${radius}px` }}
-            href={item.link || undefined}
             onClick={e => handleClick(i, e)}
             onMouseEnter={() => handleEnter(i)}
             onFocus={() => setActive(i)}
@@ -226,15 +226,26 @@ const AccordionGallery = ({
               <span className="ag-panel__overlay" aria-hidden="true" />
             </span>
             {showLabels && (
-              <span className="ag-panel__label" aria-hidden="true">
-                <span className="ag-panel__bar" ref={el => (barRefs.current[i] = el)} />
+              <span className="ag-panel__label">
+                <span className="ag-panel__bar" ref={el => (barRefs.current[i] = el)} aria-hidden="true" />
                 <span className="ag-panel__text" ref={el => (textRefs.current[i] = el)}>
                   <strong>{item.label}</strong>
                   {item.sub && <small>{item.sub}</small>}
+                  {item.link && (
+                    <a
+                      className="ag-panel__cta"
+                      href={item.link}
+                      onClick={e => e.stopPropagation()}
+                      tabIndex={isActive ? 0 : -1}
+                    >
+                      {item.cta}
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  )}
                 </span>
               </span>
             )}
-          </Tag>
+          </div>
         );
       })}
     </div>

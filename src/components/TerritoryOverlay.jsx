@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-import { SEQ, TERRITORY_MARKS } from '../lib/filmConfig.js';
+import {
+  SEQ,
+  TERRITORY_MARKS,
+  TERRITORY_REGIONS,
+  TERRITORY_GLOW,
+  TERRITORY_RADAR
+} from '../lib/filmConfig.js';
+import { CONTACT } from '../lib/content.js';
 import { useLang } from '../lib/LanguageContext.jsx';
 
 const clamp01 = v => Math.min(1, Math.max(0, v));
@@ -10,20 +17,22 @@ const smooth = v => {
 };
 
 /**
- * Markers, service-area arc and legend over the orbital footage — all
- * rendered in code, none baked into video.
+ * Territory overlay — everything here is rendered in code, none of it baked
+ * into video.
  *
- * Positions are percentages of the video frame; a JS-sized "cover box"
- * replicates the object-fit: cover crop so labels stay glued to the footage
- * at any viewport shape.
+ * Nothing appears until the footage has stopped (`settled`), so every position
+ * below refers to the one fixed frame at the cloud-clear mark. Coordinates are
+ * percentages of the video frame and live in src/lib/filmConfig.js.
  */
 export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticMode = false }) {
   const { t } = useLang();
   const rootRef = useRef(null);
   const coverRef = useRef(null);
+  const glowRef = useRef(null);
+  const regionsRef = useRef(null);
   const baseRef = useRef(null);
   const secondRef = useRef(null);
-  const areaRef = useRef(null);
+  const cardRef = useRef(null);
   const legendRef = useRef(null);
 
   const resize = useCallback(() => {
@@ -32,29 +41,57 @@ export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticM
     if (!root || !cover) return;
     const { clientWidth: w, clientHeight: h } = root;
     if (!w || !h) return;
+    // replicate the video's object-fit: cover box so overlays track the terrain
     const coverW = Math.max(w, h * frameAspect);
     const coverH = coverW / frameAspect;
+    const coverLeft = (w - coverW) / 2;
+    const coverTop = (h - coverH) / 2;
     cover.style.width = `${coverW}px`;
     cover.style.height = `${coverH}px`;
-    cover.style.left = `${(w - coverW) / 2}px`;
-    cover.style.top = `${(h - coverH) / 2}px`;
+    cover.style.left = `${coverLeft}px`;
+    cover.style.top = `${coverTop}px`;
+
+    // The card lives outside the marker (a transformed ancestor would trap it
+    // off-screen on narrow viewports). Anchor it to the marker in root space
+    // and clamp it into view; transform-origin still points at the marker, so
+    // it grows out of it.
+    const card = cardRef.current;
+    if (!card) return;
+    const turkuX = coverLeft + (TERRITORY_MARKS.turku.x / 100) * coverW;
+    const turkuY = coverTop + (TERRITORY_MARKS.turku.y / 100) * coverH;
+    const pad = 16;
+    const cw = card.offsetWidth;
+    const ch = card.offsetHeight;
+    const left = Math.min(Math.max(turkuX + 22, pad), Math.max(w - cw - pad, pad));
+    const top = Math.min(Math.max(turkuY + 24, pad), Math.max(h - ch - pad, pad));
+    card.style.left = `${left}px`;
+    card.style.top = `${top}px`;
+    card.style.transformOrigin = `${(turkuX - left).toFixed(1)}px ${(turkuY - top).toFixed(1)}px`;
   }, [frameAspect]);
 
   const update = useCallback(
-    p => {
+    (p, settled = false) => {
       const T = SEQ.TERRITORY;
       const stages = [
+        [glowRef, T.GLOW_IN],
+        [regionsRef, T.GLOW_IN],
         [baseRef, T.BASE_IN],
         [secondRef, T.SECOND_IN],
-        [areaRef, T.AREA_IN],
+        [cardRef, T.CARD_IN],
         [legendRef, T.LEGEND_IN]
       ];
       for (const [ref, at] of stages) {
         const el = ref.current;
         if (!el) continue;
-        const o = staticMode ? 1 : smooth((p - at) / 0.06);
+        // gated on `settled`: overlays may only exist over a stopped frame
+        const o = staticMode ? 1 : settled ? smooth((p - at) / 0.05) : 0;
         el.style.opacity = o.toFixed(3);
         el.style.visibility = o <= 0.001 ? 'hidden' : 'visible';
+        if (ref === cardRef) {
+          // grows out of the marker rather than appearing from nowhere
+          el.style.transform = `scale(${(0.55 + 0.45 * o).toFixed(3)})`;
+          el.style.pointerEvents = o > 0.9 ? 'auto' : 'none';
+        }
       }
     },
     [staticMode]
@@ -62,54 +99,83 @@ export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticM
 
   useEffect(() => {
     if (apiRef) apiRef.current = { update, resize };
+    // re-anchor after layout settles (card size depends on the language)
     resize();
-    update(staticMode ? 1 : 0);
+    const raf = requestAnimationFrame(resize);
+    update(1, staticMode);
     return () => {
+      cancelAnimationFrame(raf);
       if (apiRef) apiRef.current = null;
     };
-  }, [apiRef, update, resize, staticMode]);
+  }, [apiRef, update, resize, staticMode, t]);
 
   const turku = TERRITORY_MARKS.turku;
   const helsinki = TERRITORY_MARKS.helsinki;
-
-  // Quadratic arc between the two ports, bowed gently through the archipelago.
-  const midX = (turku.x + helsinki.x) / 2;
-  const midY = (turku.y + helsinki.y) / 2 + 7;
-  const arcPath = `M ${turku.x} ${turku.y} Q ${midX} ${midY} ${helsinki.x} ${helsinki.y}`;
+  const scrollToContact = () => {
+    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="territory" ref={rootRef}>
       <div className="territory__cover" ref={coverRef}>
-        <div className="territory__area" ref={areaRef}>
-          <svg
-            className="territory__svg"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <path className="territory__band" d={arcPath} vectorEffect="non-scaling-stroke" />
-            <path className="territory__route" d={arcPath} vectorEffect="non-scaling-stroke" />
-          </svg>
+        {/* soft radial weight — strongest over Turku, falling away eastward */}
+        <div
+          className="territory__glow"
+          ref={glowRef}
+          aria-hidden="true"
+          style={{
+            left: `${TERRITORY_GLOW.x}%`,
+            top: `${TERRITORY_GLOW.y}%`,
+            width: `${TERRITORY_GLOW.width}%`,
+            height: `${TERRITORY_GLOW.height}%`,
+            transform: `translate(-50%, -50%) rotate(${TERRITORY_GLOW.rotate}deg)`
+          }}
+        />
+
+        <div className="territory__regions" ref={regionsRef} aria-hidden="true">
           <span
             className="territory__region"
-            style={{ left: `${turku.x + (midX - turku.x) * 0.45}%`, top: `${turku.y + 11}%` }}
+            style={{ left: `${TERRITORY_REGIONS.varsinaisSuomi.x}%`, top: `${TERRITORY_REGIONS.varsinaisSuomi.y}%` }}
           >
             {t.territory.regionA}
           </span>
           <span
             className="territory__region"
-            style={{ left: `${helsinki.x - (helsinki.x - midX) * 0.35}%`, top: `${helsinki.y + 9}%` }}
+            style={{ left: `${TERRITORY_REGIONS.uusimaa.x}%`, top: `${TERRITORY_REGIONS.uusimaa.y}%` }}
           >
             {t.territory.regionB}
           </span>
         </div>
 
+        {/* Helsinki — a small dot and a label, nothing more */}
+        <div
+          className="territory__mark territory__mark--minor"
+          ref={secondRef}
+          style={{ left: `${helsinki.x}%`, top: `${helsinki.y}%` }}
+        >
+          <span className="territory__dot" aria-hidden="true" />
+          <span className="territory__minor-label">{helsinki.label}</span>
+        </div>
+
+        {/* Turku — the base: radar rings, dominant label, and its own card */}
         <div
           className="territory__mark territory__mark--base"
           ref={baseRef}
           style={{ left: `${turku.x}%`, top: `${turku.y}%` }}
         >
-          <span className="territory__ring" aria-hidden="true" />
+          <span className="territory__radar" aria-hidden="true">
+            {Array.from({ length: TERRITORY_RADAR.rings }, (_, i) => (
+              <span
+                key={i}
+                className="territory__ring"
+                style={{
+                  animationDuration: `${TERRITORY_RADAR.duration}s`,
+                  animationDelay: `${(i * TERRITORY_RADAR.duration) / TERRITORY_RADAR.rings}s`,
+                  '--ring-scale': TERRITORY_RADAR.maxScale
+                }}
+              />
+            ))}
+          </span>
           <span className="territory__dot" aria-hidden="true" />
           <span className="territory__tag">
             <strong>{turku.label}</strong>
@@ -117,18 +183,23 @@ export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticM
             <code>{turku.coords}</code>
           </span>
         </div>
+      </div>
 
-        <div
-          className="territory__mark"
-          ref={secondRef}
-          style={{ left: `${helsinki.x}%`, top: `${helsinki.y}%` }}
-        >
-          <span className="territory__dot" aria-hidden="true" />
-          <span className="territory__tag">
-            <strong>{helsinki.label}</strong>
-            <code>{helsinki.coords}</code>
-          </span>
-        </div>
+      {/* Turku's card: opens itself once the markers are up, and stays open.
+          Positioned against the marker by resize() above. */}
+      <div className="territory__card" ref={cardRef}>
+        <img
+          className="territory__card-logo"
+          src="/images/logo.svg"
+          alt=""
+          aria-hidden="true"
+          onError={e => (e.currentTarget.style.display = 'none')}
+        />
+        <p className="territory__card-name">{CONTACT.company}</p>
+        <p className="territory__card-address">{CONTACT.address}</p>
+        <button type="button" className="territory__card-btn" onClick={scrollToContact}>
+          {t.contact.eyebrow}
+        </button>
       </div>
 
       <p className="territory__legend" ref={legendRef}>

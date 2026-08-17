@@ -55,6 +55,7 @@ export default function FilmSequence() {
   const orbitRef = useRef(null);
   const climbPosterRef = useRef(null);
   const orbitLayerRef = useRef(null);
+  const orbitStageRef = useRef(null);
   const veilRef = useRef(null);
   const heroRef = useRef(null);
   const overlayApiRef = useRef(null);
@@ -146,13 +147,32 @@ export default function FilmSequence() {
       // — orbit scrub + crossfade —
       const zone = clamp01((p - SEQ.ORBIT_START) / (SEQ.CLIMB_END - SEQ.ORBIT_START));
       const orbitDur = durOf(orbit, orbitMeta.duration);
-      if (p >= SEQ.ORBIT_START - 0.05) {
-        orbitScrub.scrub(clamp01((p - SEQ.ORBIT_START) / (1 - SEQ.ORBIT_START)) * orbitDur);
-      }
+
+      // The clip runs from its first frame to the cloud-clear mark and stops
+      // there for good; the terrain under the markers is that fixed frame.
+      const clearAt =
+        SEQ.ORBIT.CLOUD_CLEAR_SECONDS ?? orbitDur * SEQ.ORBIT.CLOUD_CLEAR_FRACTION;
+      const toSettle = clamp01((p - SEQ.ORBIT_START) / (SEQ.ORBIT.SETTLE_AT - SEQ.ORBIT_START));
+      const orbitTime = toSettle * clearAt;
+      if (p >= SEQ.ORBIT_START - 0.05) orbitScrub.scrub(orbitTime);
+
+      // Drift is tied to the cloud clearing, not to raw scroll: it is driven by
+      // the playhead's progress toward the same mark, so it starts as the
+      // footage emerges from cloud and lands at zero exactly when it stops.
+      const cloudProgress = clearAt > 0 ? clamp01(orbitTime / clearAt) : 1;
+      const settled = cloudProgress >= 1;
+
       const orbitLayer = orbitLayerRef.current;
       if (orbitLayer) {
         orbitLayer.style.opacity = smooth(zone).toFixed(3);
         orbitLayer.style.visibility = zone > 0 ? 'visible' : 'hidden';
+      }
+      const orbitStage = orbitStageRef.current;
+      if (orbitStage) {
+        // video and overlay share this transform, so markers stay glued to the
+        // terrain while it drifts and sit on the stopped frame afterwards
+        const drift = (1 - smooth(cloudProgress)) * SEQ.ORBIT.DRIFT_VW;
+        orbitStage.style.transform = drift > 0.001 ? `translate3d(${drift}vw,0,0)` : 'none';
       }
 
       // near-white veil peaking mid-crossfade — absorbs any tonal mismatch
@@ -175,7 +195,8 @@ export default function FilmSequence() {
       const hint = hintRef.current;
       if (hint) hint.style.opacity = (1 - smooth(p / 0.06)).toFixed(3);
 
-      overlayApiRef.current?.update(p);
+      // overlays are only allowed to exist once the footage has stopped
+      overlayApiRef.current?.update(p, settled);
     };
     raf = requestAnimationFrame(frame);
 
@@ -236,29 +257,32 @@ export default function FilmSequence() {
         />
 
         <div className="film__orbit" ref={orbitLayerRef}>
-          <img
-            className="film__poster"
-            src={orbitMeta.poster}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            onError={e => (e.currentTarget.style.display = 'none')}
-          />
-          <video
-            ref={orbitRef}
-            className="film__video"
-            src={orbitMeta.src}
-            preload="none"
-            muted
-            playsInline
-            onLoadedData={markReady}
-            onError={e => (e.currentTarget.style.display = 'none')}
-          />
-          <TerritoryOverlay
-            apiRef={overlayApiRef}
-            frameAspect={orbitMeta.width / orbitMeta.height}
-            staticMode={reduced}
-          />
+          {/* video + overlay drift together, so markers stay glued to terrain */}
+          <div className="film__orbit-stage" ref={orbitStageRef}>
+            <img
+              className="film__poster"
+              src={orbitMeta.poster}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              onError={e => (e.currentTarget.style.display = 'none')}
+            />
+            <video
+              ref={orbitRef}
+              className="film__video"
+              src={orbitMeta.src}
+              preload="none"
+              muted
+              playsInline
+              onLoadedData={markReady}
+              onError={e => (e.currentTarget.style.display = 'none')}
+            />
+            <TerritoryOverlay
+              apiRef={overlayApiRef}
+              frameAspect={orbitMeta.width / orbitMeta.height}
+              staticMode={reduced}
+            />
+          </div>
         </div>
 
         <div className="film__veil" ref={veilRef} aria-hidden="true" />

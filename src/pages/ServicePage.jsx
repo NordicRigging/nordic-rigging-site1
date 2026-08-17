@@ -24,8 +24,9 @@ export default function ServicePage() {
       <section className="service-hero" style={{ background: service.fallback }}>
         <img
           className="service-hero__img"
-          src={service.image}
+          src={service.heroImage || service.image}
           alt=""
+          fetchpriority="high"
           onError={e => (e.currentTarget.style.display = 'none')}
         />
         <div className="service-hero__inner">

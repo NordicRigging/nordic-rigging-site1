@@ -35,21 +35,21 @@ export default function Spinlock() {
         // drift in from the side…
         gsap.fromTo(
           gaugeRef.current,
-          { x: 160, opacity: 0, rotate: 5 },
+          { x: 150, opacity: 0, rotate: 4 },
           {
             x: 0,
             opacity: 1,
             rotate: 0,
             ease: 'none',
-            scrollTrigger: { trigger: section, start: 'top 80%', end: 'top 30%', scrub: true }
+            scrollTrigger: { trigger: section, start: 'top 85%', end: 'top 35%', scrub: true }
           }
         );
-        // …then follow scroll with a slow parallax
+        // …then float with scroll, travelling further than the section itself
         gsap.fromTo(
           gaugeInnerRef.current,
-          { yPercent: -8 },
+          { yPercent: -14 },
           {
-            yPercent: 14,
+            yPercent: 12,
             ease: 'none',
             scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true }
           }
@@ -87,62 +87,19 @@ export default function Spinlock() {
           </div>
         </div>
 
-        <figure className="spinlock__gauge" ref={gaugeRef}>
-          <div className="spinlock__gauge-inner" ref={gaugeInnerRef}>
-            <img
-              src="/images/spinlock-rig-sense.png"
-              alt={s.gaugeAlt}
-              loading="lazy"
-              decoding="async"
-              onError={e => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement.classList.add('spinlock__gauge-inner--fallback');
-              }}
-            />
-            {/* Designed stand-in until the product photo lands at
-                public/images/spinlock-rig-sense.png */}
-            <svg className="spinlock__dial" viewBox="0 0 220 300" role="img" aria-label={s.gaugeAlt}>
-              <rect x="10" y="10" width="200" height="280" rx="26" fill="#101922" stroke="rgba(242,245,246,0.16)" />
-              <rect x="26" y="26" width="168" height="150" rx="16" fill="#06090d" stroke="rgba(242,245,246,0.1)" />
-              {Array.from({ length: 21 }, (_, i) => {
-                const a = (-210 + i * (240 / 20)) * (Math.PI / 180);
-                const cx = 110;
-                const cy = 118;
-                const r1 = 62;
-                const r2 = i % 5 === 0 ? 48 : 55;
-                return (
-                  <line
-                    key={i}
-                    x1={cx + r1 * Math.cos(a)}
-                    y1={cy + r1 * Math.sin(a)}
-                    x2={cx + r2 * Math.cos(a)}
-                    y2={cy + r2 * Math.sin(a)}
-                    stroke={i % 5 === 0 ? '#c7d1d6' : '#7c8b94'}
-                    strokeWidth={i % 5 === 0 ? 2.4 : 1.2}
-                  />
-                );
-              })}
-              <line
-                x1="110"
-                y1="118"
-                x2={110 + 56 * Math.cos((-210 + 0.62 * 240) * (Math.PI / 180))}
-                y2={118 + 56 * Math.sin((-210 + 0.62 * 240) * (Math.PI / 180))}
-                stroke="#ff5a28"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              <circle cx="110" cy="118" r="6" fill="#ff5a28" />
-              <text x="110" y="205" textAnchor="middle" fill="#f2f5f6" fontFamily="JetBrains Mono, monospace" fontSize="20">
-                412 kg
-              </text>
-              <text x="110" y="238" textAnchor="middle" fill="#7c8b94" fontFamily="JetBrains Mono, monospace" fontSize="10" letterSpacing="3">
-                RIG-SENSE PRO
-              </text>
-              <rect x="58" y="254" width="104" height="14" rx="7" fill="#06090d" stroke="rgba(242,245,246,0.1)" />
-              <circle cx="70" cy="261" r="3" fill="#ff5a28" />
-            </svg>
-          </div>
-        </figure>
+        {/* The frame clips the gauge's top, bottom and right edges, so the
+            instrument reads as embedded in the page rather than placed on it. */}
+        <div className="spinlock__frame" ref={gaugeRef}>
+          <img
+            className="spinlock__gauge"
+            ref={gaugeInnerRef}
+            src="/images/spinlock-rig-sense.png"
+            alt={s.gaugeAlt}
+            loading="lazy"
+            decoding="async"
+            onError={e => e.currentTarget.classList.add('spinlock__gauge--missing')}
+          />
+        </div>
       </div>
     </section>
   );

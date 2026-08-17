@@ -12,12 +12,11 @@ export const CONTACT = {
   email: 'sales@nordicrigging.fi',
   address: 'Itäinen Rantakatu 74, 20810 Turku',
 
-  // The old site dialled and messaged this number (tel: and wa.me links).
-  // NOTE: its footer/quick-card *displayed* +358 50 548 7766 instead — see the
-  // handover notes. This is the number that was actually actionable.
-  phoneDisplay: '+358 50 547 7277',
-  phoneHref: 'tel:+358505477277',
-  whatsapp: 'https://wa.me/358505477277'
+  // Confirmed correct number. The old site's tel:/wa.me links pointed at a
+  // different number and were wrong — do not restore them from that source.
+  phoneDisplay: '+358 50 548 7766',
+  phoneHref: 'tel:+358505487766',
+  whatsapp: 'https://wa.me/358505487766'
 };
 
 export const LANGS = ['fi', 'en'];
@@ -229,7 +228,8 @@ export const CONTENT = {
 export const SERVICES = [
   {
     slug: 'mast-work',
-    image: '/images/mast-work.jpg',
+    image: '/images/mast-work.webp',
+    heroImage: '/images/mast-work-hero.webp',
     fallback: '#152431',
     fi: {
       tag: 'Mastotyöt',
@@ -262,7 +262,8 @@ export const SERVICES = [
   },
   {
     slug: 'rope-stock',
-    image: '/images/rope-stock.jpg',
+    image: '/images/rope-stock.webp',
+    heroImage: '/images/rope-stock-hero.webp',
     fallback: '#2b241d',
     fi: {
       tag: 'Varasto',
@@ -289,7 +290,8 @@ export const SERVICES = [
   },
   {
     slug: 'maintenance',
-    image: '/images/maintenance.jpg',
+    image: '/images/maintenance.webp',
+    heroImage: '/images/maintenance-hero.webp',
     fallback: '#1b2a25',
     fi: {
       tag: 'Huolto',

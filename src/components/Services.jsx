@@ -26,9 +26,10 @@ export default function Services() {
         image: s.image,
         fallback: s.fallback,
         link: `/services/${s.slug}`,
+        cta: t.services.readMore,
         alt: `${s[lang].tag} — Nordic Rigging`
       })),
-    [lang]
+    [lang, t.services.readMore]
   );
 
   return (

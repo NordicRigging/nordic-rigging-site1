@@ -42,21 +42,20 @@ Commit the processed outputs in `public/video/` (raw files stay untracked).
 
 ## Images
 
-Drop real photos at these exact paths — no code changes needed; until then the
-site shows designed solid-colour fallbacks:
+All of these live in `public/images/`:
 
-- `public/images/mast-work.jpg`
-- `public/images/rope-stock.jpg`
-- `public/images/maintenance.jpg`
-- `public/images/spinlock-rig-sense.png` (floating gauge in the Spinlock
-  section; a drawn instrument stands in meanwhile)
+| File | Used by |
+| --- | --- |
+| `mast-work.webp`, `rope-stock.webp`, `maintenance.webp` | accordion panels (cover-fit, wide crops to tall) |
+| `mast-work-hero.webp`, `rope-stock-hero.webp`, `maintenance-hero.webp` | full-bleed hero on each service page |
+| `spinlock-rig-sense.png` | the floating gauge in the Spinlock section |
+| `logo.svg` | the Turku card on the territory map |
+
+Paths are declared in `src/lib/content.js`. If a file is missing the section
+degrades to a designed solid colour rather than breaking.
 
 ## Open items from the port
 
-- **Phone number.** The old site displayed `+358 50 548 7766` in its footer and
-  quick-contact card, but its Call/WhatsApp actions used `+358 50 547 7277`.
-  The actionable number is the one in use here (`CONTACT.phoneDisplay`) —
-  confirm which is correct.
 - **Spinlock "Watch video".** The old site had CSS for a "Katso video" link but
   no markup and no URL anywhere in its source. Set `WATCH_VIDEO_URL` in
   `src/components/Spinlock.jsx` and the button renders automatically.
@@ -82,13 +81,28 @@ in the corner is new — the old site could only be switched on that overlay.
 
 ## Tuning the film sequence
 
-Everything lives in `src/lib/filmConfig.js`:
+**Everything you may want to nudge lives in `src/lib/filmConfig.js`** — nothing
+else needs editing.
 
 - `SEQ.CLIMB_END` / `SEQ.ORBIT_START` — the cloud crossfade window
 - `SEQ.VEIL_MAX` — strength of the near-white veil that guarantees a seamless
   handoff
-- `TERRITORY_MARKS` — Turku/Helsinki positions in percent of the video frame
-  (they track the footage under `object-fit: cover` cropping)
+- `SEQ.ORBIT.CLOUD_CLEAR_SECONDS` — **the key one.** The moment in `orbit.mp4`
+  at which the cloud has mostly cleared. The clip scrubs to this mark and then
+  stops for good, and the leftward drift is driven by the playhead's progress
+  toward it, so movement begins as the footage emerges from cloud and ends
+  exactly when the cloud clears. While it is `null`, `CLOUD_CLEAR_FRACTION`
+  (0.6 of the clip) is used instead.
+- `SEQ.ORBIT.SETTLE_AT` / `DRIFT_VW` — where in the scroll the stop happens,
+  and how far the footage travels left before it does.
+- `TERRITORY_MARKS` — **Turku/Helsinki marker positions**, in percent of the
+  *stopped* frame. Scroll until the footage stops, then adjust x/y here.
+- `TERRITORY_REGIONS` — the VARSINAIS-SUOMI / UUSIMAA labels. These belong on
+  land, i.e. inland (north) of the two coastal cities.
+- `TERRITORY_GLOW` — the soft radial weight over Turku, falling away eastward.
+- `TERRITORY_RADAR` — ring count, loop duration and travel.
+- `SEQ.TERRITORY.*` — when each overlay appears. All values must stay **after**
+  `SEQ.ORBIT.SETTLE_AT`: overlays are only allowed over a stopped frame.
 
 ## Performance architecture
 
