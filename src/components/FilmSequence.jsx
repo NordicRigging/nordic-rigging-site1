@@ -63,6 +63,10 @@ export default function FilmSequence() {
 
   const { t } = useLang();
   const [manifest, setManifest] = useState(DEFAULT_MANIFEST);
+
+  // Scale needed so a full drift never reveals an edge: the stage scales from
+  // its centre, so each side gains half the growth — hence 2x the drift.
+  const coverScale = 1 + (2 * SEQ.ORBIT.DRIFT_VW) / 100 + SEQ.ORBIT.COVER_MARGIN;
   const [reduced] = useState(
     () =>
       typeof window !== 'undefined' &&
@@ -84,6 +88,7 @@ export default function FilmSequence() {
     if (reduced) return undefined;
 
     const wrap = wrapRef.current;
+    const stage = stageRef.current;
     const climb = climbRef.current;
     const orbit = orbitRef.current;
     if (!wrap || !climb || !orbit) return undefined;
@@ -93,6 +98,10 @@ export default function FilmSequence() {
 
     const climbScrub = makeScrubber(climb);
     const orbitScrub = makeScrubber(orbit);
+
+    // Both layers are scaled by the same factor so no drift position can
+    // expose page background, and so the two crops match exactly at the seam.
+    stage?.style.setProperty('--film-cover-scale', String(coverScale));
 
     let wrapTop = 0;
     let travel = 1;
@@ -150,17 +159,24 @@ export default function FilmSequence() {
 
       // The clip runs from its first frame to the cloud-clear mark and stops
       // there for good; the terrain under the markers is that fixed frame.
-      const clearAt =
-        SEQ.ORBIT.CLOUD_CLEAR_SECONDS ?? orbitDur * SEQ.ORBIT.CLOUD_CLEAR_FRACTION;
-      const toSettle = clamp01((p - SEQ.ORBIT_START) / (SEQ.ORBIT.SETTLE_AT - SEQ.ORBIT_START));
-      const orbitTime = toSettle * clearAt;
+      // clearAt is clamped into the clip so a bad config value or an unparsed
+      // manifest duration can never stall the sequence.
+      const wanted = Number.isFinite(SEQ.ORBIT.CLOUD_CLEAR_SECONDS)
+        ? SEQ.ORBIT.CLOUD_CLEAR_SECONDS
+        : orbitDur * SEQ.ORBIT.CLOUD_CLEAR_FRACTION;
+      const clearAt = Math.min(Math.max(wanted, 0.05), Math.max(orbitDur - 0.05, 0.05));
+
+      // Progress toward the cloud-clear mark. This IS the drift's clock: it
+      // starts when the footage emerges from cloud and finishes when the cloud
+      // has cleared. Taken from the scroll span directly rather than dividing
+      // the playhead back out, so it lands exactly on 1 for any clip length.
+      const cloudProgress = clamp01(
+        (p - SEQ.ORBIT_START) / (SEQ.ORBIT.SETTLE_AT - SEQ.ORBIT_START)
+      );
+      const orbitTime = cloudProgress * clearAt;
       if (p >= SEQ.ORBIT_START - 0.05) orbitScrub.scrub(orbitTime);
 
-      // Drift is tied to the cloud clearing, not to raw scroll: it is driven by
-      // the playhead's progress toward the same mark, so it starts as the
-      // footage emerges from cloud and lands at zero exactly when it stops.
-      const cloudProgress = clearAt > 0 ? clamp01(orbitTime / clearAt) : 1;
-      const settled = cloudProgress >= 1;
+      const settled = p >= SEQ.ORBIT.SETTLE_AT;
 
       const orbitLayer = orbitLayerRef.current;
       if (orbitLayer) {
@@ -169,10 +185,17 @@ export default function FilmSequence() {
       }
       const orbitStage = orbitStageRef.current;
       if (orbitStage) {
-        // video and overlay share this transform, so markers stay glued to the
-        // terrain while it drifts and sit on the stopped frame afterwards
-        const drift = (1 - smooth(cloudProgress)) * SEQ.ORBIT.DRIFT_VW;
-        orbitStage.style.transform = drift > 0.001 ? `translate3d(${drift}vw,0,0)` : 'none';
+        // The drift is held at zero until the crossfade has finished, so both
+        // layers are identically sized AND positioned through the seam and
+        // nothing shifts as one replaces the other. It then runs from the end
+        // of the handoff to the cloud-clear mark, ending exactly where the
+        // footage stops. Video and overlay share this transform, so markers
+        // stay glued to the terrain throughout.
+        const driftProgress = clamp01(
+          (p - SEQ.CLIMB_END) / (SEQ.ORBIT.SETTLE_AT - SEQ.CLIMB_END)
+        );
+        const drift = -smooth(driftProgress) * SEQ.ORBIT.DRIFT_VW;
+        orbitStage.style.transform = `translate3d(${drift.toFixed(3)}vw,0,0)`;
       }
 
       // near-white veil peaking mid-crossfade — absorbs any tonal mismatch
@@ -215,7 +238,7 @@ export default function FilmSequence() {
       climbScrub.destroy();
       orbitScrub.destroy();
     };
-  }, [manifest, reduced]);
+  }, [manifest, reduced, coverScale]);
 
   // Poster-first paint: the video layer only fades up once it can draw frames.
   const markReady = e => {
@@ -280,6 +303,7 @@ export default function FilmSequence() {
             <TerritoryOverlay
               apiRef={overlayApiRef}
               frameAspect={orbitMeta.width / orbitMeta.height}
+              frameScale={coverScale}
               staticMode={reduced}
             />
           </div>

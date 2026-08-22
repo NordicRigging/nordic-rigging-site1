@@ -51,8 +51,21 @@ export const SEQ = {
     /** Scroll progress at which the playhead reaches the cloud-clear mark. */
     SETTLE_AT: 0.72,
 
-    /** Leftward travel of the whole orbit stage while the cloud clears, in vw. */
-    DRIFT_VW: 8
+    /**
+     * Leftward travel of the orbit stage while the cloud clears, in vw.
+     * The footage starts aligned with the climb (offset 0) at the seam and
+     * moves left to -DRIFT_VW, so nothing shifts during the crossfade.
+     */
+    DRIFT_VW: 8,
+
+    /**
+     * Both film layers are scaled up so the drift can never expose page
+     * background at an edge. The minimum needed is 1 + 2 * DRIFT_VW / 100
+     * (the stage scales from its centre, so each side gains half the growth);
+     * COVER_MARGIN is the extra safety on top. The scale is DERIVED from the
+     * drift — change DRIFT_VW and the crop follows automatically.
+     */
+    COVER_MARGIN: 0.03
   },
 
   /**
@@ -120,6 +133,31 @@ export const TERRITORY_RADAR = {
 };
 
 /**
+ * ── SPINLOCK GAUGE ──────────────────────────────────────────────────────
+ * Position and size of the floating Rig-Sense gauge in the Spinlock section.
+ * The image is deliberately larger than its frame and bleeds past the section
+ * edges, which is what makes it read as embedded in the page rather than
+ * placed on top of it.
+ */
+export const SPINLOCK_GAUGE = {
+  /** Gauge height as a multiple of its frame's height. >1 clips top/bottom. */
+  SCALE: 1.12,
+
+  /** Nudge within the frame. Percentages of the frame: +x right, +y down. */
+  OFFSET_X: 0,
+  OFFSET_Y: 0,
+
+  /** How far the frame bleeds past the section's right edge, in rem. */
+  BLEED_RIGHT: 3,
+
+  /** How far it bleeds past the section's top and bottom edges, in rem. */
+  BLEED_Y: 3.5,
+
+  /** Vertical travel as the section passes, in % of the gauge's height. */
+  PARALLAX: 12
+};
+
+/**
  * Fallback clip metadata, used until /video/manifest.json (written by
  * `npm run video`) or the media element's own metadata provides real values.
  */
@@ -144,6 +182,25 @@ export const DEFAULT_MANIFEST = {
 
 let manifestPromise = null;
 
+/** A positive finite number, or the fallback. Guards against nulls in the
+ *  manifest: `ffmpeg -i` output varies between builds, so a dimension or
+ *  duration can come through as null and would otherwise poison the overlay
+ *  geometry (NaN aspect ratio → collapsed marker layer → no markers at all). */
+const num = (value, fallback) =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : fallback;
+
+function sanitiseClip(clip, defaults) {
+  const merged = { ...defaults, ...(clip || {}) };
+  return {
+    ...merged,
+    src: merged.src || defaults.src,
+    poster: merged.poster || defaults.poster,
+    duration: num(merged.duration, defaults.duration),
+    width: num(merged.width, defaults.width),
+    height: num(merged.height, defaults.height)
+  };
+}
+
 /** Runtime metadata: fetch the pipeline-written manifest, fall back to defaults. */
 export function loadManifest() {
   if (!manifestPromise) {
@@ -154,8 +211,8 @@ export function loadManifest() {
         if (!json || !json.clips) return DEFAULT_MANIFEST;
         return {
           clips: {
-            climb: { ...DEFAULT_MANIFEST.clips.climb, ...json.clips.climb },
-            orbit: { ...DEFAULT_MANIFEST.clips.orbit, ...json.clips.orbit }
+            climb: sanitiseClip(json.clips.climb, DEFAULT_MANIFEST.clips.climb),
+            orbit: sanitiseClip(json.clips.orbit, DEFAULT_MANIFEST.clips.orbit)
           }
         };
       });

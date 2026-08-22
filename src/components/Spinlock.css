@@ -44,9 +44,12 @@
 .spinlock__frame {
   position: relative;
   align-self: stretch;
-  min-height: clamp(20rem, 34vw, 30rem);
-  /* bleed past the section's right edge and beyond its top/bottom */
-  margin: calc(var(--space-5) * -1) calc(var(--page-pad) * -1) calc(var(--space-5) * -1) 0;
+  min-height: clamp(18rem, 30vw, 26rem);
+  /* Bleed past the section edges — SPINLOCK_GAUGE.BLEED_RIGHT / BLEED_Y.
+     The frame's overflow is what clips the gauge into the page. */
+  margin-top: calc(var(--sl-bleed-y, 3.5rem) * -1);
+  margin-bottom: calc(var(--sl-bleed-y, 3.5rem) * -1);
+  margin-right: calc(var(--page-pad) * -1 - var(--sl-bleed-right, 3rem));
   overflow: hidden;
   will-change: transform, opacity;
   pointer-events: none;
@@ -54,11 +57,14 @@
 
 .spinlock__gauge {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  height: 150%; /* taller than the frame → top and bottom are clipped */
+  /* SPINLOCK_GAUGE.OFFSET_X / OFFSET_Y nudge it inside the frame */
+  left: calc(50% + var(--sl-offset-x, 0%));
+  top: calc(50% + var(--sl-offset-y, 0%));
+  /* SPINLOCK_GAUGE.SCALE — >1 means top and bottom are clipped by the frame */
+  height: calc(100% * var(--sl-scale, 1.12));
   width: auto;
   max-width: none;
+  /* GSAP replaces this with the same centring plus the scroll parallax */
   transform: translate(-50%, -50%);
   object-fit: contain;
   filter: drop-shadow(0 34px 70px rgba(0, 0, 0, 0.62));
@@ -80,11 +86,10 @@
   }
 
   .spinlock__frame {
-    min-height: 17rem;
-    margin: var(--space-3) calc(var(--page-pad) * -1) calc(var(--space-5) * -1) calc(var(--page-pad) * -1);
-  }
-
-  .spinlock__gauge {
-    height: 128%;
+    min-height: 15rem;
+    margin-top: var(--space-3);
+    margin-bottom: calc(var(--sl-bleed-y, 3.5rem) * -1);
+    margin-left: calc(var(--page-pad) * -1);
+    margin-right: calc(var(--page-pad) * -1);
   }
 }

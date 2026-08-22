@@ -24,7 +24,12 @@ const smooth = v => {
  * below refers to the one fixed frame at the cloud-clear mark. Coordinates are
  * percentages of the video frame and live in src/lib/filmConfig.js.
  */
-export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticMode = false }) {
+export default function TerritoryOverlay({
+  apiRef,
+  frameAspect = 16 / 9,
+  frameScale = 1,
+  staticMode = false
+}) {
   const { t } = useLang();
   const rootRef = useRef(null);
   const coverRef = useRef(null);
@@ -41,9 +46,14 @@ export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticM
     if (!root || !cover) return;
     const { clientWidth: w, clientHeight: h } = root;
     if (!w || !h) return;
-    // replicate the video's object-fit: cover box so overlays track the terrain
-    const coverW = Math.max(w, h * frameAspect);
-    const coverH = coverW / frameAspect;
+    // Replicate the video's object-fit: cover box so overlays track the
+    // terrain. A null width/height in the manifest would make this NaN and
+    // collapse the whole marker layer, so fall back to the clip's aspect.
+    const aspect = Number.isFinite(frameAspect) && frameAspect > 0 ? frameAspect : 16 / 9;
+    const scale = Number.isFinite(frameScale) && frameScale > 0 ? frameScale : 1;
+    // the video is enlarged by `scale`, so its visible rectangle grows with it
+    const coverW = Math.max(w, h * aspect) * scale;
+    const coverH = coverW / aspect;
     const coverLeft = (w - coverW) / 2;
     const coverTop = (h - coverH) / 2;
     cover.style.width = `${coverW}px`;
@@ -67,7 +77,7 @@ export default function TerritoryOverlay({ apiRef, frameAspect = 16 / 9, staticM
     card.style.left = `${left}px`;
     card.style.top = `${top}px`;
     card.style.transformOrigin = `${(turkuX - left).toFixed(1)}px ${(turkuY - top).toFixed(1)}px`;
-  }, [frameAspect]);
+  }, [frameAspect, frameScale]);
 
   const update = useCallback(
     (p, settled = false) => {

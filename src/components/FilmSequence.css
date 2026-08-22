@@ -31,6 +31,17 @@
   object-fit: cover;
 }
 
+/* Both film layers are enlarged by the same factor (derived in JS from the
+   drift distance) so the orbit's leftward travel can never expose page
+   background, and so the climb and orbit crops match exactly at the seam. */
+.film__stage > .film__poster,
+.film__stage > .film__video,
+.film__orbit-stage > .film__poster,
+.film__orbit-stage > .film__video {
+  transform: scale(var(--film-cover-scale, 1));
+  transform-origin: center center;
+}
+
 /* Poster-first paint: the poster is visible immediately, the video layer
    fades up only once it has decodable frames. */
 .film__video {

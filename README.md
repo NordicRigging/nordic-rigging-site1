@@ -94,7 +94,13 @@ else needs editing.
   exactly when the cloud clears. While it is `null`, `CLOUD_CLEAR_FRACTION`
   (0.6 of the clip) is used instead.
 - `SEQ.ORBIT.SETTLE_AT` / `DRIFT_VW` — where in the scroll the stop happens,
-  and how far the footage travels left before it does.
+  and how far the footage travels left before it does. The drift is held at
+  zero until the crossfade finishes, so the climb and orbit layers are
+  identically sized and positioned through the seam.
+- `SEQ.ORBIT.COVER_MARGIN` — safety on top of the crop scale. Both film layers
+  are enlarged by `1 + 2 * DRIFT_VW / 100 + COVER_MARGIN`, derived from the
+  drift, so no drift position can expose page background at an edge. Change
+  `DRIFT_VW` and the crop follows automatically.
 - `TERRITORY_MARKS` — **Turku/Helsinki marker positions**, in percent of the
   *stopped* frame. Scroll until the footage stops, then adjust x/y here.
 - `TERRITORY_REGIONS` — the VARSINAIS-SUOMI / UUSIMAA labels. These belong on
@@ -103,6 +109,19 @@ else needs editing.
 - `TERRITORY_RADAR` — ring count, loop duration and travel.
 - `SEQ.TERRITORY.*` — when each overlay appears. All values must stay **after**
   `SEQ.ORBIT.SETTLE_AT`: overlays are only allowed over a stopped frame.
+
+## Tuning the Spinlock gauge
+
+Also in `src/lib/filmConfig.js`, as `SPINLOCK_GAUGE`:
+
+| Constant | What it does |
+| --- | --- |
+| `SPINLOCK_GAUGE.SCALE` | gauge height as a multiple of its frame's height; >1 is what clips the top and bottom |
+| `SPINLOCK_GAUGE.OFFSET_X` | nudge left/right, as a % of the frame (+ moves right) |
+| `SPINLOCK_GAUGE.OFFSET_Y` | nudge up/down, as a % of the frame (+ moves down) |
+| `SPINLOCK_GAUGE.BLEED_RIGHT` | how far the frame bleeds past the section's right edge, in rem |
+| `SPINLOCK_GAUGE.BLEED_Y` | how far it bleeds past the top and bottom edges, in rem |
+| `SPINLOCK_GAUGE.PARALLAX` | vertical float as the section passes, in % of gauge height |
 
 ## Performance architecture
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+import { SPINLOCK_GAUGE } from '../lib/filmConfig.js';
 import { useLang } from '../lib/LanguageContext.jsx';
 import './Spinlock.css';
 
@@ -44,12 +45,14 @@ export default function Spinlock() {
             scrollTrigger: { trigger: section, start: 'top 85%', end: 'top 35%', scrub: true }
           }
         );
-        // …then float with scroll, travelling further than the section itself
+        // …then float with scroll. yPercent carries the -50% centring as well,
+        // since GSAP owns the transform once it animates it.
+        const P = SPINLOCK_GAUGE.PARALLAX;
         gsap.fromTo(
           gaugeInnerRef.current,
-          { yPercent: -14 },
+          { xPercent: -50, yPercent: -50 - P },
           {
-            yPercent: 12,
+            yPercent: -50 + P,
             ease: 'none',
             scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true }
           }
@@ -89,7 +92,17 @@ export default function Spinlock() {
 
         {/* The frame clips the gauge's top, bottom and right edges, so the
             instrument reads as embedded in the page rather than placed on it. */}
-        <div className="spinlock__frame" ref={gaugeRef}>
+        <div
+          className="spinlock__frame"
+          ref={gaugeRef}
+          style={{
+            '--sl-scale': SPINLOCK_GAUGE.SCALE,
+            '--sl-offset-x': `${SPINLOCK_GAUGE.OFFSET_X}%`,
+            '--sl-offset-y': `${SPINLOCK_GAUGE.OFFSET_Y}%`,
+            '--sl-bleed-right': `${SPINLOCK_GAUGE.BLEED_RIGHT}rem`,
+            '--sl-bleed-y': `${SPINLOCK_GAUGE.BLEED_Y}rem`
+          }}
+        >
           <img
             className="spinlock__gauge"
             ref={gaugeInnerRef}
