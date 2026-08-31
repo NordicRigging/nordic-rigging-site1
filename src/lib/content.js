@@ -90,6 +90,11 @@ export const CONTENT = {
       ]
     },
 
+    projects: {
+      title: 'Projektit',
+      line: 'Toistaiseksi tyhjä — mutta ei kauaa.'
+    },
+
     contact: {
       eyebrow: 'Ota yhteyttä',
       heading: 'Ole meihin yhteydessä jo tänään',
@@ -195,6 +200,11 @@ export const CONTENT = {
         { label: '01 / Expertise', text: 'Our team of skilled professionals has years of experience.' },
         { label: '02 / Efficiency', text: 'We work efficiently within the agreed schedule.' }
       ]
+    },
+
+    projects: {
+      title: 'Projects',
+      line: 'Empty for now — but not for long.'
     },
 
     contact: {

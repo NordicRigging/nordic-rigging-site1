@@ -148,10 +148,15 @@ Note the film sequence reads `window.scrollY` each frame, so Lenis must drive
 native scroll position (its default) rather than transforming a wrapper
 element, or the scrubbing will not track.
 
-**"Projects"** is a real, active link with no destination yet — deliberately
-not `aria-disabled` and not dimmed, since it is not unavailable, just unbuilt.
-Give it a `target` in the `items` array in `PillNav.jsx` when the section
-exists.
+All three links now have destinations. **Projects** points at the placeholder
+`#projects` section (`src/components/Projects.jsx`), which sits last on the
+page — deliberately sparse, a heading and one line, with enough vertical space
+to read as a section awaiting content rather than a gap. Its copy lives in
+`CONTENT[lang].projects`.
+
+Note that because it is the last section, the document can run out of scroll
+before it reaches the nav offset; it then lands clamped at the page end, fully
+in view. That is expected, not a mis-scroll.
 
 ## Performance architecture
 

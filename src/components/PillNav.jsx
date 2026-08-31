@@ -34,13 +34,9 @@ const PillNav = ({ ease = 'power3.easeOut', initialLoadAnimation = true }) => {
   const navItemsRef = useRef(null);
   const logoRef = useRef(null);
 
-  // "Projects" is deliberately inert for now. It is a real, active link — no
-  // aria-disabled, no dimmed styling — it simply has nowhere to go yet. Marking
-  // it disabled would announce it as unavailable to assistive tech, which is
-  // not what it is.
   const items = [
     { key: 'services', label: t.nav.services, target: 'services' },
-    { key: 'projects', label: t.nav.projects, target: null },
+    { key: 'projects', label: t.nav.projects, target: 'projects' },
     { key: 'contact', label: t.nav.contact, target: 'contact' }
   ];
 

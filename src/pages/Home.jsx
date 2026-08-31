@@ -7,6 +7,7 @@ import Services from '../components/Services.jsx';
 import Spinlock from '../components/Spinlock.jsx';
 import Story from '../components/Story.jsx';
 import Contact from '../components/Contact.jsx';
+import Projects from '../components/Projects.jsx';
 import Footer from '../components/Footer.jsx';
 import { scrollToId } from '../lib/scroll.js';
 
@@ -30,6 +31,7 @@ export default function Home() {
       <Spinlock />
       <Story />
       <Contact />
+      <Projects />
       <Footer />
     </main>
   );
