@@ -49,7 +49,7 @@ All of these live in `public/images/`:
 | `mast-work.webp`, `rope-stock.webp`, `maintenance.webp` | accordion panels (cover-fit, wide crops to tall) |
 | `mast-work-hero.webp`, `rope-stock-hero.webp`, `maintenance-hero.webp` | full-bleed hero on each service page |
 | `spinlock-rig-sense.png` | the floating gauge in the Spinlock section |
-| `logo.svg` | the Turku card on the territory map |
+| `logo.svg` | the top navigation bar and the Turku card on the territory map |
 
 Paths are declared in `src/lib/content.js`. If a file is missing the section
 degrades to a designed solid colour rather than breaking.
@@ -77,7 +77,8 @@ All copy lives in `src/lib/content.js`, ported from the previous build
 Language handling (`src/lib/LanguageContext.jsx`) follows the old pattern:
 Finnish default, a saved choice in `localStorage.userLang` wins, and a visitor
 whose browser is not Finnish gets the picker once. The persistent FI/EN toggle
-in the corner is new — the old site could only be switched on that overlay.
+is new — the old site could only be switched on that overlay — and it lives in
+the top navigation bar.
 
 ## Tuning the film sequence
 
@@ -122,6 +123,35 @@ Also in `src/lib/filmConfig.js`, as `SPINLOCK_GAUGE`:
 | `SPINLOCK_GAUGE.BLEED_RIGHT` | how far the frame bleeds past the section's right edge, in rem |
 | `SPINLOCK_GAUGE.BLEED_Y` | how far it bleeds past the top and bottom edges, in rem |
 | `SPINLOCK_GAUGE.PARALLAX` | vertical float as the section passes, in % of gauge height |
+
+## Navigation & smooth scrolling
+
+`src/components/PillNav.jsx` is the fixed top bar (logo, three links, FI/EN
+toggle, mobile hamburger + popover). Labels come from `CONTENT[lang].nav`.
+
+**Lenis is not currently installed in this build.** The nav is written to
+cooperate with it rather than fight it: every link calls `preventDefault` and
+routes through `src/lib/scroll.js`, which hands the scroll to `window.lenis`
+when one exists and falls back to native smooth scrolling when it does not. To
+wire Lenis up, assign the instance once at creation and the nav picks it up
+with no further changes:
+
+```js
+const lenis = new Lenis();
+window.lenis = lenis;
+```
+
+`NAV_OFFSET` in that file (and `scroll-margin-top` on `.section`) keeps a
+targeted section clear of the fixed bar.
+
+Note the film sequence reads `window.scrollY` each frame, so Lenis must drive
+native scroll position (its default) rather than transforming a wrapper
+element, or the scrubbing will not track.
+
+**"Projects"** is a real, active link with no destination yet — deliberately
+not `aria-disabled` and not dimmed, since it is not unavailable, just unbuilt.
+Give it a `target` in the `items` array in `PillNav.jsx` when the section
+exists.
 
 ## Performance architecture
 

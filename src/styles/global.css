@@ -98,6 +98,8 @@ a {
   padding: var(--space-5) var(--page-pad);
   max-width: 90rem;
   margin: 0 auto;
+  /* so a section landed on by the nav isn't hidden under the fixed bar */
+  scroll-margin-top: 76px;
 }
 
 .section__head {

@@ -26,6 +26,15 @@ export const CONTENT = {
     langName: 'Suomi',
     htmlLang: 'fi',
 
+    nav: {
+      services: 'Palvelut',
+      projects: 'Projektit',
+      contact: 'Ota yhteyttä',
+      home: 'Etusivulle',
+      menu: 'Valikko',
+      language: 'Kieli'
+    },
+
     hero: {
       title: 'Nordic Rigging',
       tagline: 'Purjeveneesi paras miehistö maalla.',
@@ -123,6 +132,15 @@ export const CONTENT = {
   en: {
     langName: 'English',
     htmlLang: 'en',
+
+    nav: {
+      services: 'Services',
+      projects: 'Projects',
+      contact: 'Contact',
+      home: 'Back to top',
+      menu: 'Menu',
+      language: 'Language'
+    },
 
     hero: {
       title: 'Nordic Rigging',

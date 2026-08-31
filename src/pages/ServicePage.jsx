@@ -1,7 +1,7 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 
 import Footer from '../components/Footer.jsx';
-import { LanguageToggle } from '../components/LanguageControl.jsx';
+import PillNav from '../components/PillNav.jsx';
 import { CONTACT, serviceBySlug } from '../lib/content.js';
 import { useLang } from '../lib/LanguageContext.jsx';
 import './ServicePage.css';
@@ -19,7 +19,7 @@ export default function ServicePage() {
 
   return (
     <main>
-      <LanguageToggle />
+      <PillNav />
 
       <section className="service-hero" style={{ background: service.fallback }}>
         <img

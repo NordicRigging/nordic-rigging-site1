@@ -1,26 +1,5 @@
 import { useLang } from '../lib/LanguageContext.jsx';
-import { LANGS } from '../lib/content.js';
 import './LanguageControl.css';
-
-/** Persistent FI/EN toggle, fixed to the top-right of every page. */
-export function LanguageToggle() {
-  const { lang, changeLanguage } = useLang();
-  return (
-    <div className="lang-toggle" role="group" aria-label="Language / Kieli">
-      {LANGS.map(code => (
-        <button
-          key={code}
-          type="button"
-          className={`lang-toggle__btn${code === lang ? ' lang-toggle__btn--active' : ''}`}
-          onClick={() => changeLanguage(code)}
-          aria-pressed={code === lang}
-        >
-          {code.toUpperCase()}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 /** First-visit picker, shown when the browser language is not Finnish. */
 export function LanguagePicker() {

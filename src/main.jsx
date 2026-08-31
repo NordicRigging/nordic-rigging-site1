@@ -13,11 +13,12 @@ import { LanguageProvider } from './lib/LanguageContext.jsx';
 import { LanguagePicker } from './components/LanguageControl.jsx';
 
 function ScrollToTop() {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, state } = useLocation();
   useEffect(() => {
-    if (hash) return;
+    // a hash or an explicit scrollTo intent owns the scroll position instead
+    if (hash || state?.scrollTo) return;
     window.scrollTo(0, 0);
-  }, [pathname, hash]);
+  }, [pathname, hash, state]);
   return null;
 }
 

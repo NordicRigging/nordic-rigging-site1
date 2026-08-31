@@ -28,7 +28,8 @@
 .service-hero__inner {
   position: relative;
   z-index: 1;
-  padding: var(--space-4) var(--page-pad);
+  /* clear the fixed navigation bar */
+  padding: calc(var(--space-4) + 3.5rem) var(--page-pad) var(--space-4);
   width: 100%;
   max-width: 90rem;
   margin: 0 auto;

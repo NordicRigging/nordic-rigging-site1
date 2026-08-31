@@ -1,0 +1,293 @@
+/* ————— top navigation —————
+   Fixed to the top on every screen size. Deliberately short so it never eats
+   vertical space from the hero, and translucent rather than solid so it stays
+   legible over the moving film without blocking it. */
+
+.pill-nav-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  padding: clamp(0.5rem, 1.4vw, 0.85rem) var(--page-pad) 0;
+  pointer-events: none; /* only the bar itself is interactive */
+}
+
+.pill-nav {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.6rem, 2vw, 1.4rem);
+  height: 54px;
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 0 0.5rem 0 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 245, 246, 0.14);
+  /* translucent backdrop rather than a solid bar */
+  background: rgba(6, 9, 13, 0.55);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.34);
+}
+
+/* ————— logo ————— */
+
+.pill-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  text-decoration: none;
+  flex: 0 0 auto;
+  will-change: transform;
+}
+
+.pill-logo img {
+  height: 24px;
+  width: auto;
+  display: block;
+}
+
+.pill-logo__fallback {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  color: var(--fog);
+}
+
+.pill-logo:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ————— desktop links ————— */
+
+.pill-nav-items {
+  margin-left: auto;
+}
+
+.pill-list {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 1.1rem;
+  border-radius: 999px;
+  overflow: hidden;
+  text-decoration: none;
+  font-family: var(--font-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--cloud);
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+
+.pill:hover {
+  color: var(--fog);
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* the sweep that fills the pill on hover */
+.hover-circle {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  z-index: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.label-stack {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.pill-label,
+.pill-label-hover {
+  display: block;
+  will-change: transform, opacity;
+}
+
+.pill-label-hover {
+  position: absolute;
+  inset: 0;
+  color: var(--ink); /* reads against the accent sweep */
+}
+
+/* ————— language toggle, folded into the bar ————— */
+
+.pill-lang {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  margin-left: 0.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 245, 246, 0.14);
+  background: rgba(242, 245, 246, 0.05);
+  flex: 0 0 auto;
+}
+
+.pill-lang__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--slate);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  padding: 0.4em 0.7em;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.pill-lang__btn:hover {
+  color: var(--fog);
+}
+
+.pill-lang__btn.is-active {
+  background: var(--accent);
+  color: var(--ink);
+}
+
+.pill-lang__btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ————— mobile ————— */
+
+.mobile-menu-button {
+  appearance: none;
+  margin-left: auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 245, 246, 0.14);
+  background: rgba(242, 245, 246, 0.05);
+  cursor: pointer;
+}
+
+.mobile-menu-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.hamburger-line {
+  display: block;
+  width: 17px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--fog);
+  will-change: transform;
+}
+
+.mobile-menu-popover {
+  pointer-events: auto;
+  margin: 0.5rem auto 0;
+  max-width: 90rem;
+  padding: 0.6rem;
+  border-radius: var(--radius);
+  border: 1px solid rgba(242, 245, 246, 0.14);
+  background: rgba(6, 9, 13, 0.82);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+  visibility: hidden;
+  opacity: 0;
+}
+
+.mobile-menu-list {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.mobile-menu-link {
+  display: block;
+  padding: 0.85em 1em;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--fog);
+  font-family: var(--font-text);
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.mobile-menu-link:hover,
+.mobile-menu-link:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent);
+  outline: none;
+}
+
+.pill-lang--mobile {
+  margin: 0 0 0 0.35rem;
+  width: fit-content;
+}
+
+/* ————— breakpoints ————— */
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: inline-flex;
+  }
+
+  .mobile-menu-popover.mobile-only {
+    display: block;
+  }
+
+  .pill-nav {
+    height: 50px;
+  }
+
+  .pill-logo img {
+    height: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-circle {
+    display: none;
+  }
+}
