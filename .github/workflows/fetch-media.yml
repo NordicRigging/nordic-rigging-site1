@@ -1,15 +1,15 @@
 # Dev utility: pulls public media URLs (e.g. Higgsfield generation results)
-# into the orphan `media-inbox` branch so they can be fetched into a working
-# copy that cannot reach the CDN directly. Never touches the site branches.
+# listed in .github/media-request.txt into the orphan `media-inbox` branch so
+# they can be fetched into a working copy that cannot reach the CDN directly.
+# Never touches the site branches. Already-present files are skipped.
 name: Fetch media
 
 on:
-  workflow_dispatch:
-    inputs:
-      files:
-        description: 'Whitespace-separated name=url pairs'
-        required: true
-        type: string
+  push:
+    branches:
+      - 'claude/**'
+    paths:
+      - '.github/media-request.txt'
 
 permissions:
   contents: write
@@ -22,10 +22,9 @@ jobs:
         with:
           fetch-depth: 1
       - name: Download into media-inbox branch
-        env:
-          FILES: ${{ inputs.files }}
         run: |
           set -euo pipefail
+          cp .github/media-request.txt /tmp/request.txt
           git config user.name "media-relay"
           git config user.email "media-relay@users.noreply.github.com"
           if git fetch origin media-inbox 2>/dev/null; then
@@ -35,13 +34,15 @@ jobs:
             git rm -rf -q . || true
           fi
           mkdir -p inbox
-          for pair in $FILES; do
-            name="${pair%%=*}"
-            url="${pair#*=}"
+          while read -r name url; do
+            [ -z "$name" ] && continue
+            case "$name" in \#*) continue;; esac
+            if [ -s "inbox/$name" ]; then echo "skip $name (present)"; continue; fi
             echo "fetching $name"
             curl -fsSL --retry 3 --retry-delay 2 -o "inbox/$name" "$url"
             ls -l "inbox/$name"
-          done
+          done < /tmp/request.txt
           git add inbox
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
           git commit -m "media inbox: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           git push origin media-inbox
