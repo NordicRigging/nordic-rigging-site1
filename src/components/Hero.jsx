@@ -6,8 +6,16 @@ import { scrollToId } from '../lib/scroll.js';
 import './Hero.css';
 
 export const HERO_IMAGE = '/images/hero.webp';
-/** Set to null while no clip matches the photo; the still then carries the hero alone. */
-export const HERO_VIDEO = null; // { webm: '/video/hero.webm', mp4: '/video/hero.mp4' }
+/**
+ * Two encodes of the same clip (see scripts/process-video.mjs): `lg` at full
+ * width for screens where the clip covers the whole viewport, `sm` for phones.
+ * Set to null while no clip matches the photo; the still then carries the hero.
+ */
+export const HERO_VIDEO = {
+  lg: { webm: '/video/hero-lg.webm', mp4: '/video/hero-lg.mp4' },
+  sm: { webm: '/video/hero-sm.webm', mp4: '/video/hero-sm.mp4' }
+};
+const LG_MIN_WIDTH = 900;
 
 /**
  * How the full-bleed photo is framed: 'center' keeps the mast mid-frame,
@@ -44,8 +52,11 @@ export default function Hero() {
   const videoRef = useRef(null);
   const [useVideo, setUseVideo] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [size, setSize] = useState('sm');
 
   useEffect(() => {
+    // Picked once at mount; a resize across the breakpoint keeps the loaded clip.
+    setSize(window.innerWidth >= LG_MIN_WIDTH ? 'lg' : 'sm');
     setUseVideo(wantsVideo());
   }, []);
 
@@ -116,8 +127,9 @@ export default function Hero() {
             poster={HERO_IMAGE}
             aria-label={h.videoLabel}
           >
-            <source src={HERO_VIDEO.webm} type="video/webm" />
-            <source src={HERO_VIDEO.mp4} type="video/mp4" />
+            {/* mp4 first: at these settings H.264 comes out smaller than VP9 */}
+            <source src={HERO_VIDEO[size].mp4} type="video/mp4" />
+            <source src={HERO_VIDEO[size].webm} type="video/webm" />
           </video>
         )}
       </div>

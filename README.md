@@ -77,12 +77,16 @@ whole viewport at every size, with the copy on a gradient over it.
 
 `public/images/hero.webp` is the customer's `header.webp` cleaned with
 Higgsfield `gpt_image_2` (brand marks removed, sky deepened; job
-`1ade72a1-d359-4446-a9b1-982356dad7f1`). The Seedance 2.5 blueprint clip for
-this photo is generated with the prompt in `docs/hero-pipeline.md`; until it
-is in `public/video/`, `HERO_VIDEO` in `Hero.jsx` is `null` and the still
-carries the hero. To wire a clip in: download it to
-`public/video/raw/hero.mp4`, run `npm run video`, and set `HERO_VIDEO` back to
-the two files. The raw clip stays untracked.
+`1ade72a1-d359-4446-a9b1-982356dad7f1`). `public/video/hero-{lg,sm}.{mp4,webm}`
+is one Seedance 2.5 clip (job `b4075919-dcf2-4ce7-a7d8-457c2a6c6ef6`): static
+camera, the mast turns into an exploded blueprint and back, first and last
+frame pinned to the photo so it loops. `lg` (1248 px wide) is served from
+900 px up, `sm` (720 px) on phones. Prompts and settings are in
+`docs/hero-pipeline.md`.
+
+To regenerate: download the clip to `public/video/raw/hero.mp4` and run
+`npm run video`. The raw clip stays untracked. Setting `HERO_VIDEO` in
+`Hero.jsx` to `null` shows the still alone.
 
 The clip is skipped for `prefers-reduced-motion` and data-saver visitors; the
 still image shows instead.

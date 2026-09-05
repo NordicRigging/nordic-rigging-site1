@@ -65,10 +65,16 @@ with `declined_preset_id` set to the offered preset id.
 
 ## 4. Compress and wire in
 
+Result job: `b4075919-dcf2-4ce7-a7d8-457c2a6c6ef6` (HEVC 1248×1664, 6.04 s,
+2.5 MB).
+
 Download the clip to `public/video/raw/hero.mp4` and run `npm run video`
-(ffmpeg on PATH). It writes `public/video/hero.mp4` (H.264) and `hero.webm`
-(VP9) at 720×960 and prints the size reduction. Then point `HERO_VIDEO` in
-`src/components/Hero.jsx` back at the two files.
+(ffmpeg on PATH). It writes four files into `public/video/`: `hero-lg.mp4` /
+`hero-lg.webm` at the full 1248 px width for screens 900 px and wider, where
+the clip covers the whole viewport, and `hero-sm.mp4` / `hero-sm.webm` at
+720 px for phones, and prints the size reduction. `HERO_VIDEO` in
+`src/components/Hero.jsx` lists the four files and the component picks the
+size at mount.
 
 ## 5. Framing
 

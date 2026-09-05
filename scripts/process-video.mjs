@@ -6,15 +6,15 @@
  * `npm run video`. Needs ffmpeg on PATH (or FFMPEG_PATH=/path/to/ffmpeg).
  *
  * Outputs into public/video/ :
- *   hero.mp4         H.264 high, yuv420p, faststart, no audio (Safari + everything)
- *   hero.webm        VP9, no audio (smaller, Chrome/Firefox/Edge)
- * The poster is the hero image itself (public/images/hero.webp), which is
- * also the clip's first and last frame.
+ *   hero-lg.mp4 / hero-lg.webm   full source width (1248 px from Seedance 1080p 3:4),
+ *                                 served on screens 900 px and wider where the clip
+ *                                 covers the whole viewport
+ *   hero-sm.mp4 / hero-sm.webm   720 px wide, served on phones (2x devices covered)
+ * mp4 = H.264 high, yuv420p, faststart (Safari + everything); webm = VP9.
+ * No audio. The poster is public/images/hero.webp, the clip's first and last
+ * frame. Hero.jsx picks the size at mount.
  *
- * The clip loops behind the hero text, so it is scaled down to what the
- * layout actually shows (a 3:4 frame at most ~500 css px wide on desktop,
- * full-bleed on phones) — 720x960 covers 2x phones — and encoded with a
- * quality-first CRF. Expect roughly 90 % off the Seedance original.
+ * Quality-first CRFs; override with VIDEO_CRF_H264 / VIDEO_CRF_VP9.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, statSync } from 'node:fs';
@@ -25,9 +25,12 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const RAW = join(ROOT, 'public', 'video', 'raw', 'hero.mp4');
 const OUT = join(ROOT, 'public', 'video');
 const FFMPEG = process.env.FFMPEG_PATH || 'ffmpeg';
-const MAX_W = Number(process.env.VIDEO_MAX_W || 720);
 const CRF_H264 = process.env.VIDEO_CRF_H264 || '27';
 const CRF_VP9 = process.env.VIDEO_CRF_VP9 || '34';
+const SIZES = [
+  { name: 'lg', maxW: Number(process.env.VIDEO_LG_W || 1280) },
+  { name: 'sm', maxW: Number(process.env.VIDEO_SM_W || 720) }
+];
 
 function run(args) {
   const res = spawnSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', ...args], { encoding: 'utf8' });
@@ -42,27 +45,32 @@ if (!existsSync(RAW)) {
   process.exit(1);
 }
 mkdirSync(OUT, { recursive: true });
-
-const scale = `scale='min(${MAX_W},iw)':-2,setsar=1`;
 const inBytes = statSync(RAW).size;
 
-console.log('Encoding hero.mp4 (H.264)…');
-run([
-  '-i', RAW, '-map', '0:v:0', '-an',
-  '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-preset', 'slow', '-crf', CRF_H264,
-  '-vf', scale, '-g', '48', '-movflags', '+faststart',
-  join(OUT, 'hero.mp4')
-]);
+for (const { name, maxW } of SIZES) {
+  const scale = `scale='min(${maxW},iw)':-2,setsar=1`;
 
-console.log('Encoding hero.webm (VP9)…');
-run([
-  '-i', RAW, '-map', '0:v:0', '-an',
-  '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', CRF_VP9, '-deadline', 'good', '-cpu-used', '1', '-row-mt', '1',
-  '-pix_fmt', 'yuv420p', '-vf', scale, '-g', '48',
-  join(OUT, 'hero.webm')
-]);
+  console.log(`Encoding hero-${name}.mp4 (H.264, ≤${maxW} px wide)…`);
+  run([
+    '-i', RAW, '-map', '0:v:0', '-an',
+    '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-preset', 'slow', '-crf', CRF_H264,
+    '-vf', scale, '-g', '48', '-movflags', '+faststart',
+    join(OUT, `hero-${name}.mp4`)
+  ]);
 
-for (const f of ['hero.mp4', 'hero.webm']) {
-  const b = statSync(join(OUT, f)).size;
-  console.log(`  ${f}: ${mb(b)} (${(100 - (b / inBytes) * 100).toFixed(0)} % smaller than the ${mb(inBytes)} source)`);
+  console.log(`Encoding hero-${name}.webm (VP9)…`);
+  run([
+    '-i', RAW, '-map', '0:v:0', '-an',
+    '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', CRF_VP9, '-deadline', 'good', '-cpu-used', '1', '-row-mt', '1',
+    '-pix_fmt', 'yuv420p', '-vf', scale, '-g', '48',
+    join(OUT, `hero-${name}.webm`)
+  ]);
+}
+
+for (const { name } of SIZES) {
+  for (const ext of ['mp4', 'webm']) {
+    const f = `hero-${name}.${ext}`;
+    const b = statSync(join(OUT, f)).size;
+    console.log(`  ${f}: ${mb(b)} (${(100 - (b / inBytes) * 100).toFixed(0)} % smaller than the ${mb(inBytes)} source)`);
+  }
 }
