@@ -117,6 +117,6 @@ console.log(
   `\n${relative(ROOT, OUT)} — ${(size / 1024 / 1024).toFixed(2)} MB ` +
     `(${inlined} assets, ${(bytes / 1024 / 1024).toFixed(2)} MB of media, ${fonts} font files)`
 );
-if (!existsSync(join(PUBLIC, 'video', 'hero.mp4'))) {
-  console.log('Note: public/video/hero.mp4 is missing — run `npm run video` first.');
+if (!existsSync(join(PUBLIC, 'video', 'hero-lg.mp4'))) {
+  console.log('Note: public/video/hero-lg.mp4 is missing — run `npm run video` first if the hero should carry the clip.');
 }
