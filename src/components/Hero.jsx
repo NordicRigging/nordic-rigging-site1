@@ -15,7 +15,7 @@ export const HERO_VIDEO = null; // { webm: '/video/hero.webm', mp4: '/video/hero
  * for both lives in Hero.css. `?crop=offset` in the URL overrides it, which is
  * how the two were compared side by side.
  */
-export const HERO_CROP = 'center';
+export const HERO_CROP = 'offset';
 
 function heroCrop() {
   if (typeof window === 'undefined') return HERO_CROP;
