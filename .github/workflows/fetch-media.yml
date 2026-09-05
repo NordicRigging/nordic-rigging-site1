@@ -39,8 +39,11 @@ jobs:
             case "$name" in \#*) continue;; esac
             if [ -s "inbox/$name" ]; then echo "skip $name (present)"; continue; fi
             echo "fetching $name"
-            curl -fsSL --retry 3 --retry-delay 2 -o "inbox/$name" "$url"
-            ls -l "inbox/$name"
+            if curl -fsSL --retry 3 --retry-delay 2 -o "inbox/$name" "$url"; then
+              ls -l "inbox/$name"
+            else
+              echo "FAILED $name"; rm -f "inbox/$name"
+            fi
           done < /tmp/request.txt
           git add inbox
           if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
