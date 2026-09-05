@@ -1,40 +1,40 @@
 /* ————————————————————————————————————————————
-   Nordic Rigging v3 — design system
-   Large, high-contrast, mobile-first. Dark navy
-   hero and accents, light paper for reading.
+   Nordic Rigging v3 — design system, round 3
+   One family of dark blues from top to bottom. No orange, no white:
+   type is a cool off-white, the accent is the blueprint cyan-blue.
+   Sections have no hard edges; the page ground is one long gradient.
    ———————————————————————————————————————————— */
 
 :root {
-  /* colour */
-  --navy: #0b1a2e;
-  --navy-deep: #071122;
-  --navy-soft: #13294a;
-  --paper: #f5f7fa;
-  --paper-2: #e9eef4;
-  --white: #ffffff;
-  --ink: #0f1a28;
-  --ink-2: #33414f;
-  --muted: #5b6875;
-  --line: #d3dae3;
-  --line-dark: rgba(255, 255, 255, 0.16);
-  --accent: #ff5a1f;
-  --accent-deep: #e04a12;
-  --accent-text: #b83a0c;
-  --sea: #2f6fb3;
-  --sea-soft: #dbe8f7;
-  --ok: #157347;
+  /* the blues, deepest first */
+  --navy-900: #050d1a;
+  --navy-800: #071426;
+  --navy-700: #0a1c36;
+  --navy-600: #0f2547;
+  --navy-500: #16325c;
+  --navy-400: #1f4278;
+  --blue-300: #3d7bc4;
+  --accent: #4fa3ff; /* buttons, active states */
+  --accent-2: #8ed0ff; /* labels, highlights, the blueprint line colour */
 
-  /* type */
+  /* type on dark */
+  --text: #d6e4f7;
+  --text-2: #a9bfdc;
+  --muted: #7f97b8;
+  --line: rgba(141, 180, 230, 0.18);
+  --line-strong: rgba(141, 180, 230, 0.34);
+  --glass: rgba(22, 50, 92, 0.42);
+  --glass-2: rgba(10, 28, 54, 0.72);
+
   --font: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
-  /* rhythm */
   --radius: 14px;
   --radius-lg: 22px;
   --pad: clamp(1.15rem, 4vw, 3rem);
   --max: 76rem;
   --header-h: 72px;
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 *,
@@ -76,8 +76,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--navy-800);
+  color: var(--text);
   font-family: var(--font);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -109,6 +109,7 @@ h4 {
   letter-spacing: -0.015em;
   font-weight: 800;
   text-wrap: balance;
+  color: var(--text);
 }
 
 h1 {
@@ -125,11 +126,11 @@ h3 {
 
 ::selection {
   background: var(--accent);
-  color: var(--white);
+  color: var(--navy-900);
 }
 
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--accent-2);
   outline-offset: 3px;
 }
 
@@ -141,7 +142,7 @@ h3 {
   z-index: 100;
   padding: 0.7em 1em;
   background: var(--accent);
-  color: var(--white);
+  color: var(--navy-900);
   border-radius: 10px;
   font-weight: 700;
   text-decoration: none;
@@ -157,22 +158,26 @@ h3 {
 }
 
 .section {
+  position: relative;
   padding-block: clamp(3.5rem, 8vw, 6.5rem);
   scroll-margin-top: var(--header-h);
 }
 
-.section--dark {
-  background: var(--navy);
-  color: var(--white);
-}
-
-.section--deep {
-  background: var(--navy-deep);
-  color: var(--white);
-}
-
-.section--paper2 {
-  background: var(--paper-2);
+/*
+  Everything after the hero/services stage sits on one continuous gradient,
+  so section boundaries are never a colour step. Sections themselves are
+  transparent and add at most a soft radial glow.
+*/
+.after-stage {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    var(--navy-700) 0%,
+    var(--navy-600) 30%,
+    var(--navy-700) 62%,
+    var(--navy-800) 85%,
+    var(--navy-900) 100%
+  );
 }
 
 .eyebrow {
@@ -182,29 +187,14 @@ h3 {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent-text);
-}
-
-.section--dark .eyebrow,
-.section--deep .eyebrow {
-  color: #ff8a5c;
+  color: var(--accent-2);
 }
 
 .lede {
   font-size: clamp(1.1rem, 0.6vw + 1rem, 1.35rem);
-  color: var(--ink-2);
+  color: var(--text-2);
   max-width: 60ch;
   margin: 1rem 0 0;
-}
-
-.section--dark .lede,
-.section--deep .lede,
-.on-dark .lede {
-  color: #d5deea;
-}
-
-.on-dark .eyebrow {
-  color: #ff8a5c;
 }
 
 /* buttons: big tap targets for everyone */
@@ -215,10 +205,10 @@ h3 {
   gap: 0.6em;
   min-height: 3.4rem;
   padding: 0.8em 1.5em;
-  border-radius: 12px;
-  border: 2px solid var(--navy);
-  background: var(--navy);
-  color: var(--white);
+  border-radius: 999px;
+  border: 2px solid var(--line-strong);
+  background: var(--glass-2);
+  color: var(--text);
   font: inherit;
   font-size: 1.05rem;
   font-weight: 700;
@@ -228,44 +218,32 @@ h3 {
 }
 
 .btn:hover {
-  background: var(--navy-soft);
-  border-color: var(--navy-soft);
+  background: var(--navy-500);
+  border-color: var(--accent-2);
   transform: translateY(-1px);
 }
 
 .btn--accent {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--white);
+  color: var(--navy-900);
 }
 
 .btn--accent:hover {
-  background: var(--accent-deep);
-  border-color: var(--accent-deep);
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  color: var(--navy-900);
 }
 
 .btn--ghost {
   background: transparent;
-  color: var(--navy);
+  border-color: rgba(142, 208, 255, 0.55);
+  color: var(--text);
 }
 
 .btn--ghost:hover {
-  background: var(--sea-soft);
-  color: var(--navy);
-}
-
-.section--dark .btn--ghost,
-.section--deep .btn--ghost,
-.on-dark .btn--ghost {
-  border-color: rgba(255, 255, 255, 0.7);
-  color: var(--white);
-}
-
-.section--dark .btn--ghost:hover,
-.section--deep .btn--ghost:hover,
-.on-dark .btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: var(--white);
+  background: rgba(79, 163, 255, 0.14);
+  border-color: var(--accent-2);
 }
 
 .btn svg {
@@ -310,8 +288,18 @@ h3 {
   height: 1.5rem;
   margin-top: 0.1em;
   border-radius: 50%;
-  background: var(--accent) center / 62% no-repeat
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E");
+  background: var(--accent-2) center / 62% no-repeat
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23071426' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E");
+}
+
+/* glass card, shared by several sections */
+.card {
+  background: linear-gradient(180deg, var(--glass) 0%, var(--glass-2) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 24px 60px rgba(3, 9, 20, 0.45);
 }
 
 /* visually hidden */

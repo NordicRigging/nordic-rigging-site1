@@ -6,10 +6,10 @@
  * `npm run video`. Needs ffmpeg on PATH (or FFMPEG_PATH=/path/to/ffmpeg).
  *
  * Outputs into public/video/ :
- *   hero-lg.mp4 / hero-lg.webm   full source width (1248 px from Seedance 1080p 3:4),
+ *   hero-lg.mp4 / hero-lg.webm   full source width (1440 px after the 2K upscale),
  *                                 served on screens 900 px and wider where the clip
  *                                 covers the whole viewport
- *   hero-sm.mp4 / hero-sm.webm   720 px wide, served on phones (2x devices covered)
+ *   hero-sm.mp4 / hero-sm.webm   960 px wide, served on phones
  * mp4 = H.264 high, yuv420p, faststart (Safari + everything); webm = VP9.
  * No audio. The poster is public/images/hero.webp, the clip's first and last
  * frame. Hero.jsx picks the size at mount.
@@ -28,8 +28,8 @@ const FFMPEG = process.env.FFMPEG_PATH || 'ffmpeg';
 const CRF_H264 = process.env.VIDEO_CRF_H264 || '27';
 const CRF_VP9 = process.env.VIDEO_CRF_VP9 || '34';
 const SIZES = [
-  { name: 'lg', maxW: Number(process.env.VIDEO_LG_W || 1280) },
-  { name: 'sm', maxW: Number(process.env.VIDEO_SM_W || 720) }
+  { name: 'lg', maxW: Number(process.env.VIDEO_LG_W || 1440) },
+  { name: 'sm', maxW: Number(process.env.VIDEO_SM_W || 960) }
 ];
 
 function run(args) {

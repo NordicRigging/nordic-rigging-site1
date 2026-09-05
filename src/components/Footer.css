@@ -1,8 +1,17 @@
 .footer {
-  background: var(--paper-2);
-  border-top: 1px solid var(--line);
+  position: relative;
   padding: clamp(2.5rem, 6vw, 4rem) 0 1.5rem;
-  color: var(--ink);
+  color: var(--text);
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
 }
 
 .footer__grid {
@@ -16,11 +25,13 @@
   align-items: center;
 }
 
-.footer__brand img {
-  width: 96px;
-  height: 72px;
-  object-fit: contain;
+.footer__mark {
+  width: 84px;
+  height: 84px;
   flex: none;
+  background: var(--text);
+  -webkit-mask: url('/images/logo-light.png') center / contain no-repeat;
+  mask: url('/images/logo-light.png') center / contain no-repeat;
 }
 
 .footer__name {
@@ -30,7 +41,7 @@
 
 .footer__tagline {
   margin: 0.25rem 0 0;
-  color: var(--muted);
+  color: var(--text-2);
 }
 
 .footer__heading {
@@ -48,12 +59,17 @@
   display: grid;
   gap: 0.5rem;
   font-size: 1.02rem;
+  color: var(--text-2);
 }
 
 .footer__list a {
-  color: var(--navy);
+  color: var(--text);
   font-weight: 600;
   text-underline-offset: 3px;
+}
+
+.footer__list a:hover {
+  color: var(--accent-2);
 }
 
 .footer__base {

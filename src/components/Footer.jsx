@@ -29,7 +29,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="wrap footer__grid">
         <div className="footer__brand">
-          <img src="/images/logo.svg" alt="" width="120" height="90" loading="lazy" />
+          <span className="footer__mark" aria-hidden="true" />
           <div>
             <strong className="footer__name">{CONTACT.company}</strong>
             <p className="footer__tagline">{f.tagline}</p>

@@ -8,7 +8,7 @@ export default function RigSense() {
   const r = t.rigsense;
 
   return (
-    <section className="section section--deep rigsense" id="rig-sense" aria-labelledby="rigsense-title">
+    <section className="section rigsense" id="rig-sense" aria-labelledby="rigsense-title">
       <div className="wrap rigsense__grid">
         <figure className="rigsense__figure">
           <div className="rigsense__glow" aria-hidden="true" />

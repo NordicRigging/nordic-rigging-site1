@@ -11,8 +11,8 @@ import { useLang } from '../lib/LanguageContext.jsx';
  * viewport, so the rest of the page pays nothing for it. With reduced motion
  * the final frame is drawn straight away.
  */
-const START = [-38, 24]; // lon, lat the globe faces at first
-const END = [23.5, 61.2]; // Finland centred
+const START = [-38, 10]; // lon, lat the globe faces at first
+const END = [23.5, 43]; // Finland high in the frame: the sphere's lower part is cropped away
 const AREA_CENTER = [23.6, 60.3]; // Varsinais-Suomi + Uusimaa coast
 const AREA_RADIUS = 1.35; // degrees of arc
 const DURATION = 2600;
@@ -92,9 +92,9 @@ export default function Globe() {
         ctx.clearRect(0, 0, size, size);
 
         // ocean
-        const g = ctx.createRadialGradient(size * 0.36, size * 0.32, size * 0.04, size / 2, size / 2, size / 2);
-        g.addColorStop(0, '#22497c');
-        g.addColorStop(0.65, '#10294f');
+        const g = ctx.createRadialGradient(size * 0.36, size * 0.3, size * 0.04, size / 2, size / 2, size / 2);
+        g.addColorStop(0, '#24528c');
+        g.addColorStop(0.65, '#122c55');
         g.addColorStop(1, '#08152c');
         ctx.beginPath();
         path({ type: 'Sphere' });
@@ -133,9 +133,9 @@ export default function Globe() {
         if (a > 0) {
           ctx.beginPath();
           path(area);
-          ctx.fillStyle = `rgba(255, 90, 31, ${0.3 * a})`;
+          ctx.fillStyle = `rgba(142, 208, 255, ${0.28 * a})`;
           ctx.fill();
-          ctx.strokeStyle = `rgba(255, 150, 110, ${0.95 * a})`;
+          ctx.strokeStyle = `rgba(142, 208, 255, ${0.95 * a})`;
           ctx.lineWidth = 1.5;
           ctx.stroke();
         }

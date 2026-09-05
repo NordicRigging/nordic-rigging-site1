@@ -13,20 +13,26 @@ const WhatsAppIcon = () => (
   </svg>
 );
 
+/**
+ * Location and contact. The globe is the left column's backdrop: zoomed in
+ * on the Nordics and let run off the bottom edge of the section, so it reads
+ * as a horizon rather than a ball in a box. Details and the form sit beside
+ * it.
+ */
 export default function Location() {
   const { t } = useLang();
   const l = t.location;
 
   return (
-    <section className="section section--dark location" id="yhteystiedot" aria-labelledby="location-title">
-      <div className="wrap">
-        <div className="location__grid">
-          <div className="location__globe">
-            <Suspense fallback={<div className="globe globe--placeholder" aria-hidden="true" />}>
-              <Globe />
-            </Suspense>
-          </div>
+    <section className="section location" id="yhteystiedot" aria-labelledby="location-title">
+      <div className="wrap location__grid">
+        <div className="location__globe" aria-hidden="true">
+          <Suspense fallback={<div className="globe globe--placeholder" />}>
+            <Globe />
+          </Suspense>
+        </div>
 
+        <div className="location__main">
           <div className="location__info">
             <p className="eyebrow">{l.eyebrow}</p>
             <h2 id="location-title">{l.title}</h2>
@@ -78,9 +84,9 @@ export default function Location() {
               </div>
             </dl>
           </div>
-        </div>
 
-        <ContactForm />
+          <ContactForm />
+        </div>
       </div>
     </section>
   );

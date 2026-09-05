@@ -28,8 +28,8 @@ export default function ServicePage() {
   return (
     <>
       <Header />
-      <main id="sisalto">
-        <section className="svc-hero on-dark">
+      <main id="sisalto" className="svc-page">
+        <section className="svc-hero">
           <div className="wrap svc-hero__grid">
             <div className="svc-hero__copy">
               <Link className="svc-hero__back" to="/">

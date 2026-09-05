@@ -1,22 +1,27 @@
 .location {
   overflow: hidden;
+  padding-bottom: 0;
 }
 
 .location__grid {
   display: grid;
-  gap: 2.5rem;
-  align-items: center;
+  gap: 2rem;
+  align-items: start;
 }
 
+/* phones: the globe is a horizon band at the top, its lower half cut by its own box */
 .location__globe {
-  display: grid;
-  place-items: center;
+  position: relative;
+  height: 64vw;
+  max-height: 22rem;
+  overflow: hidden;
 }
 
-/* globe */
 .globe {
-  position: relative;
-  width: min(100%, 26rem);
+  position: absolute;
+  left: -22%;
+  top: 0;
+  width: 144%;
   aspect-ratio: 1;
 }
 
@@ -48,8 +53,8 @@
   height: 14px;
   border-radius: 50%;
   background: var(--accent);
-  border: 2px solid var(--white);
-  box-shadow: 0 0 0 2px rgba(255, 90, 31, 0.4);
+  border: 2px solid var(--text);
+  box-shadow: 0 0 0 2px rgba(79, 163, 255, 0.4);
 }
 
 .globe__dot--small {
@@ -57,7 +62,7 @@
   top: -5px;
   width: 10px;
   height: 10px;
-  background: #ffd3c2;
+  background: var(--accent-2);
   box-shadow: none;
 }
 
@@ -67,7 +72,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 138, 92, 0.9);
+  border: 2px solid rgba(142, 208, 255, 0.9);
   animation: globe-pulse 2.4s ease-out infinite;
 }
 
@@ -92,8 +97,8 @@
   top: -0.85em;
   padding: 0.15em 0.55em;
   border-radius: 8px;
-  background: var(--white);
-  color: var(--navy);
+  background: var(--text);
+  color: var(--navy-900);
   font-weight: 800;
   font-size: 1rem;
   white-space: nowrap;
@@ -103,10 +108,14 @@
 .globe__label--small {
   font-size: 0.8rem;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(214, 228, 247, 0.85);
   top: 0.35em;
   right: auto;
   left: 9px;
+}
+
+.location__main {
+  padding-bottom: clamp(3.5rem, 8vw, 6.5rem);
 }
 
 /* contact list */
@@ -120,7 +129,7 @@
   display: grid;
   gap: 0.2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--line-dark);
+  border-bottom: 1px solid var(--line);
 }
 
 .contact-list__row:last-child {
@@ -132,16 +141,17 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #a9b6c7;
+  color: var(--muted);
 }
 
 .contact-list dd {
   margin: 0;
   font-size: 1.1rem;
+  color: var(--text);
 }
 
 .contact-list dd a {
-  color: var(--white);
+  color: var(--text);
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
 }
@@ -154,7 +164,7 @@
 }
 
 .contact-list__big:hover {
-  color: #ff9a72 !important;
+  color: var(--accent-2) !important;
 }
 
 .contact-list__wa {
@@ -163,18 +173,42 @@
   font-size: 1rem;
 }
 
+/* desktop: the globe fills the left column and runs off the section's bottom edge */
 @media (min-width: 900px) {
   .location__grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 4rem;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 3rem;
+    align-items: stretch;
   }
+
+  .location__globe {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    min-height: 40rem;
+  }
+
+  /* wider than its column, but only ever spilling to the left, never under the text */
   .globe {
-    width: min(100%, 34rem);
+    position: sticky;
+    top: 22vh;
+    left: auto;
+    width: 150%;
+    margin-left: -54%;
+    transform: translateY(6%);
+    z-index: 0;
   }
+
+  .location__main {
+    position: relative;
+    z-index: 1;
+  }
+
   .contact-list {
     grid-template-columns: 1fr 1fr;
     column-gap: 2rem;
   }
+
   .contact-list__row--hero {
     grid-column: 1 / -1;
   }

@@ -1,124 +1,247 @@
+/* Service panels — the v2 accordion gallery look on the v3 palette.
+   The row sits over the held blueprint frame of the stage background. */
+
+.services {
+  padding-top: clamp(2.5rem, 6vw, 4.5rem);
+}
+
 .services__head {
   max-width: 62ch;
 }
 
-.services__list {
-  display: grid;
-  gap: clamp(2rem, 5vw, 4rem);
+.accordion-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   margin-top: clamp(2rem, 5vw, 3.5rem);
+  perspective: 1400px;
 }
 
-.service {
-  display: grid;
-  gap: 1.25rem;
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  scroll-margin-top: var(--header-h);
-}
-
-.service__media {
+.ag-panel {
   position: relative;
-  aspect-ratio: 4 / 3;
-  background: var(--navy);
+  container-type: inline-size;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--navy-800);
+  color: var(--text);
+  scroll-margin-top: var(--header-h);
+  box-shadow: 0 24px 60px rgba(3, 9, 20, 0.45);
+  transition: flex-grow 600ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 300ms ease;
 }
 
-.service__media img {
+.ag-panel:hover,
+.ag-panel:focus-within {
+  border-color: var(--line-strong);
+}
+
+/* photo */
+.ag-panel__frame {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  flex: none;
+}
+
+.ag-panel__media {
+  position: absolute;
+  inset: 0;
+}
+
+.ag-panel__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(90% 70% at 50% 12%, rgba(142, 208, 255, 0.08) 0%, transparent 60%),
+    repeating-linear-gradient(118deg, rgba(142, 208, 255, 0.05) 0 1px, transparent 1px 16px);
+  pointer-events: none;
+}
+
+.ag-panel__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  filter: grayscale(0.7) brightness(0.74) saturate(0.85);
+  transform: scale(1.02);
+  transition: filter 600ms ease, transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.service__num {
+.ag-panel:hover .ag-panel__media img,
+.ag-panel:focus-within .ag-panel__media img {
+  filter: grayscale(0) brightness(0.85) saturate(1);
+  transform: scale(1.06);
+}
+
+.ag-panel__overlay {
   position: absolute;
-  left: 1rem;
-  top: 1rem;
-  padding: 0.3em 0.7em;
-  border-radius: 10px;
-  background: var(--accent);
-  color: var(--white);
-  font-weight: 800;
-  font-size: 1.1rem;
-  letter-spacing: 0.04em;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(5, 13, 26, 0.1) 0%, transparent 34%, rgba(7, 20, 38, 0.55) 70%, var(--navy-800) 100%);
+  pointer-events: none;
 }
 
-.service__body {
-  padding: 0 clamp(1.15rem, 3vw, 2.25rem) clamp(1.5rem, 3vw, 2.25rem);
+/* copy */
+.ag-panel__body {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0 clamp(1.1rem, 2.4vw, 1.8rem) clamp(1.3rem, 2.4vw, 1.8rem);
+  margin-top: -2.5rem;
 }
 
-.service__title {
-  font-size: clamp(1.8rem, 2.5vw + 0.5rem, 2.5rem);
+.ag-panel__label {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.85rem;
 }
 
-.service__short {
-  font-size: 1.15rem;
-  color: var(--ink-2);
-  margin: 0.6rem 0 1.25rem;
+.ag-panel__bar {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 4px;
+  margin-bottom: 0.7rem;
+  border-radius: 2px;
+  background: var(--accent-2);
+  box-shadow: 0 0 18px rgba(142, 208, 255, 0.55);
 }
 
-.service__sub {
-  font-size: 0.9rem;
-  letter-spacing: 0.06em;
+.ag-panel__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ag-panel__text small {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 0.75rem;
+  color: var(--accent-2);
 }
 
-.service__outcome {
-  margin: 1.25rem 0 0;
-  padding: 0.9rem 1.1rem;
-  border-left: 5px solid var(--accent);
-  background: var(--paper);
+.ag-panel__title {
+  /* sized by the panel's own width so the longest name always fits on one line */
+  font-size: clamp(1.45rem, 8.6cqi, 2.4rem);
+  line-height: 1;
+  overflow-wrap: anywhere;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+}
+
+.ag-panel__short {
+  margin: 0;
+  font-size: 1.08rem;
+  color: var(--text-2);
+}
+
+.ag-panel__checks {
+  gap: 0.45rem;
+}
+
+.ag-panel__checks li {
+  font-size: 1rem;
+}
+
+.ag-panel__outcome {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-left: 4px solid var(--accent-2);
+  background: rgba(79, 163, 255, 0.1);
   border-radius: 0 12px 12px 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
+  color: var(--text);
 }
 
-.service__price {
-  margin: 1rem 0 0;
-  font-size: 1.05rem;
+.ag-panel__price {
+  margin: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 0.75rem;
+  gap: 0.3rem 0.7rem;
   align-items: baseline;
+  font-size: 1rem;
+  color: var(--text);
 }
 
-.service__price-label {
-  font-size: 0.85rem;
+.ag-panel__price span {
+  font-size: 0.8rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent-text);
+  color: var(--accent-2);
 }
 
-.service__actions {
+.ag-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
   align-items: center;
+  margin-top: 0.3rem;
 }
 
-.service__more {
+.ag-panel__actions .btn {
+  font-size: 0.98rem;
+  min-height: 3.1rem;
+  padding-inline: 1.2em;
+}
+
+.ag-panel__more {
   font-weight: 700;
-  color: var(--sea);
-  padding: 0.5em 0;
+  color: var(--accent-2);
+  padding: 0.4em 0;
+  text-underline-offset: 3px;
 }
 
+.ag-panel .crew {
+  margin-top: 0.4rem;
+  padding-top: 1rem;
+}
+
+/* desktop: one row, the hovered panel grows, the photo runs behind the copy */
 @media (min-width: 900px) {
-  .service {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 0;
+  .accordion-gallery {
+    flex-direction: row;
     align-items: stretch;
   }
 
-  .service__media {
-    aspect-ratio: auto;
-    min-height: 100%;
+  .ag-panel {
+    min-height: 40rem;
   }
 
-  .service--flip .service__media {
-    order: 2;
+  .ag-panel:hover,
+  .ag-panel:focus-within {
+    flex-grow: 1.3;
   }
 
-  .service__body {
-    padding: clamp(1.5rem, 3vw, 2.75rem);
+  .ag-panel__frame {
+    position: absolute;
+    inset: 0;
+    height: auto;
+  }
+
+  .ag-panel__overlay {
+    background: linear-gradient(180deg, rgba(5, 13, 26, 0.12) 0%, rgba(5, 13, 26, 0.05) 22%, rgba(7, 20, 38, 0.86) 48%, rgba(7, 20, 38, 0.97) 100%);
+  }
+
+  .ag-panel__body {
+    margin-top: auto;
+    padding-top: 12rem;
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+  .ag-panel__actions .btn {
+    flex: 1 1 100%;
   }
 }
 

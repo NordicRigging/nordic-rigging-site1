@@ -1,5 +1,5 @@
-/** Height of the sticky header, so a targeted section is not hidden under it. */
-export const NAV_OFFSET = 84;
+/** Height of the fixed pill bar plus its top padding, so a target clears it. */
+export const NAV_OFFSET = 88;
 
 const prefersReduced = () =>
   typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

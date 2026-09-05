@@ -25,12 +25,27 @@ deploy `dist/` from `npm run build`.
 Deploy note: routes like `/palvelut/mastotyot` need an SPA fallback to
 `index.html` on the host (Netlify `_redirects`, Vercel rewrites, etc.).
 
+## Look
+
+One family of dark blues from top to bottom (`src/styles/global.css`): no
+orange, no white. Type is a cool off-white, the accent is the blueprint
+cyan-blue, cards are translucent navy glass. Sections have no hard edges: the
+hero and the services share one sticky background (the stage), and everything
+after it sits on a single long gradient (`.after-stage`), so colour changes
+run through section boundaries instead of stopping at them.
+
+The top bar and the service panels keep the structure and styling of the v2
+build's PillNav and accordion gallery, recoloured, without GSAP: the hover
+sweep and the label swap on the pills and the growing panels are CSS
+transitions. Unlike v2, every panel shows its full content without a hover.
+
 ## Page structure
 
 | Section | Component | Anchor |
 | --- | --- | --- |
-| Hero: headline, call + message buttons, price / area / crew facts, blueprint clip | `Hero.jsx` | top |
-| Three services, each with what is included, result, price, buttons and the crew line | `Services.jsx` | `#palvelut` |
+| Stage: the sticky photo / clip behind the hero and the services | `Stage.jsx` | |
+| Hero: headline, call + message buttons, price / area / crew facts | `Hero.jsx` | top |
+| Three service panels, each with what is included, result, price, buttons and the crew line | `Services.jsx` | `#palvelut` |
 | Crew card (Tuomas and Lukas Eloranta) | `Team.jsx` | `#tekijat` |
 | Spinlock Rig-Sense Pro: why measured tension matters | `RigSense.jsx` | `#rig-sense` |
 | For boatyards and marinas (B2B) | `Partners.jsx` | `#telakoille` |
@@ -68,42 +83,50 @@ wording). Two delivery modes:
 Phone, email and WhatsApp are always shown next to the form, in the header and
 in the footer.
 
-## Hero image and clip
+## Hero image, clip and the scroll into the services
 
-The hero is full-bleed: the photo (and the clip, once wired in) covers the
-whole viewport at every size, with the copy on a gradient over it.
-`HERO_CROP` in `src/components/Hero.jsx` picks the framing, `center` or
-`offset`; `?crop=offset` in the URL previews the other one.
+The stage (`src/components/Stage.jsx`) is a sticky, full-viewport layer
+behind the hero and the services. While the hero is in view the clip loops.
+Scrolling darkens the layer, and once the reader is a third of the way
+through the hero the clip plays on to the fully exploded blueprint frame
+(`HOLD_AT`, 3.6 s) and pauses there, so the services panels sit on the
+exploded mast. Scrolling back up resumes the loop. Nothing is scrubbed: the
+clip only ever plays forward at its own speed and holds on one frame. With
+`prefers-reduced-motion` or data saver there is no clip; the still
+`hero-blueprint.webp` fades in with the scroll instead.
 
-`public/images/hero.webp` is the customer's `header.webp` cleaned with
-Higgsfield `gpt_image_2` (brand marks removed, sky deepened; job
-`1ade72a1-d359-4446-a9b1-982356dad7f1`). `public/video/hero-{lg,sm}.{mp4,webm}`
-is one Seedance 2.5 clip (job `b4075919-dcf2-4ce7-a7d8-457c2a6c6ef6`): static
-camera, the mast turns into an exploded blueprint and back, first and last
-frame pinned to the photo so it loops. `lg` (1248 px wide) is served from
-900 px up, `sm` (720 px) on phones. Prompts and settings are in
+`HERO_CROP` in `Stage.jsx` picks the framing, `center` or `offset`;
+`?crop=center` in the URL previews the other one.
+
+`public/images/hero.webp` (2000 px, with a 1200 px `srcset` variant for
+phones) is the customer's `header.webp` cleaned with Higgsfield `gpt_image_2`
+(brand marks removed, sky deepened) and upscaled to 4K.
+`public/video/hero-{lg,sm}.{mp4,webm}` is one Seedance 2.5 clip upscaled to
+1440×1920: static camera, the mast turns into an exploded blueprint and back,
+first and last frame pinned to the photo so it loops. `lg` (1440 px) is served
+from 900 px up, `sm` (960 px) on phones. Job ids, prompts and settings are in
 `docs/hero-pipeline.md`.
 
 To regenerate: download the clip to `public/video/raw/hero.mp4` and run
 `npm run video`. The raw clip stays untracked. Setting `HERO_VIDEO` in
-`Hero.jsx` to `null` shows the still alone.
-
-The clip is skipped for `prefers-reduced-motion` and data-saver visitors; the
-still image shows instead.
+`Stage.jsx` to `null` shows the stills alone.
 
 ## Globe
 
 `Globe.jsx` draws an orthographic canvas globe with `d3-geo` and the
 Natural Earth 110m countries from `world-atlas`, lazy-loaded when the contact
-section is near. It turns from the Atlantic to Finland, highlights Finland and
-the Varsinais-Suomi/Uusimaa coast, and pins Turku and Helsinki. Reduced motion
-draws the final frame directly.
+section is near. It turns from the Atlantic to the Nordics, highlights Finland
+and the Varsinais-Suomi/Uusimaa coast, and pins Turku and Helsinki. Reduced
+motion draws the final frame directly. It is drawn larger than its column and
+runs off the section's left and bottom edges (a horizon band on phones), with
+Finland kept high in the frame.
 
 ## Images
 
 | File | Used by |
 | --- | --- |
-| `hero.webp`, `og.jpg` | hero frame / poster, social share |
+| `hero.webp`, `hero-1200.webp`, `hero-blueprint.webp`, `og.jpg` | stage poster (two sizes), the held blueprint frame for no-clip visitors, social share |
+| `logo-light.png` | the mark, used as a CSS mask so it takes the text colour |
 | `mastotyot.webp`, `koysivarasto.webp`, `huolto.webp` | service blocks and pages |
 | `rig-sense.webp` | Rig-Sense section (transparent background) |
 | `telakka.webp` | B2B section |

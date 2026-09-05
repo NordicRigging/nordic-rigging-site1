@@ -1,9 +1,13 @@
 .cform {
-  margin-top: clamp(2.5rem, 6vw, 4.5rem);
-  padding: clamp(1.25rem, 4vw, 2.75rem);
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+  padding: clamp(1.25rem, 4vw, 2.5rem);
   border-radius: var(--radius-lg);
-  background: var(--white);
-  color: var(--ink);
+  background: linear-gradient(180deg, var(--glass) 0%, var(--glass-2) 100%);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 24px 60px rgba(3, 9, 20, 0.45);
+  color: var(--text);
   display: grid;
   gap: 1.5rem;
 }
@@ -14,7 +18,7 @@
 
 .cform__lede {
   margin: 0.5rem 0 0;
-  color: var(--ink-2);
+  color: var(--text-2);
   font-size: 1.05rem;
 }
 
@@ -30,6 +34,7 @@
   font-weight: 700;
   font-size: 1rem;
   margin-bottom: 0.45rem;
+  color: var(--text);
 }
 
 .cform__opt {
@@ -47,10 +52,10 @@
   display: grid;
   gap: 0.15rem;
   padding: 1rem 1.1rem 1rem 3.2rem;
-  border: 2px solid var(--line);
+  border: 2px solid var(--line-strong);
   border-radius: 14px;
   cursor: pointer;
-  background: var(--paper);
+  background: rgba(5, 13, 26, 0.45);
 }
 
 .who input {
@@ -66,17 +71,18 @@
 }
 
 .who.is-active {
-  border-color: var(--navy);
-  background: var(--sea-soft);
+  border-color: var(--accent);
+  background: rgba(79, 163, 255, 0.14);
 }
 
 .who__label {
   font-weight: 800;
   font-size: 1.1rem;
+  color: var(--text);
 }
 
 .who__hint {
-  color: var(--muted);
+  color: var(--text-2);
   font-size: 0.95rem;
 }
 
@@ -95,11 +101,16 @@
   font: inherit;
   font-size: 1.1rem;
   padding: 0.8em 0.9em;
-  border: 2px solid var(--line);
+  border: 2px solid var(--line-strong);
   border-radius: 12px;
-  background: var(--white);
-  color: var(--ink);
+  background: rgba(5, 13, 26, 0.55);
+  color: var(--text);
   min-height: 3.4rem;
+}
+
+.cform input::placeholder,
+.cform textarea::placeholder {
+  color: var(--muted);
 }
 
 .cform textarea {
@@ -110,8 +121,8 @@
 .cform input:focus,
 .cform textarea:focus {
   outline: none;
-  border-color: var(--navy);
-  box-shadow: 0 0 0 4px rgba(47, 111, 179, 0.2);
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 4px rgba(79, 163, 255, 0.25);
 }
 
 .chips {
@@ -126,11 +137,12 @@
   gap: 0.55rem;
   min-height: 3rem;
   padding: 0.5em 1em 0.5em 0.8em;
-  border: 2px solid var(--line);
+  border: 2px solid var(--line-strong);
   border-radius: 999px;
-  background: var(--paper);
+  background: rgba(5, 13, 26, 0.45);
   font-weight: 700;
   font-size: 1rem;
+  color: var(--text);
   cursor: pointer;
 }
 
@@ -143,9 +155,9 @@
 }
 
 .chip.is-on {
-  border-color: var(--navy);
-  background: var(--sea-soft);
-  color: var(--navy);
+  border-color: var(--accent);
+  background: rgba(79, 163, 255, 0.16);
+  color: var(--accent-2);
 }
 
 .cform__hp {
@@ -161,18 +173,21 @@
   padding: 0.9rem 1.1rem;
   border-radius: 12px;
   font-weight: 600;
+  color: var(--text);
 }
 
 .cform__msg--warn {
-  background: #fff1e8;
-  border: 2px solid #ffb28f;
-  color: #8a2c05;
+  background: rgba(79, 163, 255, 0.12);
+  border: 2px solid var(--accent);
 }
 
 .cform__msg--ok {
-  background: #e8f6ee;
-  border: 2px solid #9ad3b4;
-  color: #0f5132;
+  background: rgba(142, 208, 255, 0.12);
+  border: 2px solid var(--accent-2);
+}
+
+.cform__msg a {
+  color: var(--accent-2);
 }
 
 .cform__foot {
@@ -191,11 +206,12 @@
 .cform__or {
   margin: 0;
   font-size: 1.05rem;
+  color: var(--text-2);
 }
 
 .cform__or a {
   font-weight: 800;
-  color: var(--navy);
+  color: var(--text);
 }
 
 .cform__privacy {
@@ -207,7 +223,7 @@
 .cform--done .cform__ok {
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--ok);
+  color: var(--accent-2);
 }
 
 @media (min-width: 700px) {

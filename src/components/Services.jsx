@@ -26,51 +26,65 @@ export function AskButton({ slug, className = 'btn', children, onHome = true }) 
   );
 }
 
-export function ServiceBlock({ service, index, onHome = true }) {
+/**
+ * One service panel. The look is the v2 accordion gallery: tall photo
+ * panels in a row, a dark gradient rising from the bottom, an accent bar and
+ * a big title, and the row breathing as the pointer moves across it. Unlike
+ * v2 nothing waits for a hover: every panel shows what the service includes,
+ * the result, the price, the buttons and who does the work.
+ */
+export function ServicePanel({ service, index, onHome = true }) {
   const { lang, t } = useLang();
   const s = service[lang];
   const c = t.services;
-  const num = String(index + 1).padStart(2, '0');
 
   return (
-    <article className={`service${index % 2 ? ' service--flip' : ''}`} id={service.slug} aria-labelledby={`svc-${service.slug}`}>
-      <div className="service__media">
-        <img src={service.image} alt="" loading="lazy" decoding="async" width="1200" height="900" />
-        <span className="service__num" aria-hidden="true">
-          {num}
-        </span>
+    <article className="ag-panel" id={service.slug} aria-labelledby={`svc-${service.slug}`}>
+      <div className="ag-panel__frame" aria-hidden="true">
+        <div className="ag-panel__media">
+          <img src={service.image} alt="" loading="lazy" decoding="async" width="1200" height="900" />
+        </div>
+        <div className="ag-panel__overlay" />
       </div>
 
-      <div className="service__body">
-        <h3 className="service__title" id={`svc-${service.slug}`}>
-          {s.name}
-        </h3>
-        <p className="service__short">{s.short}</p>
+      <div className="ag-panel__body">
+        <div className="ag-panel__label">
+          <span className="ag-panel__bar" />
+          <div className="ag-panel__text">
+            <small>
+              0{index + 1} · {c.eyebrow}
+            </small>
+            <h3 className="ag-panel__title" id={`svc-${service.slug}`}>
+              {s.name}
+            </h3>
+          </div>
+        </div>
 
-        <h4 className="service__sub">{c.includesTitle}</h4>
-        <ul className="checks">
+        <p className="ag-panel__short">{s.short}</p>
+
+        <ul className="checks ag-panel__checks">
           {s.includes.map(item => (
             <li key={item}>{item}</li>
           ))}
         </ul>
 
-        <p className="service__outcome">
+        <p className="ag-panel__outcome">
           <strong>{c.outcomeTitle}:</strong> {s.outcome}
         </p>
 
-        <p className="service__price">
-          <span className="service__price-label">{c.pricingTitle}</span>
+        <p className="ag-panel__price">
+          <span>{c.pricingTitle}</span>
           {s.pricing}
         </p>
 
-        <div className="btn-row service__actions">
+        <div className="ag-panel__actions">
           <AskButton slug={service.slug} className="btn btn--accent" onHome={onHome}>
             {c.askCta}
           </AskButton>
           <a className="btn btn--ghost" href={CONTACT.phoneHref}>
             {c.callCta} {CONTACT.phoneDisplay}
           </a>
-          <Link className="service__more" to={`/palvelut/${service.slug}`}>
+          <Link className="ag-panel__more" to={`/palvelut/${service.slug}`}>
             {c.readMore} →
           </Link>
         </div>
@@ -94,9 +108,9 @@ export default function Services() {
           <p className="lede">{c.lede}</p>
         </div>
 
-        <div className="services__list">
+        <div className="accordion-gallery">
           {SERVICES.map((service, i) => (
-            <ServiceBlock key={service.slug} service={service} index={i} />
+            <ServicePanel key={service.slug} service={service} index={i} />
           ))}
         </div>
 

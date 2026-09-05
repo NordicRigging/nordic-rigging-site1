@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import Header from '../components/Header.jsx';
+import Stage from '../components/Stage.jsx';
 import Hero from '../components/Hero.jsx';
 import Services from '../components/Services.jsx';
 import RigSense from '../components/RigSense.jsx';
@@ -25,13 +26,17 @@ export default function Home() {
     <>
       <Header />
       <main id="sisalto">
-        <Hero />
-        <Services />
-        <RigSense />
-        <Partners />
-        <Location />
+        <Stage>
+          <Hero />
+          <Services />
+        </Stage>
+        <div className="after-stage">
+          <RigSense />
+          <Partners />
+          <Location />
+          <Footer />
+        </div>
       </main>
-      <Footer />
     </>
   );
 }

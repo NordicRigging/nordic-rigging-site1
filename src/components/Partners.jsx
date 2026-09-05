@@ -18,7 +18,7 @@ export default function Partners() {
   };
 
   return (
-    <section className="section section--paper2 partners" id="telakoille" aria-labelledby="partners-title">
+    <section className="section partners" id="telakoille" aria-labelledby="partners-title">
       <div className="wrap">
         <div className="partners__card">
           <div className="partners__copy">

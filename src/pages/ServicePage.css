@@ -1,7 +1,9 @@
+.svc-page {
+  background: linear-gradient(180deg, var(--navy-900) 0%, var(--navy-700) 22%, var(--navy-600) 55%, var(--navy-800) 85%, var(--navy-900) 100%);
+}
+
 .svc-hero {
-  background: var(--navy);
-  color: var(--white);
-  padding-block: clamp(2rem, 5vw, 4rem);
+  padding-block: clamp(6.5rem, 12vw, 9rem) clamp(2rem, 5vw, 4rem);
 }
 
 .svc-hero__grid {
@@ -14,13 +16,13 @@
   display: block;
   width: fit-content;
   margin-bottom: 1.25rem;
-  color: #cfd9e6;
+  color: var(--text-2);
   font-weight: 600;
   text-decoration: none;
 }
 
 .svc-hero__back:hover {
-  color: var(--white);
+  color: var(--accent-2);
   text-decoration: underline;
 }
 
@@ -29,7 +31,8 @@
   aspect-ratio: 4 / 3;
   object-fit: cover;
   border-radius: var(--radius-lg);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
 }
 
 .svc-body__grid {
@@ -47,7 +50,12 @@
 }
 
 .svc-body .service__outcome {
-  margin-bottom: 2.5rem;
+  margin: 0 0 2.5rem;
+  padding: 0.9rem 1.1rem;
+  border-left: 4px solid var(--accent-2);
+  background: rgba(79, 163, 255, 0.1);
+  border-radius: 0 12px 12px 0;
+  font-size: 1.05rem;
 }
 
 .steps {
@@ -71,8 +79,8 @@
   width: 2.6rem;
   height: 2.6rem;
   border-radius: 50%;
-  background: var(--navy);
-  color: var(--white);
+  background: var(--accent);
+  color: var(--navy-900);
   font-weight: 800;
   font-size: 1.15rem;
 }
@@ -84,14 +92,17 @@
 
 .step__text {
   margin: 0;
-  color: var(--ink-2);
+  color: var(--text-2);
 }
 
 .svc-card {
   padding: 1.5rem;
   border-radius: var(--radius-lg);
-  background: var(--white);
+  background: linear-gradient(180deg, var(--glass) 0%, var(--glass-2) 100%);
   border: 1px solid var(--line);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 24px 60px rgba(3, 9, 20, 0.45);
 }
 
 .svc-card__label {
@@ -100,7 +111,7 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent-text);
+  color: var(--accent-2);
 }
 
 .svc-card__price {
@@ -112,7 +123,7 @@
 }
 
 .svc-card__text {
-  color: var(--ink-2);
+  color: var(--text-2);
   margin: 0 0 1.25rem;
 }
 
@@ -125,7 +136,8 @@
   margin-top: 1.5rem;
   padding: 1.5rem;
   border-radius: var(--radius-lg);
-  background: var(--paper-2);
+  background: rgba(5, 13, 26, 0.45);
+  border: 1px solid var(--line);
 }
 
 .svc-others__h {
@@ -147,7 +159,7 @@
 }
 
 .svc-others a {
-  color: var(--navy);
+  color: var(--accent-2);
 }
 
 @media (min-width: 900px) {
