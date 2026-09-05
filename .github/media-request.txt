@@ -22,3 +22,5 @@ hero-gpt-v1.png https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3P
 hero-seedance-v1.mp4 https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3PEoaAA/hf_20260905_160248_c9f59f13-8f59-411b-8284-b3dd300dfc3c.mp4
 hero-header-clean-v1.png https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3PEoaAA/hf_20260905_165434_1ade72a1-d359-4446-a9b1-982356dad7f1.png
 hero-header-blueprint-v1.mp4 https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3PEoaAA/hf_20260905_173042_b4075919-dcf2-4ce7-a7d8-457c2a6c6ef6.mp4
+hero-header-clean-4k.png https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3PEoaAA/hf_20260905_182234_3fb4df99-63b1-4627-962e-e0e7f38c4e3a.png
+hero-header-blueprint-2k.mp4 https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3PEoaAA/hf_20260905_182237_58e27349-5e21-4c42-ac06-d28eea3c4cc2.mp4
