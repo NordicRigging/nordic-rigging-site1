@@ -16,6 +16,29 @@ npm run video      # re-encode public/video/raw/hero.mp4 → hero.mp4 + hero.web
 npm run preview:file   # one self-contained preview/nordic-rigging.html
 ```
 
+## Checking a change
+
+```bash
+npm run dev                    # in one terminal
+npm run verify                 # in another: 34 end-to-end checks, non-zero exit on failure
+npm run shot -- hero.png       # a screenshot of whatever is on screen
+```
+
+`verify` drives a real browser through the things that are easy to break and
+slow to test by hand: the FI/EN toggle and what it saves, the hero clip playing
+and then holding on the blueprint frame behind the services, the globe settling
+on Finland, the nav and the mobile menu scrolling to the right section, the
+contact form in both its modes (a pre-filled email and a JSON POST), the
+service pages and the old v2 URLs redirecting, plus horizontal overflow and
+console errors on a phone viewport. It needs a browser once:
+`npx playwright install chromium`, or set `CHROMIUM_PATH` to one you already
+have.
+
+`shot` takes a picture of the running site. `--target=full` for the whole page,
+`--to=#palvelut` to scroll a section under the nav first, `--size=390x844` for a
+phone, `--lang=en`, `--wait=6000` to let the clip and the globe settle, and
+`--still` to see the page the way a reduced-motion visitor does.
+
 `preview:file` inlines the whole site — code, styles, fonts, photos and the
 hero clip — into a single HTML file that opens from disk, over email or on a
 phone with no server. It routes on the hash (`#/palvelut/mastotyot`) because
