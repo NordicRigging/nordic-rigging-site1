@@ -1,38 +1,37 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-import PillNav from '../components/PillNav.jsx';
-import FilmSequence from '../components/FilmSequence.jsx';
+import Header from '../components/Header.jsx';
+import Hero from '../components/Hero.jsx';
 import Services from '../components/Services.jsx';
-import Spinlock from '../components/Spinlock.jsx';
-import Story from '../components/Story.jsx';
-import Contact from '../components/Contact.jsx';
-import Projects from '../components/Projects.jsx';
+import RigSense from '../components/RigSense.jsx';
+import Partners from '../components/Partners.jsx';
+import Location from '../components/Location.jsx';
 import Footer from '../components/Footer.jsx';
 import { scrollToId } from '../lib/scroll.js';
 
 export default function Home() {
-  const { state } = useLocation();
+  const { state, hash } = useLocation();
 
-  // Arriving from a service page via the nav: scroll to the requested section
-  // once this page has actually laid out.
+  // Arriving from a service page (state) or a deep link (hash): scroll once laid out.
   useEffect(() => {
-    const target = state?.scrollTo;
+    const target = state?.scrollTo || (hash ? hash.slice(1) : '');
     if (!target) return undefined;
     const raf = requestAnimationFrame(() => scrollToId(target));
     return () => cancelAnimationFrame(raf);
-  }, [state]);
+  }, [state, hash]);
 
   return (
-    <main>
-      <PillNav />
-      <FilmSequence />
-      <Services />
-      <Spinlock />
-      <Story />
-      <Contact />
-      <Projects />
+    <>
+      <Header />
+      <main id="sisalto">
+        <Hero />
+        <Services />
+        <RigSense />
+        <Partners />
+        <Location />
+      </main>
       <Footer />
-    </main>
+    </>
   );
 }

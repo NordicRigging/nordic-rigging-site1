@@ -1,0 +1,224 @@
+.cform {
+  margin-top: clamp(2.5rem, 6vw, 4.5rem);
+  padding: clamp(1.25rem, 4vw, 2.75rem);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  color: var(--ink);
+  display: grid;
+  gap: 1.5rem;
+}
+
+.cform__title {
+  font-size: clamp(1.6rem, 2vw + 0.6rem, 2.2rem);
+}
+
+.cform__lede {
+  margin: 0.5rem 0 0;
+  color: var(--ink-2);
+  font-size: 1.05rem;
+}
+
+.cform fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.cform__label {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.45rem;
+}
+
+.cform__opt {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.cform__who-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.who {
+  position: relative;
+  display: grid;
+  gap: 0.15rem;
+  padding: 1rem 1.1rem 1rem 3.2rem;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  background: var(--paper);
+}
+
+.who input {
+  position: absolute;
+  left: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.who.is-active {
+  border-color: var(--navy);
+  background: var(--sea-soft);
+}
+
+.who__label {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.who__hint {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.cform__grid {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.field {
+  display: grid;
+}
+
+.cform input:not([type='radio']):not([type='checkbox']),
+.cform textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 1.1rem;
+  padding: 0.8em 0.9em;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--ink);
+  min-height: 3.4rem;
+}
+
+.cform textarea {
+  resize: vertical;
+  min-height: 8rem;
+}
+
+.cform input:focus,
+.cform textarea:focus {
+  outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 4px rgba(47, 111, 179, 0.2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 3rem;
+  padding: 0.5em 1em 0.5em 0.8em;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.chip input {
+  width: 1.3rem;
+  height: 1.3rem;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.chip.is-on {
+  border-color: var(--navy);
+  background: var(--sea-soft);
+  color: var(--navy);
+}
+
+.cform__hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.cform__msg {
+  margin: 0;
+  padding: 0.9rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.cform__msg--warn {
+  background: #fff1e8;
+  border: 2px solid #ffb28f;
+  color: #8a2c05;
+}
+
+.cform__msg--ok {
+  background: #e8f6ee;
+  border: 2px solid #9ad3b4;
+  color: #0f5132;
+}
+
+.cform__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+}
+
+.cform__submit {
+  font-size: 1.15rem;
+  min-height: 3.6rem;
+  padding-inline: 2em;
+}
+
+.cform__or {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.cform__or a {
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.cform__privacy {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.cform--done .cform__ok {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ok);
+}
+
+@media (min-width: 700px) {
+  .cform__who-grid,
+  .cform__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .cform__submit {
+    width: 100%;
+  }
+}

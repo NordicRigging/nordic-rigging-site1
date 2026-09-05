@@ -6,54 +6,40 @@ const STORAGE_KEY = 'userLang';
 
 const LanguageContext = createContext(null);
 
-/**
- * Same language pattern as the previous build:
- *   - Finnish is the default
- *   - a saved choice in localStorage('userLang') always wins
- *   - a visitor whose browser is not Finnish, and who has never chosen, is
- *     offered the picker once
- * The persistent FI/EN toggle is new — the old site could only be switched on
- * that first-visit overlay.
- */
+/** Finnish unless the browser is set to something else; a saved choice always wins. */
+function initialLang() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && CONTENT[saved]) return saved;
+  } catch {
+    /* private mode */
+  }
+  const browser = typeof navigator !== 'undefined' ? (navigator.language || '').toLowerCase() : 'fi';
+  return browser.startsWith('fi') || browser === '' ? 'fi' : 'en';
+}
+
 export function LanguageProvider({ children }) {
-  const [lang, setLang] = useState('fi');
-  const [showPicker, setShowPicker] = useState(false);
-
-  useEffect(() => {
-    let saved = null;
-    try {
-      saved = localStorage.getItem(STORAGE_KEY);
-    } catch {
-      saved = null;
-    }
-    const browserLang = typeof navigator !== 'undefined' ? navigator.language || '' : '';
-
-    if (saved && CONTENT[saved]) {
-      setLang(saved);
-    } else if (!browserLang.toLowerCase().startsWith('fi')) {
-      setShowPicker(true);
-    }
-  }, []);
+  const [lang, setLang] = useState(initialLang);
 
   const changeLanguage = useCallback(next => {
     if (!CONTENT[next]) return;
     setLang(next);
-    setShowPicker(false);
     try {
       localStorage.setItem(STORAGE_KEY, next);
     } catch {
-      /* private mode — the choice simply won't persist */
+      /* the choice simply will not persist */
     }
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = CONTENT[lang].htmlLang;
+    const t = CONTENT[lang];
+    document.documentElement.lang = t.htmlLang;
+    document.title = t.meta.title;
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', t.meta.description);
   }, [lang]);
 
-  const value = useMemo(
-    () => ({ lang, t: CONTENT[lang], changeLanguage, showPicker, dismissPicker: () => setShowPicker(false) }),
-    [lang, changeLanguage, showPicker]
-  );
+  const value = useMemo(() => ({ lang, t: CONTENT[lang], changeLanguage }), [lang, changeLanguage]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

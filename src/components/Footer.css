@@ -1,37 +1,44 @@
 .footer {
+  background: var(--paper-2);
   border-top: 1px solid var(--line);
-  padding: var(--space-4) var(--page-pad) var(--space-3);
-  background: var(--abyss);
+  padding: clamp(2.5rem, 6vw, 4rem) 0 1.5rem;
+  color: var(--ink);
 }
 
 .footer__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
-  gap: var(--space-4) var(--space-3);
-  max-width: 90rem;
-  margin: 0 auto;
+  gap: 2rem;
+}
+
+.footer__brand {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.footer__brand img {
+  width: 96px;
+  height: 72px;
+  object-fit: contain;
+  flex: none;
 }
 
 .footer__name {
-  font-size: clamp(1.3rem, 2.4vw, 1.9rem);
-  color: var(--fog);
-  margin: 0;
+  display: block;
+  font-size: 1.1rem;
 }
 
 .footer__tagline {
-  margin: 0.5rem 0 0;
-  color: var(--cloud);
-  max-width: 28ch;
+  margin: 0.25rem 0 0;
+  color: var(--muted);
 }
 
 .footer__heading {
-  margin: 0 0 var(--space-2);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 400;
-  letter-spacing: 0.28em;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--muted);
+  margin-bottom: 0.75rem;
 }
 
 .footer__list {
@@ -40,47 +47,30 @@
   padding: 0;
   display: grid;
   gap: 0.5rem;
-  color: var(--cloud);
-  font-size: 0.92rem;
+  font-size: 1.02rem;
 }
 
 .footer__list a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 160ms ease;
-}
-
-.footer__list a:hover {
-  color: var(--accent);
+  color: var(--navy);
+  font-weight: 600;
+  text-underline-offset: 3px;
 }
 
 .footer__base {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 2rem;
-  max-width: 90rem;
-  margin: var(--space-4) auto 0;
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--line);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--slate);
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.95rem;
+  color: var(--muted);
 }
 
-@media (max-width: 860px) {
+@media (min-width: 900px) {
   .footer__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .footer__brand {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 480px) {
-  .footer__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
   }
 }

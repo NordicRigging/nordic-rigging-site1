@@ -1,0 +1,181 @@
+.location {
+  overflow: hidden;
+}
+
+.location__grid {
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.location__globe {
+  display: grid;
+  place-items: center;
+}
+
+/* globe */
+.globe {
+  position: relative;
+  width: min(100%, 26rem);
+  aspect-ratio: 1;
+}
+
+.globe--placeholder {
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 32%, #22497c, #10294f 65%, #08152c);
+}
+
+.globe canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.globe__pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.globe__dot {
+  position: absolute;
+  left: -7px;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--white);
+  box-shadow: 0 0 0 2px rgba(255, 90, 31, 0.4);
+}
+
+.globe__dot--small {
+  left: -5px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  background: #ffd3c2;
+  box-shadow: none;
+}
+
+.globe.is-settled .globe__pin--turku .globe__dot::before,
+.globe.is-settled .globe__pin--turku .globe__dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 138, 92, 0.9);
+  animation: globe-pulse 2.4s ease-out infinite;
+}
+
+.globe.is-settled .globe__pin--turku .globe__dot::after {
+  animation-delay: 1.2s;
+}
+
+@keyframes globe-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+.globe__label {
+  position: absolute;
+  right: 14px;
+  top: -0.85em;
+  padding: 0.15em 0.55em;
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--navy);
+  font-weight: 800;
+  font-size: 1rem;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.globe__label--small {
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.85);
+  top: 0.35em;
+  right: auto;
+  left: 9px;
+}
+
+/* contact list */
+.contact-list {
+  margin: 1.75rem 0 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-list__row {
+  display: grid;
+  gap: 0.2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line-dark);
+}
+
+.contact-list__row:last-child {
+  border-bottom: 0;
+}
+
+.contact-list dt {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a9b6c7;
+}
+
+.contact-list dd {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.contact-list dd a {
+  color: var(--white);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.contact-list__big {
+  font-size: clamp(1.6rem, 2.5vw + 0.5rem, 2.3rem);
+  font-weight: 800;
+  text-decoration: none !important;
+  letter-spacing: -0.01em;
+}
+
+.contact-list__big:hover {
+  color: #ff9a72 !important;
+}
+
+.contact-list__wa {
+  text-decoration: none !important;
+  min-height: 3rem;
+  font-size: 1rem;
+}
+
+@media (min-width: 900px) {
+  .location__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 4rem;
+  }
+  .globe {
+    width: min(100%, 34rem);
+  }
+  .contact-list {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2rem;
+  }
+  .contact-list__row--hero {
+    grid-column: 1 / -1;
+  }
+}

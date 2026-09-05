@@ -1,0 +1,120 @@
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--white);
+  font-weight: 800;
+  overflow: hidden;
+  flex: none;
+  border: 3px solid var(--white);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar--sm {
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 0.85rem;
+}
+
+.avatar--lg {
+  width: 5rem;
+  height: 5rem;
+  font-size: 1.4rem;
+}
+
+.crew {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.25rem;
+  padding-top: 1.25rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.crew__label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.crew__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.25rem;
+}
+
+.crew__person {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  line-height: 1.2;
+}
+
+.crew__person strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.crew__role {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.team {
+  display: grid;
+  gap: 2rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  border: 1px solid var(--line);
+}
+
+.team__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.team__person {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.team__name {
+  font-size: 1.2rem;
+}
+
+.team__role {
+  color: var(--accent-text);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.team__line {
+  margin: 0.35rem 0 0;
+  color: var(--ink-2);
+}
+
+@media (min-width: 900px) {
+  .team {
+    grid-template-columns: 1.1fr 1fr;
+    align-items: center;
+  }
+}

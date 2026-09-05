@@ -1,171 +1,107 @@
-# Nordic Rigging — landing page
+# Nordic Rigging — website v3
 
-Scroll-scrubbed landing page for Nordic Rigging: one continuous 32-second camera
-climb from the deck into cloud, an invisible handoff into orbital footage over
-the Finnish coast, then services, Spinlock Rig-Sense Pro, and contact.
+Bilingual (FI/EN) one-page site plus three service pages for Nordic Rigging
+Company Oy. Built as a tool, not an experience: services, price and contact
+details are visible without clicks, type is large and high-contrast, and the
+page scrolls statically from section to section.
 
 ## Develop
 
 ```bash
 npm install
-npm run dev        # localhost:5173
+npm run dev        # http://localhost:5173
 npm run build      # production build in dist/
+npm run preview    # serve dist/
+npm run video      # re-encode public/video/raw/hero.mp4 → hero.mp4 + hero.webm
 ```
 
-Deploy note: routes like `/services/mast-work` need an SPA fallback to
-`index.html` on the host.
+Deploy note: routes like `/palvelut/mastotyot` need an SPA fallback to
+`index.html` on the host (Netlify `_redirects`, Vercel rewrites, etc.).
 
-## Video assets
+## Page structure
 
-The five source clips are Higgsfield generations (IDs → filenames):
+| Section | Component | Anchor |
+| --- | --- | --- |
+| Hero: headline, call + message buttons, price / area / crew facts, blueprint clip | `Hero.jsx` | top |
+| Three services, each with what is included, result, price, buttons and the crew line | `Services.jsx` | `#palvelut` |
+| Crew card (Tuomas and Lukas Eloranta) | `Team.jsx` | `#tekijat` |
+| Spinlock Rig-Sense Pro: why measured tension matters | `RigSense.jsx` | `#rig-sense` |
+| For boatyards and marinas (B2B) | `Partners.jsx` | `#telakoille` |
+| Globe + contact details + the one contact form | `Location.jsx`, `Globe.jsx`, `ContactForm.jsx` | `#yhteystiedot` |
+| Footer | `Footer.jsx` | |
 
-| Generation | File |
-| --- | --- |
-| `c4104572-a8c0-4124-a163-569a77d81b22` | `climb-1.mp4` |
-| `4315b9c6-6f29-46c1-a851-64bcc5cb4a3c` | `climb-2.mp4` |
-| `eecfb6ce-f9ab-4cb1-b3ab-a748394c38d9` | `climb-3.mp4` |
-| `9c9b186c-76db-42a2-bb98-b4e2ad4d0ae9` | `climb-4.mp4` |
-| `ea0fffb4-9355-4d4a-a9a5-12ca188f954d` | `orbit.mp4` |
+Service pages live at `/palvelut/mastotyot`, `/palvelut/koysivarasto` and
+`/palvelut/huolto` (the v2 `/services/...` URLs redirect there).
 
-Download them into `public/video/raw/` with those names, then:
+## Content and languages
 
-```bash
-npm run video      # needs ffmpeg on PATH (or FFMPEG_PATH=/path/to/ffmpeg)
-```
+All copy and company facts live in `src/lib/content.js`:
 
-The pipeline concatenates the four climb clips **in a single encode pass** (so
-they scrub as one unbroken stream), re-encodes everything scrub-friendly
-(H.264, 8-bit yuv420p, keyframe every 12 frames, faststart, < 3 MB each),
-extracts first-frame posters, and writes `public/video/manifest.json` — the
-runtime metadata the page uses to map scroll to time before any video loads.
-Commit the processed outputs in `public/video/` (raw files stay untracked).
+- `CONTACT` — company name, business ID, address, phone, email, WhatsApp, yard.
+- `TEAM` — the two riggers. Drop portrait photos at
+  `public/images/team/tuomas.webp` and `public/images/team/lukas.webp` and set
+  the `photo` paths there; until then the site shows initials.
+- `SERVICES` — the three service lines (FI + EN).
+- `CONTENT.fi` / `CONTENT.en` — every other visible string.
+
+Finnish is the default; a browser set to another language gets English; the
+FI/EN toggle in the header and footer saves the choice in `localStorage`.
+
+## Contact form
+
+One form for both private owners and yards ("Kuka olet?" switches the
+wording). Two delivery modes:
+
+- **With `VITE_FORM_ENDPOINT`** (see `.env.example`, e.g. a Formspree URL) the
+  form posts JSON (`who, name, phone, email, boat, needs, message, lang, text,
+  _subject`) and shows a thank-you.
+- **Without it** the form opens the visitor's email app with the whole message
+  pre-filled (`mailto:` to sales@nordicrigging.fi). Nothing to host.
+
+Phone, email and WhatsApp are always shown next to the form, in the header and
+in the footer.
+
+## Hero image and clip
+
+`public/images/hero.webp` is the reference photo re-lit to blue hour with
+Higgsfield `gpt_image_2` (job `fe020c01-47c1-400a-beaf-f89cca4c0d77`).
+`public/video/hero.{mp4,webm}` is one Seedance 2.5 clip (job
+`c9f59f13-8f59-411b-8284-b3dd300dfc3c`): static camera, the mast turns into an
+exploded blueprint and back, start and end frame pinned to the hero image so it
+loops. The prompts are in `docs/hero-pipeline.md`.
+
+To swap the photo: replace `public/images/hero.webp` (3:4), regenerate the clip
+with the same prompt, download it to `public/video/raw/hero.mp4` and run
+`npm run video`. The raw clip stays untracked.
+
+The clip is skipped for `prefers-reduced-motion` and data-saver visitors; the
+still image shows instead.
+
+## Globe
+
+`Globe.jsx` draws an orthographic canvas globe with `d3-geo` and the
+Natural Earth 110m countries from `world-atlas`, lazy-loaded when the contact
+section is near. It turns from the Atlantic to Finland, highlights Finland and
+the Varsinais-Suomi/Uusimaa coast, and pins Turku and Helsinki. Reduced motion
+draws the final frame directly.
 
 ## Images
 
-All of these live in `public/images/`:
-
 | File | Used by |
 | --- | --- |
-| `mast-work.webp`, `rope-stock.webp`, `maintenance.webp` | accordion panels (cover-fit, wide crops to tall) |
-| `mast-work-hero.webp`, `rope-stock-hero.webp`, `maintenance-hero.webp` | full-bleed hero on each service page |
-| `spinlock-rig-sense.png` | the floating gauge in the Spinlock section |
-| `logo.svg` | the top navigation bar and the Turku card on the territory map |
+| `hero.webp`, `og.jpg` | hero frame / poster, social share |
+| `mastotyot.webp`, `koysivarasto.webp`, `huolto.webp` | service blocks and pages |
+| `rig-sense.webp` | Rig-Sense section (transparent background) |
+| `telakka.webp` | B2B section |
+| `logo.svg`, `favicon.svg` | header, footer, browser tab |
 
-Paths are declared in `src/lib/content.js`. If a file is missing the section
-degrades to a designed solid colour rather than breaking.
+The original photos the site images were cut from (and the Spinlock PNG with
+transparency) are kept in `assets/source/`, outside `public/`, so they are
+versioned but not deployed.
 
-## Open items from the port
+## Media relay (dev only)
 
-- **Spinlock "Watch video".** The old site had CSS for a "Katso video" link but
-  no markup and no URL anywhere in its source. Set `WATCH_VIDEO_URL` in
-  `src/components/Spinlock.jsx` and the button renders automatically.
-- **Newsletter strings.** `footerJoin` / `footerNews` / `footerJoinBtn` existed
-  in the old translations but were never rendered, and there was no signup
-  backend — not carried over. Say the word and it goes in.
-
-## Content & languages
-
-All copy lives in `src/lib/content.js`, ported from the previous build
-(`translations.js` + `App.jsx`) — nothing is hard-coded in components:
-
-- `CONTACT` — company name, business ID, email, phone, WhatsApp, address.
-  Single-sourced, so the contact section, service pages and footer cannot drift.
-- `CONTENT.fi` / `CONTENT.en` — every visible string in both languages.
-- `SERVICES` — the three service lines with per-language tag, title, lead,
-  process steps and pricing checks. Add a language by extending both objects.
-
-Language handling (`src/lib/LanguageContext.jsx`) follows the old pattern:
-Finnish default, a saved choice in `localStorage.userLang` wins, and a visitor
-whose browser is not Finnish gets the picker once. The persistent FI/EN toggle
-is new — the old site could only be switched on that overlay — and it lives in
-the top navigation bar.
-
-## Tuning the film sequence
-
-**Everything you may want to nudge lives in `src/lib/filmConfig.js`** — nothing
-else needs editing.
-
-- `SEQ.CLIMB_END` / `SEQ.ORBIT_START` — the cloud crossfade window
-- `SEQ.VEIL_MAX` — strength of the near-white veil that guarantees a seamless
-  handoff
-- `SEQ.ORBIT.CLOUD_CLEAR_SECONDS` — **the key one.** The moment in `orbit.mp4`
-  at which the cloud has mostly cleared. The clip scrubs to this mark and then
-  stops for good, and the leftward drift is driven by the playhead's progress
-  toward it, so movement begins as the footage emerges from cloud and ends
-  exactly when the cloud clears. While it is `null`, `CLOUD_CLEAR_FRACTION`
-  (0.6 of the clip) is used instead.
-- `SEQ.ORBIT.SETTLE_AT` / `DRIFT_VW` — where in the scroll the stop happens,
-  and how far the footage travels left before it does. The drift is held at
-  zero until the crossfade finishes, so the climb and orbit layers are
-  identically sized and positioned through the seam.
-- `SEQ.ORBIT.COVER_MARGIN` — safety on top of the crop scale. Both film layers
-  are enlarged by `1 + 2 * DRIFT_VW / 100 + COVER_MARGIN`, derived from the
-  drift, so no drift position can expose page background at an edge. Change
-  `DRIFT_VW` and the crop follows automatically.
-- `TERRITORY_MARKS` — **Turku/Helsinki marker positions**, in percent of the
-  *stopped* frame. Scroll until the footage stops, then adjust x/y here.
-- `TERRITORY_REGIONS` — the VARSINAIS-SUOMI / UUSIMAA labels. These belong on
-  land, i.e. inland (north) of the two coastal cities.
-- `TERRITORY_GLOW` — the soft radial weight over Turku, falling away eastward.
-- `TERRITORY_RADAR` — ring count, loop duration and travel.
-- `SEQ.TERRITORY.*` — when each overlay appears. All values must stay **after**
-  `SEQ.ORBIT.SETTLE_AT`: overlays are only allowed over a stopped frame.
-
-## Tuning the Spinlock gauge
-
-Also in `src/lib/filmConfig.js`, as `SPINLOCK_GAUGE`:
-
-| Constant | What it does |
-| --- | --- |
-| `SPINLOCK_GAUGE.SCALE` | gauge height as a multiple of its frame's height; >1 is what clips the top and bottom |
-| `SPINLOCK_GAUGE.OFFSET_X` | nudge left/right, as a % of the frame (+ moves right) |
-| `SPINLOCK_GAUGE.OFFSET_Y` | nudge up/down, as a % of the frame (+ moves down) |
-| `SPINLOCK_GAUGE.BLEED_RIGHT` | how far the frame bleeds past the section's right edge, in rem |
-| `SPINLOCK_GAUGE.BLEED_Y` | how far it bleeds past the top and bottom edges, in rem |
-| `SPINLOCK_GAUGE.PARALLAX` | vertical float as the section passes, in % of gauge height |
-
-## Navigation & smooth scrolling
-
-`src/components/PillNav.jsx` is the fixed top bar (logo, three links, FI/EN
-toggle, mobile hamburger + popover). Labels come from `CONTENT[lang].nav`.
-
-**Lenis is not currently installed in this build.** The nav is written to
-cooperate with it rather than fight it: every link calls `preventDefault` and
-routes through `src/lib/scroll.js`, which hands the scroll to `window.lenis`
-when one exists and falls back to native smooth scrolling when it does not. To
-wire Lenis up, assign the instance once at creation and the nav picks it up
-with no further changes:
-
-```js
-const lenis = new Lenis();
-window.lenis = lenis;
-```
-
-`NAV_OFFSET` in that file (and `scroll-margin-top` on `.section`) keeps a
-targeted section clear of the fixed bar.
-
-Note the film sequence reads `window.scrollY` each frame, so Lenis must drive
-native scroll position (its default) rather than transforming a wrapper
-element, or the scrubbing will not track.
-
-All three links now have destinations. **Projects** points at the placeholder
-`#projects` section (`src/components/Projects.jsx`), which sits last on the
-page — deliberately sparse, a heading and one line, with enough vertical space
-to read as a section awaiting content rather than a gap. Its copy lives in
-`CONTENT[lang].projects`.
-
-Note that because it is the last section, the document can run out of scroll
-before it reaches the nav offset; it then lands clamped at the page end, fully
-in view. That is expected, not a mis-scroll.
-
-## Performance architecture
-
-- **Poster-first paint** — posters render immediately; video layers fade up
-  only once they have decodable frames.
-- **One eager asset** — only `climb.mp4` loads eagerly; `orbit.mp4` starts
-  loading as its half of the sequence approaches (IntersectionObserver plus a
-  scroll-progress trigger). Below-the-fold images are `loading="lazy"`.
-- **Draw coalescing** — scroll collapses into at most one in-flight seek per
-  video (retargeted on `seeked`), and unchanged progress costs nothing.
-- **Runtime metadata** — `manifest.json` supplies durations/dimensions up
-  front, corrected by `loadedmetadata` when the real media arrives.
+`.github/workflows/fetch-media.yml` downloads the URLs listed in
+`.github/media-request.txt` into the orphan `media-inbox` branch. It exists
+because the build environment used for v3 could not reach Higgsfield's CDN
+directly. It never touches the site branches and can be deleted.
