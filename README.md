@@ -13,7 +13,14 @@ npm run dev        # http://localhost:5173
 npm run build      # production build in dist/
 npm run preview    # serve dist/
 npm run video      # re-encode public/video/raw/hero.mp4 → hero.mp4 + hero.webm
+npm run preview:file   # one self-contained preview/nordic-rigging.html
 ```
+
+`preview:file` inlines the whole site — code, styles, fonts, photos and the
+hero clip — into a single HTML file that opens from disk, over email or on a
+phone with no server. It routes on the hash (`#/palvelut/mastotyot`) because
+there is no server to fall back to `index.html`. It is a snapshot for review;
+deploy `dist/` from `npm run build`.
 
 Deploy note: routes like `/palvelut/mastotyot` need an SPA fallback to
 `index.html` on the host (Netlify `_redirects`, Vercel rewrites, etc.).

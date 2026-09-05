@@ -6,3 +6,6 @@ dist
 # Raw video drops are processed into public/video/ by `npm run video`.
 # The processed outputs ARE committed; the raw sources are not.
 public/video/raw/*.mp4
+
+dist-preview
+preview

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 
 import '@fontsource-variable/inter';
 import './styles/global.css';
@@ -19,6 +19,12 @@ function ScrollToTop() {
   return null;
 }
 
+/**
+ * Real hosting uses clean paths. The single-file preview build has no server
+ * to fall back to index.html, so it routes on the hash instead.
+ */
+const Router = import.meta.env.VITE_HASH_ROUTER === '1' ? HashRouter : BrowserRouter;
+
 /** Old v2 URLs keep working. */
 const LEGACY = { 'mast-work': 'mastotyot', 'rope-stock': 'koysivarasto', maintenance: 'huolto' };
 function LegacyService() {
@@ -30,7 +36,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <LanguageProvider>
       <PrefillProvider>
-        <BrowserRouter>
+        <Router>
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Home />} />
@@ -38,7 +44,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/services/:slug" element={<LegacyService />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </BrowserRouter>
+        </Router>
       </PrefillProvider>
     </LanguageProvider>
   </React.StrictMode>
