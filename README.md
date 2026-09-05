@@ -70,16 +70,19 @@ in the footer.
 
 ## Hero image and clip
 
-`public/images/hero.webp` is the reference photo re-lit to blue hour with
-Higgsfield `gpt_image_2` (job `fe020c01-47c1-400a-beaf-f89cca4c0d77`).
-`public/video/hero.{mp4,webm}` is one Seedance 2.5 clip (job
-`c9f59f13-8f59-411b-8284-b3dd300dfc3c`): static camera, the mast turns into an
-exploded blueprint and back, start and end frame pinned to the hero image so it
-loops. The prompts are in `docs/hero-pipeline.md`.
+The hero is full-bleed: the photo (and the clip, once wired in) covers the
+whole viewport at every size, with the copy on a gradient over it.
+`HERO_CROP` in `src/components/Hero.jsx` picks the framing, `center` or
+`offset`; `?crop=offset` in the URL previews the other one.
 
-To swap the photo: replace `public/images/hero.webp` (3:4), regenerate the clip
-with the same prompt, download it to `public/video/raw/hero.mp4` and run
-`npm run video`. The raw clip stays untracked.
+`public/images/hero.webp` is the customer's `header.webp` cleaned with
+Higgsfield `gpt_image_2` (brand marks removed, sky deepened; job
+`1ade72a1-d359-4446-a9b1-982356dad7f1`). The Seedance 2.5 blueprint clip for
+this photo is generated with the prompt in `docs/hero-pipeline.md`; until it
+is in `public/video/`, `HERO_VIDEO` in `Hero.jsx` is `null` and the still
+carries the hero. To wire a clip in: download it to
+`public/video/raw/hero.mp4`, run `npm run video`, and set `HERO_VIDEO` back to
+the two files. The raw clip stays untracked.
 
 The clip is skipped for `prefers-reduced-motion` and data-saver visitors; the
 still image shows instead.

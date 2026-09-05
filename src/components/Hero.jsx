@@ -6,7 +6,22 @@ import { scrollToId } from '../lib/scroll.js';
 import './Hero.css';
 
 export const HERO_IMAGE = '/images/hero.webp';
-export const HERO_VIDEO = { webm: '/video/hero.webm', mp4: '/video/hero.mp4' };
+/** Set to null while no clip matches the photo; the still then carries the hero alone. */
+export const HERO_VIDEO = null; // { webm: '/video/hero.webm', mp4: '/video/hero.mp4' }
+
+/**
+ * How the full-bleed photo is framed: 'center' keeps the mast mid-frame,
+ * 'offset' pushes it right of centre so the copy sits on clean sky. The CSS
+ * for both lives in Hero.css. `?crop=offset` in the URL overrides it, which is
+ * how the two were compared side by side.
+ */
+export const HERO_CROP = 'center';
+
+function heroCrop() {
+  if (typeof window === 'undefined') return HERO_CROP;
+  const q = new URLSearchParams(window.location.search).get('crop');
+  return q === 'offset' || q === 'center' ? q : HERO_CROP;
+}
 
 const PhoneIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -16,7 +31,7 @@ const PhoneIcon = () => (
 
 /** Skip the clip for people who asked for less motion or are saving data. */
 function wantsVideo() {
-  if (typeof window === 'undefined') return false;
+  if (!HERO_VIDEO || typeof window === 'undefined') return false;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
   const conn = navigator.connection;
   if (conn && (conn.saveData || /(^|\b)2g/.test(conn.effectiveType || ''))) return false;
@@ -56,7 +71,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="hero on-dark" aria-labelledby="hero-title">
+    <section className="hero on-dark" data-crop={heroCrop()} aria-labelledby="hero-title">
       <div className="hero__inner">
         <div className="hero__copy">
           <p className="eyebrow hero__eyebrow">{h.eyebrow}</p>
@@ -85,27 +100,28 @@ export default function Hero() {
           </dl>
         </div>
 
-        <div className="hero__media" aria-hidden="true">
-          <img className="hero__poster" src={HERO_IMAGE} alt="" fetchpriority="high" decoding="async" />
-          {useVideo && (
-            <video
-              ref={videoRef}
-              className={`hero__video${playing ? ' is-playing' : ''}`}
-              muted
-              loop
-              playsInline
-              autoPlay
-              preload="auto"
-              poster={HERO_IMAGE}
-              aria-label={h.videoLabel}
-            >
-              <source src={HERO_VIDEO.webm} type="video/webm" />
-              <source src={HERO_VIDEO.mp4} type="video/mp4" />
-            </video>
-          )}
-          <div className="hero__shade" />
-        </div>
       </div>
+
+      <div className="hero__media" aria-hidden="true">
+        <img className="hero__poster" src={HERO_IMAGE} alt="" fetchpriority="high" decoding="async" />
+        {useVideo && (
+          <video
+            ref={videoRef}
+            className={`hero__video${playing ? ' is-playing' : ''}`}
+            muted
+            loop
+            playsInline
+            autoPlay
+            preload="auto"
+            poster={HERO_IMAGE}
+            aria-label={h.videoLabel}
+          >
+            <source src={HERO_VIDEO.webm} type="video/webm" />
+            <source src={HERO_VIDEO.mp4} type="video/mp4" />
+          </video>
+        )}
+      </div>
+      <div className="hero__shade" aria-hidden="true" />
     </section>
   );
 }

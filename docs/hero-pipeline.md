@@ -1,65 +1,78 @@
 # Hero pipeline (Higgsfield)
 
 Reproducible steps for the hero image and clip. Credits at the time of
-writing: image ≈ 8.5, clip ≈ 54.
+writing: image ≈ 8.5, clip 1080p 6 s ≈ 54 (720p 4 s ≈ 26).
 
 ## 1. Reference photo
 
-The intended source is the customer's own `header.webp` (mast standing, dark
-evening sky, yard crane silhouette). It was not available in the v3 build
-environment, so the customer's marina photo of the Beneteau First 30 with the
-mast stepped (Higgsfield media `c1aec72b-d7e0-4b3f-b0d7-bbc84777b4fe`) was
-used instead. To use `header.webp`, upload it with `media_upload` and swap the
-media id below.
+`public/images/header.webp` (1920×2560, 3:4): the customer's own photo, mast
+standing, dark evening sky, yard crane and travel lift behind. Uploaded to
+Higgsfield as media `57da8740-e50e-4dc9-b89c-64045101d435` with
+`media_upload` + `media_confirm`.
+
+The earlier round (before the file was available) used the marina photo of
+the Beneteau First 30 instead; that image, its clip and the raw download are
+kept in `assets/source/hero-beneteau-*`.
 
 ## 2. Cleaned hero image — `gpt_image_2`, 3:4, 2k, quality high
 
-> Photo edit of the reference photograph. Keep the sailboat, its standing mast,
-> spreaders, shrouds, deck, pontoon and the surrounding marina exactly as they
-> are, same camera position and same composition, reframed to a portrait 3:4
-> crop centred on the mast. Change only the lighting and colour: turn the
-> bright daytime scene into a moody blue hour at dusk with a deep dark
-> evening-blue sky that darkens toward the top, mast and rigging catching the
-> last cool light so they stay clearly visible as bright thin lines against
-> the sky, water dark and calm with subtle reflections, forest as a dark
-> silhouette. Remove any readable brand names, logos, text, flags or signage
-> anywhere in the image. Photorealistic, high detail, no illustration look, no
-> added objects.
+Reference role `image`, media id above.
 
-For `header.webp` add: "remove the website address and any brand marks on the
-crane".
+> Photo edit of the reference photograph. Keep everything exactly as it is:
+> the same sailboat, its standing mast with spreaders, radar and shrouds, the
+> furled sail, the pontoon, the neighbouring boats, the forest line, the
+> yellow crane boom at the top right and the blue boat travel lift in the
+> background, same camera position, same wide-angle perspective, same
+> framing, portrait 3:4. Change only these things: remove all readable text,
+> lettering, logos and brand marks anywhere in the image, above all the white
+> website address printed on the crossbeam of the blue boat lift, plus any
+> lettering on the crane boom and any logos on the sail cover or on the
+> boats, replacing them with the plain surface and colour of the object
+> underneath. Deepen the sky slightly into a richer dark evening blue at the
+> top while keeping the natural light gradient toward the horizon.
+> Photorealistic, high detail, no illustration look, no added objects, no
+> people.
 
-Result job: `fe020c01-47c1-400a-beaf-f89cca4c0d77`. Converted with Pillow to
-`public/images/hero.webp` (1200×1600, q82) and `public/images/og.jpg`.
+Result job: `1ade72a1-d359-4446-a9b1-982356dad7f1` (1744×2336). Converted
+with Pillow to `public/images/hero.webp` (1195×1600, q82) and
+`public/images/og.jpg` (1200×630 crop).
 
 ## 3. Blueprint clip — `seedance_2_5`, omni_reference, 3:4, 1080p, 6 s, no audio, standard bitrate
 
-Medias: `start_image` and `end_image` both set to the hero image job id, so the
-clip starts and ends on the photo and loops cleanly.
+Medias: `start_image` and `end_image` both set to the cleaned image's job id,
+so the clip starts and ends on the photo and loops cleanly. Same prompt as
+the first round, adapted to this scene:
 
 > Locked-off static camera, absolutely no camera movement, no zoom, no pan,
 > identical framing to the reference photo for the whole clip. The scene is
-> the reference photograph: a sailboat moored at a marina pontoon at blue
-> hour, mast standing against a deep evening-blue sky. Animation: thin glowing
-> white-cyan technical drawing lines trace along the mast, spreaders, shrouds
-> and forestay, and the photographed mast and rigging turn into an exploded
-> engineering blueprint: clean white line art on the dark blue sky, masthead,
-> spreaders, shroud terminals and mast sections separate slightly and hover
-> apart as schematic parts with dimension lines, small measurement ticks and
-> callout leader lines, like a CAD drawing overlay. The hull, pontoon, water
-> and forest stay photographic and completely still. Hold the blueprint
-> briefly, then the parts glide back into place and the line drawing fades
-> back into the original photograph, ending exactly on the reference frame.
-> Precise, smooth, minimal motion, no people, no readable text, no letters, no
-> extra objects, dark evening-blue palette with white-cyan lines.
+> the reference photograph: a sailboat at a marina pontoon at dusk, mast
+> standing against a deep evening-blue sky, a yard crane boom and a boat lift
+> behind it. Animation: thin glowing white-cyan technical drawing lines trace
+> along the mast, spreaders, shrouds, forestay and the diagonal furled sail,
+> and the photographed mast and rigging turn into an exploded engineering
+> blueprint: clean white line art on the dark blue sky, masthead, spreaders,
+> radar, shroud terminals and mast sections separate slightly and hover apart
+> as schematic parts with dimension lines, small measurement ticks and callout
+> leader lines, like a CAD drawing overlay. The crane, the lift, the boats,
+> pontoon, water and forest stay photographic and completely still. Hold the
+> blueprint briefly, then the parts glide back into place and the line drawing
+> fades back into the original photograph, ending exactly on the reference
+> frame. Precise, smooth, minimal motion, no people, no readable text, no
+> letters, no extra objects, dark evening-blue palette with white-cyan lines.
 
 If Higgsfield answers with a preset recommendation instead of a job, resubmit
 with `declined_preset_id` set to the offered preset id.
 
-Result job: `c9f59f13-8f59-411b-8284-b3dd300dfc3c`.
-
-## 4. Compress
+## 4. Compress and wire in
 
 Download the clip to `public/video/raw/hero.mp4` and run `npm run video`
-(ffmpeg on PATH). It writes `public/video/hero.mp4` (H.264), `hero.webm` (VP9)
-and `hero-poster.jpg`, scaled to 720×960, and prints the size reduction.
+(ffmpeg on PATH). It writes `public/video/hero.mp4` (H.264) and `hero.webm`
+(VP9) at 720×960 and prints the size reduction. Then point `HERO_VIDEO` in
+`src/components/Hero.jsx` back at the two files.
+
+## 5. Framing
+
+The hero is full-bleed at every size. `HERO_CROP` in `Hero.jsx` picks between
+`center` (mast mid-frame) and `offset` (mast right of centre, copy on clean
+sky); the numbers for both live at the top of `Hero.css`. `?crop=offset` in
+the URL previews the other one.
