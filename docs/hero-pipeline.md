@@ -75,25 +75,20 @@ ByteDance upscalers (≈ 2 credits for the image, ≈ 0.2 for the clip):
   `srcset`) and `og.jpg`.
 - `upscale_video` on job `b4075919…`, provider bytedance, preset aigc, 2k, 24
   fps → job `58e27349-5e21-4c42-ac06-d28eea3c4cc2`, H.264 1440×1920, 6.4 MB.
-  `public/images/hero-blueprint.webp` is its frame at 3.6 s, the fully
-  exploded blueprint, used as the services background when the clip is not
-  playing (reduced motion, data saver).
 
 ## 5. Compress and wire in
 
 Download the upscaled clip to `public/video/raw/hero.mp4` and run
 `npm run video` (ffmpeg on PATH). It writes four files into `public/video/`:
-`hero-lg.mp4` / `hero-lg.webm` at 1440 px for screens 900 px and wider, where
-the clip covers the whole viewport, and `hero-sm.mp4` / `hero-sm.webm` at
-960 px for phones, and prints the size reduction. `HERO_VIDEO` in
-`src/components/Stage.jsx` lists the four files and the component picks the
-size at mount. `HOLD_AT` there (3.6 s) is the frame the clip pauses on once
-the reader has scrolled a third of the way through the hero; the services
-section sits on that frame.
+`hero-lg.mp4` / `hero-lg.webm` at 1440 px for screens 900 px and wider, and
+`hero-sm.mp4` / `hero-sm.webm` at 960 px for phones, and prints the size
+reduction. `HERO_VIDEO` in `src/components/Hero.jsx` lists the four files and
+the component picks the size at mount. The clip just loops in its card for as
+long as the hero is on screen — nothing pauses it or hands its frame to
+another section.
 
 ## 6. Framing
 
-The hero is full-bleed at every size. `HERO_CROP` in `Stage.jsx` picks between
-`center` (mast mid-frame) and `offset` (mast right of centre, copy on clean
-sky); the numbers for both live at the top of `Stage.css`. `?crop=center` in
-the URL previews the other one.
+The photo/clip sits in its own card next to the copy, not full-bleed —
+`.hero__media` in `Hero.css`, `aspect-ratio: 3 / 4` (matching the source
+media exactly, so the whole frame shows) with the top two corners rounded.

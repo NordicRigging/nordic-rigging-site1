@@ -1,0 +1,35 @@
+.yards-tab {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.yards-tab__points {
+  margin-top: 1.25rem;
+}
+
+.yards-tab__ref {
+  margin: 1.1rem 0 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.yards-tab__media {
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  min-height: 12rem;
+}
+
+.yards-tab__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (min-width: 900px) {
+  .yards-tab {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: center;
+    gap: 2.5rem;
+  }
+}

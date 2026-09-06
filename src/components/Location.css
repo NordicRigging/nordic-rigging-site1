@@ -1,6 +1,9 @@
+/* Picks up at navy-700 where the tabs section ends, and settles back at
+   navy-900 for the footer below. */
 .location {
   overflow: hidden;
   padding-bottom: 0;
+  background: linear-gradient(180deg, var(--navy-700) 0%, var(--navy-800) 55%, var(--navy-900) 100%);
 }
 
 .location__grid {

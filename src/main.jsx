@@ -9,6 +9,7 @@ import Home from './pages/Home.jsx';
 import ServicePage from './pages/ServicePage.jsx';
 import { LanguageProvider } from './lib/LanguageContext.jsx';
 import { PrefillProvider } from './lib/prefill.jsx';
+import { TabsProvider } from './lib/tabs.jsx';
 
 function ScrollToTop() {
   const { pathname, hash, state } = useLocation();
@@ -36,15 +37,17 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <LanguageProvider>
       <PrefillProvider>
-        <Router>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/palvelut/:slug" element={<ServicePage />} />
-            <Route path="/services/:slug" element={<LegacyService />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
+        <TabsProvider>
+          <Router>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/palvelut/:slug" element={<ServicePage />} />
+              <Route path="/services/:slug" element={<LegacyService />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </TabsProvider>
       </PrefillProvider>
     </LanguageProvider>
   </React.StrictMode>

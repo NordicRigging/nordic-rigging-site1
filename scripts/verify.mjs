@@ -13,7 +13,6 @@
  *
  * Exits non-zero if any check fails, so it can gate a deploy.
  */
-// No preset language here: the checks below exercise the picker's own default.
 import { contextOptions, launch } from './browser.mjs';
 
 const [base = 'http://localhost:5173', endpoint = ''] = process.argv.slice(2);
@@ -38,15 +37,34 @@ const browser = await launch();
   check('html lang is fi by default', (await page.getAttribute('html', 'lang')) === 'fi');
   check('FI hero title', (await page.locator('h1').textContent()).includes('Purjeveneesi'));
 
-  // the hero clip
-  await page.waitForTimeout(2500);
-  const v = await page.evaluate(() => {
-    const el = document.querySelector('.stage__video');
-    if (!el) return { present: false };
-    return { present: true, playing: !el.paused && el.currentTime > 0, t: el.currentTime, w: el.videoWidth, h: el.videoHeight, cls: el.className };
+  // the hero's wave background (GradientWaves) and the framed clip, both contained in the hero card
+  await page.waitForTimeout(2000);
+  const waves = await page.evaluate(() => {
+    const c = document.querySelector('.gradient-waves-container canvas');
+    if (!c) return { present: false };
+    const gl = c.getContext('webgl2') || c.getContext('webgl');
+    return { present: true, w: c.width, h: c.height, lost: gl ? gl.isContextLost() : null };
   });
-  check('hero video element present', v.present, JSON.stringify(v));
-  check('hero video is playing', !!v.playing, `t=${v.t?.toFixed?.(2)} ${v.w}x${v.h}`);
+  check('GradientWaves canvas renders behind the hero', waves.present && waves.w > 0 && waves.lost === false, JSON.stringify(waves));
+
+  const v = await page.evaluate(() => {
+    const el = document.querySelector('.hero__video');
+    if (!el) return { present: false };
+    return { present: true, playing: !el.paused && el.currentTime > 0, t: el.currentTime, w: el.videoWidth, h: el.videoHeight };
+  });
+  check('hero clip element present', v.present, JSON.stringify(v));
+  check('hero clip is playing', !!v.playing, `t=${v.t?.toFixed?.(2)} ${v.w}x${v.h}`);
+  const mediaBox = await page.evaluate(() => {
+    const el = document.querySelector('.hero__media');
+    const r = el?.getBoundingClientRect();
+    const cs = el && getComputedStyle(el);
+    return r && cs ? { w: Math.round(r.width), h: Math.round(r.height), radius: cs.borderTopLeftRadius, radiusBottom: cs.borderBottomLeftRadius } : null;
+  });
+  check(
+    'hero media is a contained 3:4 card with rounded top only',
+    !!mediaBox && Math.abs(mediaBox.w / mediaBox.h - 0.75) < 0.02 && mediaBox.radius !== '0px' && mediaBox.radiusBottom === '0px',
+    JSON.stringify(mediaBox)
+  );
 
   // language toggle
   await page.getByRole('button', { name: 'EN', exact: true }).first().click();
@@ -66,19 +84,36 @@ const browser = await launch();
   });
   check('price/area/crew facts visible in first viewport (desktop)', !!factsVisible);
 
-  // nav scroll
+  // the four tabs: default, then each nav link opens the matching one and scrolls to it
+  check('Palvelut tab open by default', await page.locator('#tab-palvelut').getAttribute('aria-selected').then(v => v === 'true'));
+  check('Palvelut panel shows the three services', (await page.locator('#panel-palvelut').textContent()).includes('Mastotyöt'));
+
+  const navChecks = [
+    { label: 'Telakoille', tabId: 'telakat', text: 'Tarvitsetko luotettavan' },
+    { label: 'Tehdyt työt', tabId: 'tyot', text: 'Referenssejä' },
+    { label: 'Meistä', tabId: 'meista', text: 'Isä ja poika' }
+  ];
+  for (const { label, tabId, text } of navChecks) {
+    await page.locator('.pill', { hasText: label }).click();
+    await page.waitForTimeout(700);
+    check(`nav "${label}" opens and scrolls to its tab`, await page.locator(`#tab-${tabId}`).getAttribute('aria-selected').then(v => v === 'true'));
+    check(`"${label}" panel shows its content`, (await page.locator(`#panel-${tabId}`).textContent()).includes(text));
+    const top = await page.evaluate(() => document.getElementById('ratkaisut').getBoundingClientRect().top);
+    check(`"${label}" scrolled the tabs section into view`, top >= -5 && top < 200, `top=${top.toFixed(0)}`);
+  }
+
+  // clicking a tab button directly also works, and only that tab's content is mounted
+  // (we were just on "Tehdyt työt", so its portfolio grid should be gone now)
+  await page.click('#tab-palvelut');
+  await page.waitForTimeout(200);
+  check('clicking a tab button switches back', await page.locator('#tab-palvelut').getAttribute('aria-selected').then(v => v === 'true'));
+  check('switching tabs unmounts the previous panel', (await page.locator('.portfolio-grid').count()) === 0);
+
+  // nav scroll to contact (not a tab)
   await page.locator('.pill', { hasText: 'Yhteystiedot' }).click();
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1200);
   const contactTop = await page.evaluate(() => document.getElementById('yhteystiedot').getBoundingClientRect().top);
   check('nav link scrolls to contact', contactTop >= 0 && contactTop < 200, `top=${contactTop.toFixed(0)}`);
-
-  // the stage hands its blueprint frame to the services section
-  await page.waitForTimeout(6500);
-  const held = await page.evaluate(() => {
-    const el = document.querySelector('.stage__video');
-    return el ? { paused: el.paused, t: +el.currentTime.toFixed(2) } : null;
-  });
-  check('clip holds on the blueprint frame once scrolled past the hero', !!held && held.paused && held.t >= 3.5 && held.t < 4.4, JSON.stringify(held));
 
   // globe
   await page.waitForTimeout(3500);
@@ -87,9 +122,11 @@ const browser = await launch();
   const pinVisible = await page.evaluate(() => Number(document.querySelector('.globe__pin--turku')?.style.opacity) > 0.9);
   check('Turku pin visible', !!pinVisible);
 
-  // the B2B button pre-fills the shared form for yards
-  await page.locator('#telakoille .btn--accent').click();
-  await page.waitForTimeout(1500);
+  // the B2B path: open the yards tab via its own button and pre-fill the shared form
+  await page.locator('.pill', { hasText: 'Telakoille' }).click();
+  await page.waitForTimeout(600);
+  await page.locator('#panel-telakat .btn--accent').click();
+  await page.waitForTimeout(1200);
   const who = await page.evaluate(() => document.querySelector('input[name="who"]:checked')?.value);
   const partnerChecked = await page.evaluate(() => document.querySelector('input[name="needs"][value="partner"]')?.checked);
   check('B2B button pre-selects "yard"', who === 'yard', `who=${who}`);
@@ -130,8 +167,8 @@ const browser = await launch();
   check('service page shows price', (await page.locator('.svc-card__price').textContent()).includes('100'));
 
   await page.locator('.svc-hero .btn--ghost').click();
-  await page.waitForTimeout(1500);
-  check('service page ask → home', page.url().endsWith('/'), page.url());
+  await page.waitForTimeout(1200);
+  check('service page ask → home, Palvelut tab open', page.url().endsWith('/'), page.url());
   const mastChecked = await page.evaluate(() => document.querySelector('input[name="needs"][value="mast"]')?.checked);
   check('need "mast" preselected from service page', !!mastChecked);
 
@@ -154,18 +191,20 @@ const browser = await launch();
   await page.locator('.mobile-menu-button').click();
   await page.waitForTimeout(300);
   check('mobile menu opens', await page.locator('#mobile-menu').isVisible());
-  await page.locator('.mobile-menu-link', { hasText: 'Palvelut' }).click();
-  await page.waitForTimeout(1200);
+  await page.locator('.mobile-menu-link', { hasText: 'Tehdyt työt' }).click();
+  await page.waitForTimeout(900);
   check('mobile menu closes after click', !(await page.locator('#mobile-menu').isVisible()));
-  const svcTop = await page.evaluate(() => document.getElementById('palvelut').getBoundingClientRect().top);
-  check('mobile nav scrolls to services', svcTop >= -5 && svcTop < 200, `top=${svcTop.toFixed(0)}`);
+  check('mobile nav opened the Tehdyt työt tab', await page.locator('#tab-tyot').getAttribute('aria-selected').then(v => v === 'true'));
+  const tabsTop = await page.evaluate(() => document.getElementById('ratkaisut').getBoundingClientRect().top);
+  check('mobile nav scrolled to the tabs section', tabsTop >= -5 && tabsTop < 200, `top=${tabsTop.toFixed(0)}`);
+  check('portfolio grid has photos', (await page.locator('.portfolio-grid__item').count()) >= 4);
 
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1200);
   const vm = await page.evaluate(() => {
-    const el = document.querySelector('.stage__video');
+    const el = document.querySelector('.hero__video');
     return el ? { playing: !el.paused && el.currentTime > 0 } : { playing: false, missing: true };
   });
-  check('hero video plays on mobile', !!vm.playing, JSON.stringify(vm));
+  check('hero clip plays on mobile', !!vm.playing, JSON.stringify(vm));
   check('no page errors (mobile)', errors.length === 0, errors.join(' | ').slice(0, 300));
   await ctx.close();
 }

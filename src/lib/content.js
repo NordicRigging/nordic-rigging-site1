@@ -46,6 +46,39 @@ export const TEAM = [
   }
 ];
 
+/**
+ * Finished-work references for the "Tehdyt työt" tab. Placeholder photos
+ * from the customer's own service images until real job photos replace
+ * them — drop new files in public/images/portfolio/ and add an entry here;
+ * nothing else needs to change for the grid to pick them up.
+ */
+export const PORTFOLIO = [
+  {
+    id: 'mastotyo-1',
+    image: '/images/portfolio/mastotyo-1.webp',
+    fi: { caption: 'Mastonnosto ja vanttien vaihto' },
+    en: { caption: 'Mast stepping and shroud replacement' }
+  },
+  {
+    id: 'koysivarasto-1',
+    image: '/images/portfolio/koysivarasto-1.webp',
+    fi: { caption: 'Mittatilausköysi valmiina noudettavaksi' },
+    en: { caption: 'A made-to-measure rope, ready for pick-up' }
+  },
+  {
+    id: 'huolto-1',
+    image: '/images/portfolio/huolto-1.webp',
+    fi: { caption: 'Kausihuolto ja talvisäilytyksen valmistelu' },
+    en: { caption: 'Seasonal service and winter storage prep' }
+  },
+  {
+    id: 'telakkayhteistyo-1',
+    image: '/images/portfolio/telakkayhteistyo-1.webp',
+    fi: { caption: 'Alihankintatyötä telakalla' },
+    en: { caption: 'Subcontracted work at a partner yard' }
+  }
+];
+
 export const SERVICES = [
   {
     slug: 'mastotyot',
@@ -197,14 +230,18 @@ export const CONTENT = {
     skip: 'Siirry sisältöön',
     nav: {
       services: 'Palvelut',
-      rigsense: 'Rig-Sense',
-      partners: 'Telakoille',
+      yards: 'Telakoille',
+      portfolio: 'Tehdyt työt',
+      about: 'Meistä',
       contact: 'Yhteystiedot',
       call: 'Soita',
       menu: 'Valikko',
       close: 'Sulje',
       language: 'Kieli',
       home: 'Etusivulle'
+    },
+    tabs: {
+      sectionTitle: 'Palvelut, telakkayhteistyö, referenssit ja tekijät'
     },
     hero: {
       eyebrow: 'Purjeveneesi paras miehistö maalla',
@@ -234,12 +271,25 @@ export const CONTENT = {
       backHome: 'Takaisin etusivulle',
       otherServices: 'Muut palvelut'
     },
+    servicesTab: {
+      priceLabel: 'Hinnoitteluperiaate',
+      priceNote: '100 € / h sis. alv kaikessa työssä. Rikaustöissä myös urakkahinta työn vaativuuden mukaan.',
+      areaLabel: 'Toimialue',
+      contactCta: 'Ota yhteyttä'
+    },
     team: {
       eyebrow: 'Tekijät',
       title: 'Isä ja poika, Turku.',
       body:
         'Nordic Rigging on Tuomas ja Lukas Elorannan yritys. Sovit työstä suoraan tekijän kanssa, ja sama tekijä on myös veneesi luona.',
       pageLine: 'Työn tekee'
+    },
+    story: {
+      eyebrow: 'Tietoa meistä',
+      intro:
+        'Nordic Rigging on isän ja pojan yritys Turusta. Tuomaksella on vuosikymmenten kokemus veneistä ja rikaustöistä, Lukas on kasvanut ammattiin hänen rinnallaan. Yhdessä he varmistavat veneesi turvallisuuden sukupolvelta toiselle siirtyneellä ammattitaidolla.',
+      highlight:
+        'Tämä on meille enemmän kuin työtä. Se on elämäntapa, joka perustuu taitoon, meren kunnioittamiseen ja siihen, että jokainen vene ansaitsee asiantuntevaa huolta.'
     },
     rigsense: {
       eyebrow: 'Spinlock Rig-Sense Pro',
@@ -280,6 +330,11 @@ export const CONTENT = {
       cta: 'Keskustellaan yhteistyöstä',
       call: 'Soita 050 548 7766',
       reference: 'Kiinteä toimipiste Ajolanranta Oy:n telakalla, Turku'
+    },
+    portfolio: {
+      eyebrow: 'Tehdyt työt',
+      title: 'Referenssejä valmiista töistä',
+      lede: 'Kuvia mastotöistä, köysivarastosta, huolloista ja telakkayhteistyöstä. Lisäämme uusia kuvia sitä mukaa kun projekteja valmistuu.'
     },
     location: {
       eyebrow: 'Yhteystiedot',
@@ -367,14 +422,18 @@ export const CONTENT = {
     skip: 'Skip to content',
     nav: {
       services: 'Services',
-      rigsense: 'Rig-Sense',
-      partners: 'For yards',
+      yards: 'For yards',
+      portfolio: 'Our work',
+      about: 'About',
       contact: 'Contact',
       call: 'Call',
       menu: 'Menu',
       close: 'Close',
       language: 'Language',
       home: 'Home'
+    },
+    tabs: {
+      sectionTitle: 'Services, yard partnerships, past work and the crew'
     },
     hero: {
       eyebrow: 'Your sailboat’s best crew on land',
@@ -404,12 +463,25 @@ export const CONTENT = {
       backHome: 'Back to the front page',
       otherServices: 'Other services'
     },
+    servicesTab: {
+      priceLabel: 'Pricing principle',
+      priceNote: '€100 / h incl. VAT for all work. Rigging jobs also at a fixed price depending on the job.',
+      areaLabel: 'Service area',
+      contactCta: 'Get in touch'
+    },
     team: {
       eyebrow: 'The crew',
       title: 'Father and son, Turku.',
       body:
         'Nordic Rigging is Tuomas and Lukas Eloranta’s company. You agree the job with the person who does it, and the same person shows up at your boat.',
       pageLine: 'Done by'
+    },
+    story: {
+      eyebrow: 'About us',
+      intro:
+        "Nordic Rigging is a father-and-son company from Turku. Tuomas has decades of experience with boats and rigging, and Lukas grew up learning the trade at his side. Together they keep your boat safe with skill passed down through generations.",
+      highlight:
+        "This is more than a job for us. It's a way of life based on skill, respect for the sea, and the belief that every boat deserves expert care."
     },
     rigsense: {
       eyebrow: 'Spinlock Rig-Sense Pro',
@@ -450,6 +522,11 @@ export const CONTENT = {
       cta: 'Let’s talk about working together',
       call: 'Call +358 50 548 7766',
       reference: 'Fixed base at Ajolanranta Oy’s yard, Turku'
+    },
+    portfolio: {
+      eyebrow: 'Our work',
+      title: 'References from finished jobs',
+      lede: 'Photos from mast work, the rope stock, seasonal service and yard partnerships. We add new photos as projects finish.'
     },
     location: {
       eyebrow: 'Contact',

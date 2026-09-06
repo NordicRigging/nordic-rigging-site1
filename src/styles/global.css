@@ -1,15 +1,17 @@
 /* ————————————————————————————————————————————
-   Nordic Rigging v3 — design system, round 3
-   One family of dark blues from top to bottom. No orange, no white:
+   Nordic Rigging v4 — design system
+   One family of dark blues from top to bottom, matching the hero's
+   GradientWaves background exactly at #050b16. No orange, no white:
    type is a cool off-white, the accent is the blueprint cyan-blue.
-   Sections have no hard edges; the page ground is one long gradient.
+   Sections have no hard edges; each one's gradient starts exactly where
+   the previous one ended.
    ———————————————————————————————————————————— */
 
 :root {
-  /* the blues, deepest first */
-  --navy-900: #050d1a;
-  --navy-800: #071426;
-  --navy-700: #0a1c36;
+  /* the blues, deepest first — #050b16 is also GradientWaves' horizonColor */
+  --navy-900: #050b16;
+  --navy-800: #0a1628;
+  --navy-700: #0d1d33;
   --navy-600: #0f2547;
   --navy-500: #16325c;
   --navy-400: #1f4278;
@@ -23,8 +25,8 @@
   --muted: #7f97b8;
   --line: rgba(141, 180, 230, 0.18);
   --line-strong: rgba(141, 180, 230, 0.34);
-  --glass: rgba(22, 50, 92, 0.42);
-  --glass-2: rgba(10, 28, 54, 0.72);
+  --glass: rgba(13, 29, 51, 0.42);
+  --glass-2: rgba(10, 22, 40, 0.72);
 
   --font: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
@@ -161,23 +163,6 @@ h3 {
   position: relative;
   padding-block: clamp(3.5rem, 8vw, 6.5rem);
   scroll-margin-top: var(--header-h);
-}
-
-/*
-  Everything after the hero/services stage sits on one continuous gradient,
-  so section boundaries are never a colour step. Sections themselves are
-  transparent and add at most a soft radial glow.
-*/
-.after-stage {
-  position: relative;
-  background: linear-gradient(
-    180deg,
-    var(--navy-700) 0%,
-    var(--navy-600) 30%,
-    var(--navy-700) 62%,
-    var(--navy-800) 85%,
-    var(--navy-900) 100%
-  );
 }
 
 .eyebrow {

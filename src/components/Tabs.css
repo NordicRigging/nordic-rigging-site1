@@ -1,0 +1,68 @@
+/* The tab row + panel below the hero: four equal buttons in a bordered bar,
+   one large panel underneath that swaps content, no page reload, no hash
+   navigation — everything stays reachable within the same section. */
+
+/* Continues straight from the hero's navy-900 with no colour step, and
+   settles at navy-700 (the lightest stop) for the location section below
+   to pick up from. */
+.tabs {
+  padding-top: clamp(2rem, 5vw, 3rem);
+  background: linear-gradient(180deg, var(--navy-900) 0%, var(--navy-800) 35%, var(--navy-700) 100%);
+}
+
+.tabs__bar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.tabs__btn {
+  appearance: none;
+  border: 0;
+  background: var(--navy-800);
+  color: var(--text-2);
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 1rem 0.75rem;
+  cursor: pointer;
+  text-align: center;
+  border-bottom: 3px solid transparent;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.tabs__btn:hover {
+  color: var(--text);
+  background: var(--navy-700);
+}
+
+.tabs__btn.is-active {
+  background: var(--navy-700);
+  color: var(--accent-2);
+  border-bottom-color: var(--accent-2);
+}
+
+.tabs__panel {
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+  padding: clamp(1.25rem, 3.5vw, 2.5rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--glass) 0%, var(--glass-2) 100%);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 24px 60px rgba(3, 9, 20, 0.4);
+}
+
+@media (min-width: 640px) {
+  .tabs__bar {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .tabs__btn {
+    font-size: 1.05rem;
+    padding: 1.1rem 1rem;
+  }
+}

@@ -52,31 +52,47 @@ Deploy note: routes like `/palvelut/mastotyot` need an SPA fallback to
 
 One family of dark blues from top to bottom (`src/styles/global.css`): no
 orange, no white. Type is a cool off-white, the accent is the blueprint
-cyan-blue, cards are translucent navy glass. Sections have no hard edges: the
-hero and the services share one sticky background (the stage), and everything
-after it sits on a single long gradient (`.after-stage`), so colour changes
-run through section boundaries instead of stopping at them.
+cyan-blue, cards are translucent navy glass. Sections have no hard edges —
+each one's own gradient starts exactly where the previous one's ended
+(`--navy-900` → `--navy-800` → `--navy-700` and back), and `--navy-900`
+(`#050b16`) is also the `horizonColor` the hero's wave background renders, so
+even that handoff has no seam.
 
-The top bar and the service panels keep the structure and styling of the v2
-build's PillNav and accordion gallery, recoloured, without GSAP: the hover
-sweep and the label swap on the pills and the growing panels are CSS
-transitions. Unlike v2, every panel shows its full content without a hover.
+The top bar keeps the structure and styling of the v2 build's PillNav,
+recoloured, without GSAP: the hover sweep and the label swap on the pills are
+CSS transitions. The service cards (inside the "Palvelut" tab) keep the v2
+accordion-gallery look the same way. Unlike v2, every card shows its full
+content without a hover.
 
 ## Page structure
 
 | Section | Component | Anchor |
 | --- | --- | --- |
-| Stage: the sticky photo / clip behind the hero and the services | `Stage.jsx` | |
-| Hero: headline, call + message buttons, price / area / crew facts | `Hero.jsx` | top |
-| Three service panels, each with what is included, result, price, buttons and the crew line | `Services.jsx` | `#palvelut` |
-| Crew card (Tuomas and Lukas Eloranta) | `Team.jsx` | `#tekijat` |
-| Spinlock Rig-Sense Pro: why measured tension matters | `RigSense.jsx` | `#rig-sense` |
-| For boatyards and marinas (B2B) | `Partners.jsx` | `#telakoille` |
+| Hero: wave background, a framed photo/clip card, headline, call + message buttons, price / area / crew facts | `Hero.jsx`, `GradientWaves.jsx` | top |
+| Four tabs — Palvelut, Telakoille, Tehdyt työt, Meistä — one panel below a tab bar | `Tabs.jsx` | `#ratkaisut` |
+| ↳ Palvelut: the three services, a Spinlock Rig-Sense Pro highlight, pricing/area, contact CTA | `ServicesTab.jsx`, `RigSenseHighlight.jsx` (uses `Services.jsx`'s `ServicePanel`) | |
+| ↳ Telakoille: the B2B pitch for yards and marinas | `YardsTab.jsx` | |
+| ↳ Tehdyt työt: a photo grid of finished jobs | `PortfolioTab.jsx` | |
+| ↳ Meistä: the company story and the crew | `AboutTab.jsx` (uses `Team.jsx`) | |
 | Globe + contact details + the one contact form | `Location.jsx`, `Globe.jsx`, `ContactForm.jsx` | `#yhteystiedot` |
 | Footer | `Footer.jsx` | |
 
 Service pages live at `/palvelut/mastotyot`, `/palvelut/koysivarasto` and
 `/palvelut/huolto` (the v2 `/services/...` URLs redirect there).
+
+## The tabs
+
+`src/lib/tabs.jsx` holds which of the four tabs is open (`TabsProvider`,
+`useTabs()`), the same pattern as `prefill.jsx` for the contact form. A nav
+link, or a card's own button (e.g. "Telakoille" in the header, or a service's
+"Kysy tästä palvelusta"), can select a tab before scrolling to `#ratkaisut`,
+so the reader lands on the right panel already open rather than on whichever
+tab happened to be active. Only the active tab's component is mounted — the
+other three cost nothing until clicked.
+
+Adding a fifth tab: add its id to `TABS` in `tabs.jsx`, a label in
+`CONTENT[lang].nav`, a `<Tab*.jsx>` component, and a line in the `PANELS` map
+in `Tabs.jsx`.
 
 ## Content and languages
 
@@ -87,6 +103,9 @@ All copy and company facts live in `src/lib/content.js`:
   `public/images/team/tuomas.webp` and `public/images/team/lukas.webp` and set
   the `photo` paths there; until then the site shows initials.
 - `SERVICES` — the three service lines (FI + EN).
+- `PORTFOLIO` — the "Tehdyt työt" photo grid: `{ id, image, fi.caption,
+  en.caption }`. Add a photo to `public/images/portfolio/` and an entry here;
+  nothing else needs to change for it to show up.
 - `CONTENT.fi` / `CONTENT.en` — every other visible string.
 
 Finnish is the default; a browser set to another language gets English; the
@@ -106,20 +125,25 @@ wording). Two delivery modes:
 Phone, email and WhatsApp are always shown next to the form, in the header and
 in the footer.
 
-## Hero image, clip and the scroll into the services
+## Hero: wave background and the framed clip
 
-The stage (`src/components/Stage.jsx`) is a sticky, full-viewport layer
-behind the hero and the services. While the hero is in view the clip loops.
-Scrolling darkens the layer, and once the reader is a third of the way
-through the hero the clip plays on to the fully exploded blueprint frame
-(`HOLD_AT`, 3.6 s) and pauses there, so the services panels sit on the
-exploded mast. Scrolling back up resumes the loop. Nothing is scrubbed: the
-clip only ever plays forward at its own speed and holds on one frame. With
-`prefers-reduced-motion` or data saver there is no clip; the still
-`hero-blueprint.webp` fades in with the scroll instead.
+The hero is a normal section, not full-bleed. `GradientWaves.jsx` (a React
+Bits component, `ogl` for WebGL2, added as supplied and left unmodified) fills
+it as an absolutely-positioned background — a slow, calm animated wave field
+in the same navy family as the rest of the site (`horizonColor="#050b16"`,
+`waveColor="#123a6b"`, `crestColor="#4fa8db"`; tuned down from the defaults:
+`speed=0.25`, `mouseInteraction` on but gentle). `prefers-reduced-motion` or
+data saver gets a static CSS gradient instead (`.hero__waves-fallback`) —
+Hero.jsx's own choice, not something built into the pasted component.
 
-`HERO_CROP` in `Stage.jsx` picks the framing, `center` or `offset`;
-`?crop=center` in the URL previews the other one.
+The photo/clip lives in its own card (`.hero__media`) next to the copy —
+contained, never full-bleed, and never scroll-linked. Its `aspect-ratio: 3/4`
+matches the source media exactly, so `object-fit: cover` shows the whole
+frame (mast and boat both) rather than a tight crop; only the top two corners
+are rounded (`border-radius: 24px 24px 0 0`). The clip just loops for as long
+as it's on screen — nothing pauses it, nothing hands its frame to the section
+below. With `prefers-reduced-motion` or data saver there is no clip; the
+poster photo carries the card alone.
 
 `public/images/hero.webp` (2000 px, with a 1200 px `srcset` variant for
 phones) is the customer's `header.webp` cleaned with Higgsfield `gpt_image_2`
@@ -131,8 +155,8 @@ from 900 px up, `sm` (960 px) on phones. Job ids, prompts and settings are in
 `docs/hero-pipeline.md`.
 
 To regenerate: download the clip to `public/video/raw/hero.mp4` and run
-`npm run video`. The raw clip stays untracked. Setting `HERO_VIDEO` in
-`Stage.jsx` to `null` shows the stills alone.
+`npm run video`. The raw clip stays untracked. Setting `HERO_VIDEO` to `null`
+in `Hero.jsx` shows the poster alone.
 
 ## Globe
 
@@ -148,11 +172,12 @@ Finland kept high in the frame.
 
 | File | Used by |
 | --- | --- |
-| `hero.webp`, `hero-1200.webp`, `hero-blueprint.webp`, `og.jpg` | stage poster (two sizes), the held blueprint frame for no-clip visitors, social share |
+| `hero.webp`, `hero-1200.webp`, `og.jpg` | the hero card's poster (two sizes), social share |
 | `logo-light.png` | the mark, used as a CSS mask so it takes the text colour |
-| `mastotyot.webp`, `koysivarasto.webp`, `huolto.webp` | service blocks and pages |
-| `rig-sense.webp` | Rig-Sense section (transparent background) |
-| `telakka.webp` | B2B section |
+| `mastotyot.webp`, `koysivarasto.webp`, `huolto.webp` | service cards and pages |
+| `rig-sense.webp` | the Rig-Sense highlight in the Palvelut tab (transparent background) |
+| `telakka.webp` | the Telakoille tab |
+| `portfolio/*.webp` | the Tehdyt työt tab's photo grid — see `PORTFOLIO` in `content.js` |
 | `logo.svg`, `favicon.svg` | header, footer, browser tab |
 
 The original photos the site images were cut from (and the Spinlock PNG with

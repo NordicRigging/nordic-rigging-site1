@@ -4,8 +4,16 @@ import { CONTACT, SERVICES } from '../lib/content.js';
 import { useLang } from '../lib/LanguageContext.jsx';
 import { usePrefill } from '../lib/prefill.jsx';
 import { scrollToId } from '../lib/scroll.js';
-import Team, { CrewLine } from './Team.jsx';
+import { CrewLine } from './Team.jsx';
 import './Services.css';
+
+/**
+ * ServicePanel and AskButton are the shared pieces: ServicePanel (the v2
+ * accordion-gallery card) is used both here and by ServicesTab, AskButton by
+ * both ServicesTab and ServicePage. There is no standalone services section
+ * any more — the three services live inside the "Palvelut" tab under the
+ * hero (see Tabs.jsx / ServicesTab.jsx).
+ */
 
 const NEED_BY_SLUG = { mastotyot: 'mast', koysivarasto: 'rope', huolto: 'service' };
 
@@ -92,32 +100,5 @@ export function ServicePanel({ service, index, onHome = true }) {
         <CrewLine />
       </div>
     </article>
-  );
-}
-
-export default function Services() {
-  const { t } = useLang();
-  const c = t.services;
-
-  return (
-    <section className="section services" id="palvelut" aria-labelledby="services-title">
-      <div className="wrap">
-        <div className="services__head">
-          <p className="eyebrow">{c.eyebrow}</p>
-          <h2 id="services-title">{c.title}</h2>
-          <p className="lede">{c.lede}</p>
-        </div>
-
-        <div className="accordion-gallery">
-          {SERVICES.map((service, i) => (
-            <ServicePanel key={service.slug} service={service} index={i} />
-          ))}
-        </div>
-
-        <div className="services__team">
-          <Team />
-        </div>
-      </div>
-    </section>
   );
 }

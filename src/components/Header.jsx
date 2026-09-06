@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CONTACT, LANGS } from '../lib/content.js';
 import { useLang } from '../lib/LanguageContext.jsx';
 import { scrollToId, scrollToTop } from '../lib/scroll.js';
+import { useTabs } from '../lib/tabs.jsx';
 import './Header.css';
 
 /**
@@ -11,7 +12,9 @@ import './Header.css';
  * a fixed, translucent pill bar with the logo, link pills with a colour sweep
  * on hover, the FI/EN toggle folded into the bar, and a popover menu on
  * phones. The GSAP timelines are gone; the sweep and the label swap are CSS
- * transitions. New in v3: the phone number never leaves the bar.
+ * transitions. Four of the five links open the tabbed section below the
+ * hero on the matching tab; "Yhteystiedot" still goes straight to the
+ * contact section. The phone number never leaves the bar.
  */
 const PhoneIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -43,13 +46,15 @@ export default function Header() {
   const { t } = useLang();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { setActiveTab } = useTabs();
   const onHome = pathname === '/';
   const [open, setOpen] = useState(false);
 
   const items = [
-    { key: 'services', label: t.nav.services, target: 'palvelut' },
-    { key: 'rigsense', label: t.nav.rigsense, target: 'rig-sense' },
-    { key: 'partners', label: t.nav.partners, target: 'telakoille' },
+    { key: 'services', label: t.nav.services, tab: 'palvelut' },
+    { key: 'yards', label: t.nav.yards, tab: 'telakat' },
+    { key: 'portfolio', label: t.nav.portfolio, tab: 'tyot' },
+    { key: 'about', label: t.nav.about, tab: 'meista' },
     { key: 'contact', label: t.nav.contact, target: 'yhteystiedot' }
   ];
 
@@ -64,14 +69,16 @@ export default function Header() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const go = (target, e) => {
+  const go = (item, e) => {
     e?.preventDefault();
     setOpen(false);
+    const target = item.target || 'ratkaisut';
+    if (item.tab) setActiveTab(item.tab);
     if (!onHome) {
-      navigate('/', { state: { scrollTo: target } });
+      navigate('/', { state: { scrollTo: target, tab: item.tab } });
       return;
     }
-    // let the menu close and the layout settle before measuring the target
+    // let the menu close and the tab render before measuring the target
     requestAnimationFrame(() => requestAnimationFrame(() => scrollToId(target)));
   };
 
@@ -97,7 +104,7 @@ export default function Header() {
           <ul className="pill-list" role="menubar">
             {items.map(item => (
               <li key={item.key} role="none">
-                <a role="menuitem" href={`/#${item.target}`} className="pill" onClick={e => go(item.target, e)}>
+                <a role="menuitem" href={`/#${item.target || 'ratkaisut'}`} className="pill" onClick={e => go(item, e)}>
                   <span className="hover-circle" aria-hidden="true" />
                   <span className="label-stack">
                     <span className="pill-label">{item.label}</span>
@@ -136,7 +143,7 @@ export default function Header() {
         <ul className="mobile-menu-list">
           {items.map(item => (
             <li key={item.key}>
-              <a href={`/#${item.target}`} className="mobile-menu-link" onClick={e => go(item.target, e)}>
+              <a href={`/#${item.target || 'ratkaisut'}`} className="mobile-menu-link" onClick={e => go(item, e)}>
                 {item.label}
               </a>
             </li>

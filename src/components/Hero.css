@@ -1,16 +1,37 @@
-/* The hero copy over the sticky stage background. The nav bar is fixed, so
-   the section starts at the very top and keeps its copy clear of the bar. */
+/*
+  Hero: an animated wave background behind a two-column layout (copy + a
+  framed photo/clip card). Unlike round 3, the media never leaves this card —
+  no full-bleed, no scroll-linked darkening or hold-frame. The card's aspect
+  ratio (3:4) matches the source media exactly, so the whole mast-and-boat
+  frame shows, not a tight crop.
+*/
 .hero {
-  min-height: 100svh;
-  display: flex;
-  align-items: flex-end;
+  position: relative;
+  overflow: hidden;
+  background: var(--navy-900);
+  padding-top: calc(var(--header-h) + 2rem);
+  padding-bottom: clamp(2.5rem, 6vw, 4rem);
+}
+
+.hero__waves {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero__waves-fallback {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 30% 20%, var(--navy-500) 0%, var(--navy-700) 55%, var(--navy-900) 100%);
 }
 
 .hero__inner {
+  position: relative;
+  z-index: 1;
   width: min(100% - 2 * var(--pad), var(--max));
   margin-inline: auto;
-  padding-top: clamp(14rem, 50svh, 26rem);
-  padding-bottom: 2.5rem;
+  display: grid;
+  gap: 2rem;
 }
 
 .hero__eyebrow {
@@ -18,7 +39,7 @@
 }
 
 .hero__title {
-  max-width: 14ch;
+  max-width: 16ch;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.45);
 }
 
@@ -27,7 +48,6 @@
   color: var(--text-2);
   max-width: 42ch;
   margin: 1rem 0 0;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
 }
 
 .hero__actions {
@@ -64,21 +84,59 @@
   color: var(--text);
 }
 
+/* the framed photo/clip — contained, not full-bleed. Rounded on top only. */
+.hero__media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-width: 26rem;
+  margin-inline: auto;
+  border-radius: 24px 24px 0 0;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(3, 9, 20, 0.55);
+  border: 1px solid var(--line-strong);
+  border-bottom: 0;
+}
+
+.hero__poster,
+.hero__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero__video {
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.hero__video.is-playing {
+  opacity: 1;
+}
+
 @media (min-width: 900px) {
   .hero {
-    align-items: center;
+    padding-top: calc(var(--header-h) + 3.5rem);
+    padding-bottom: clamp(3rem, 6vw, 5rem);
   }
 
   .hero__inner {
-    min-height: 100svh;
-    display: flex;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     align-items: center;
-    padding-top: 5rem;
-    padding-bottom: 3rem;
+    gap: 3rem;
   }
 
   .hero__copy {
-    max-width: 34rem;
+    order: 1;
+  }
+
+  .hero__media {
+    order: 2;
+    max-width: 28rem;
+    margin-inline: 0 0 0 auto;
   }
 
   .hero__facts {

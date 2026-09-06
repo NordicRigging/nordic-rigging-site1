@@ -1,0 +1,68 @@
+.services-tab__lede {
+  margin-top: 0;
+}
+
+/* the reused v2 card grid, scaled down to fit inside a tab panel */
+.accordion-gallery--tab {
+  margin-top: 1.5rem;
+}
+
+.accordion-gallery--tab .ag-panel {
+  min-height: 0;
+}
+
+.accordion-gallery--tab .ag-panel__frame {
+  height: 180px;
+}
+
+@media (min-width: 900px) {
+  .accordion-gallery--tab .ag-panel {
+    min-height: 26rem;
+  }
+  .accordion-gallery--tab .ag-panel__frame {
+    position: absolute;
+    inset: 0;
+    height: auto;
+  }
+  .accordion-gallery--tab .ag-panel__body {
+    padding-top: 9rem;
+  }
+}
+
+.services-tab__foot {
+  margin-top: clamp(1.75rem, 4vw, 2.5rem);
+  padding-top: clamp(1.5rem, 3vw, 2rem);
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 1rem;
+}
+
+.services-tab__fact span {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  margin-bottom: 0.25rem;
+}
+
+.services-tab__fact strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.services-tab__actions {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 700px) {
+  .services-tab__foot {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: start;
+  }
+  .services-tab__actions {
+    margin-top: 0;
+    grid-column: 1 / -1;
+  }
+}
