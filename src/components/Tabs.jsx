@@ -4,6 +4,7 @@ import ServicesTab from './ServicesTab.jsx';
 import YardsTab from './YardsTab.jsx';
 import PortfolioTab from './PortfolioTab.jsx';
 import AboutTab from './AboutTab.jsx';
+import TabPanelFX from './TabPanelFX.jsx';
 import './Tabs.css';
 
 const PANELS = {
@@ -51,7 +52,10 @@ export default function Tabs() {
         </div>
 
         <div className="tabs__panel" role="tabpanel" id={`panel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
-          <Panel />
+          <TabPanelFX />
+          <div className="tabs__panel-content">
+            <Panel />
+          </div>
         </div>
       </div>
     </section>

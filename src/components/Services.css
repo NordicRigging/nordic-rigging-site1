@@ -157,24 +157,6 @@
   color: var(--text);
 }
 
-.ag-panel__price {
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.7rem;
-  align-items: baseline;
-  font-size: 1rem;
-  color: var(--text);
-}
-
-.ag-panel__price span {
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent-2);
-}
-
 .ag-panel__actions {
   display: flex;
   flex-wrap: wrap;
@@ -187,18 +169,6 @@
   font-size: 0.98rem;
   min-height: 3.1rem;
   padding-inline: 1.2em;
-}
-
-.ag-panel__more {
-  font-weight: 700;
-  color: var(--accent-2);
-  padding: 0.4em 0;
-  text-underline-offset: 3px;
-}
-
-.ag-panel .crew {
-  margin-top: 0.4rem;
-  padding-top: 1rem;
 }
 
 /* desktop: one row, the hovered panel grows, the photo runs behind the copy */
@@ -230,11 +200,5 @@
   .ag-panel__body {
     margin-top: auto;
     padding-top: 12rem;
-  }
-}
-
-@media (min-width: 900px) and (max-width: 1199px) {
-  .ag-panel__actions .btn {
-    flex: 1 1 100%;
   }
 }

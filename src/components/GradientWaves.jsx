@@ -149,7 +149,8 @@ const GradientWaves = ({
   parallaxStrength = 0.5,
   grain = true,
   grainIntensity = 0.05,
-  className = ''
+  className = '',
+  onError
 }) => {
   const containerRef = useRef(null);
   const enableMouseRef = useRef(mouseInteraction);
@@ -158,22 +159,34 @@ const GradientWaves = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const renderer = new Renderer({
-      webgl: 2,
-      alpha: true,
-      premultipliedAlpha: true,
-      antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2)
-    });
+    let renderer;
+    let gl;
+    let canvas;
+    try {
+      renderer = new Renderer({
+        webgl: 2,
+        alpha: true,
+        premultipliedAlpha: true,
+        antialias: false,
+        dpr: Math.min(window.devicePixelRatio || 1, 2)
+      });
+      gl = renderer.gl;
+      if (!gl) throw new Error('no WebGL2 context');
+      canvas = gl.canvas;
+    } catch (err) {
+      onError?.(err);
+      return undefined;
+    }
 
-    const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
-    const canvas = gl.canvas;
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     canvas.style.display = 'block';
     container.appendChild(canvas);
 
+    // Uniforms start at this render's actual prop values (not the library's
+    // generic purple/pink defaults), so the very first frame — before the
+    // props effect below has a chance to run — is already the right colour.
     const geometry = new Triangle(gl);
     const program = new Program(gl, {
       vertex,
@@ -181,27 +194,27 @@ const GradientWaves = ({
       uniforms: {
         iTime: { value: 0 },
         iResolution: { value: new Float32Array([1, 1]) },
-        uSpeed: { value: 0.4 },
-        uAmplitude: { value: 2.5 },
-        uWaveScale: { value: 0.6 },
-        uWaveRatio: { value: 0.9 },
-        uSwell: { value: 35 },
-        uTurbulence: { value: 20 },
-        uTilt: { value: 1.11 },
-        uZoom: { value: 1.0 },
-        uHeight: { value: 5.5 },
-        uFogDepth: { value: 15 },
-        uSteps: { value: 70.0 },
-        uBrightness: { value: 1.0 },
-        uOpacity: { value: 1.0 },
-        uGrain: { value: 1.0 },
-        uGrainIntensity: { value: 0.05 },
+        uSpeed: { value: speed },
+        uAmplitude: { value: amplitude },
+        uWaveScale: { value: waveScale },
+        uWaveRatio: { value: waveRatio },
+        uSwell: { value: swell },
+        uTurbulence: { value: turbulence },
+        uTilt: { value: tilt },
+        uZoom: { value: zoom },
+        uHeight: { value: height },
+        uFogDepth: { value: fogDepth },
+        uSteps: { value: detailToSteps(detail) },
+        uBrightness: { value: brightness },
+        uOpacity: { value: opacity },
+        uGrain: { value: grain ? 1.0 : 0.0 },
+        uGrainIntensity: { value: grainIntensity },
         uMouse: { value: new Float32Array([0.5, 0.5]) },
-        uParallax: { value: 0.5 },
-        uEnableMouse: { value: true },
-        uHorizonColor: { value: new Float32Array([1, 1, 1]) },
-        uWaveColor: { value: new Float32Array([1, 1, 1]) },
-        uCrestColor: { value: new Float32Array([1, 1, 1]) }
+        uParallax: { value: parallaxStrength },
+        uEnableMouse: { value: mouseInteraction },
+        uHorizonColor: { value: new Float32Array(hexToRgb(horizonColor)) },
+        uWaveColor: { value: new Float32Array(hexToRgb(waveColor)) },
+        uCrestColor: { value: new Float32Array(hexToRgb(crestColor)) }
       }
     });
 

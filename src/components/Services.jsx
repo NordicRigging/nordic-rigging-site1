@@ -1,16 +1,15 @@
 import { Link, useNavigate } from 'react-router-dom';
 
-import { CONTACT, SERVICES } from '../lib/content.js';
 import { useLang } from '../lib/LanguageContext.jsx';
 import { usePrefill } from '../lib/prefill.jsx';
 import { scrollToId } from '../lib/scroll.js';
-import { CrewLine } from './Team.jsx';
 import './Services.css';
 
 /**
  * ServicePanel and AskButton are the shared pieces: ServicePanel (the v2
  * accordion-gallery card) is used both here and by ServicesTab, AskButton by
- * both ServicesTab and ServicePage. There is no standalone services section
+ * ServicePage (its own "ask about this" button — the card itself only links
+ * through to the service page now). There is no standalone services section
  * any more — the three services live inside the "Palvelut" tab under the
  * hero (see Tabs.jsx / ServicesTab.jsx).
  */
@@ -38,10 +37,10 @@ export function AskButton({ slug, className = 'btn', children, onHome = true }) 
  * One service panel. The look is the v2 accordion gallery: tall photo
  * panels in a row, a dark gradient rising from the bottom, an accent bar and
  * a big title, and the row breathing as the pointer moves across it. Unlike
- * v2 nothing waits for a hover: every panel shows what the service includes,
- * the result, the price, the buttons and who does the work.
+ * v2 nothing waits for a hover: every panel shows what the service includes
+ * and the result; price, crew and full detail live on its own page now.
  */
-export function ServicePanel({ service, index, onHome = true }) {
+export function ServicePanel({ service, index }) {
   const { lang, t } = useLang();
   const s = service[lang];
   const c = t.services;
@@ -80,24 +79,11 @@ export function ServicePanel({ service, index, onHome = true }) {
           <strong>{c.outcomeTitle}:</strong> {s.outcome}
         </p>
 
-        <p className="ag-panel__price">
-          <span>{c.pricingTitle}</span>
-          {s.pricing}
-        </p>
-
         <div className="ag-panel__actions">
-          <AskButton slug={service.slug} className="btn btn--accent" onHome={onHome}>
-            {c.askCta}
-          </AskButton>
-          <a className="btn btn--ghost" href={CONTACT.phoneHref}>
-            {c.callCta} {CONTACT.phoneDisplay}
-          </a>
-          <Link className="ag-panel__more" to={`/palvelut/${service.slug}`}>
-            {c.readMore} →
+          <Link className="btn btn--accent" to={`/palvelut/${service.slug}`}>
+            {c.readMore}
           </Link>
         </div>
-
-        <CrewLine />
       </div>
     </article>
   );

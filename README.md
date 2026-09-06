@@ -20,7 +20,7 @@ npm run preview:file   # one self-contained preview/nordic-rigging.html
 
 ```bash
 npm run dev                    # in one terminal
-npm run verify                 # in another: 34 end-to-end checks, non-zero exit on failure
+npm run verify                 # in another: end-to-end checks, non-zero exit on failure
 npm run shot -- hero.png       # a screenshot of whatever is on screen
 ```
 
@@ -60,17 +60,24 @@ even that handoff has no seam.
 
 The top bar keeps the structure and styling of the v2 build's PillNav,
 recoloured, without GSAP: the hover sweep and the label swap on the pills are
-CSS transitions. The service cards (inside the "Palvelut" tab) keep the v2
-accordion-gallery look the same way. Unlike v2, every card shows its full
-content without a hover.
+CSS transitions. It's promoted to its own compositor layer
+(`transform: translateZ(0)`) — without that, a fixed + `backdrop-filter` bar
+sitting directly above the hero's live WebGL canvas can visibly flicker or
+lag during scroll in Chromium/WebKit. The nav only links to Palvelut, Ota
+Yhteyttä and Meistä; Telakoille and Tehdyt työt are reachable from the tab
+bar itself, and the phone number lives in the hero, the tab panels and the
+footer instead of the nav bar. The service cards (inside the "Palvelut" tab)
+keep the v2 accordion-gallery look the same way, trimmed to a short
+description, the outcome line and a single "Lue lisää palvelusta" button —
+price, crew and full detail live on the service's own page.
 
 ## Page structure
 
 | Section | Component | Anchor |
 | --- | --- | --- |
-| Hero: wave background, a framed photo/clip card, headline, call + message buttons, price / area / crew facts | `Hero.jsx`, `GradientWaves.jsx` | top |
-| Four tabs — Palvelut, Telakoille, Tehdyt työt, Meistä — one panel below a tab bar | `Tabs.jsx` | `#ratkaisut` |
-| ↳ Palvelut: the three services, a Spinlock Rig-Sense Pro highlight, pricing/area, contact CTA | `ServicesTab.jsx`, `RigSenseHighlight.jsx` (uses `Services.jsx`'s `ServicePanel`) | |
+| Hero: wave background, a video-filled "Nordic Rigging" wordmark, a side tagline badge, headline, call + message buttons, price / area / crew facts, an enlarged framed photo/clip card | `Hero.jsx`, `GradientWaves.jsx`, `MaskedHeading.jsx` | top |
+| Four tabs — Palvelut, Telakoille, Tehdyt työt, Meistä — one panel below a tab bar, a quiet radar-sweep animation behind it | `Tabs.jsx`, `TabPanelFX.jsx` | `#ratkaisut` |
+| ↳ Palvelut: the three services (short card, "Lue lisää" through to the full page), a Spinlock Rig-Sense Pro highlight, pricing/area, contact CTA | `ServicesTab.jsx`, `RigSenseHighlight.jsx` (uses `Services.jsx`'s `ServicePanel`) | |
 | ↳ Telakoille: the B2B pitch for yards and marinas | `YardsTab.jsx` | |
 | ↳ Tehdyt työt: a photo grid of finished jobs | `PortfolioTab.jsx` | |
 | ↳ Meistä: the company story and the crew | `AboutTab.jsx` (uses `Team.jsx`) | |
@@ -92,7 +99,16 @@ other three cost nothing until clicked.
 
 Adding a fifth tab: add its id to `TABS` in `tabs.jsx`, a label in
 `CONTENT[lang].nav`, a `<Tab*.jsx>` component, and a line in the `PANELS` map
-in `Tabs.jsx`.
+in `Tabs.jsx`. Only Palvelut and Meistä have a top-nav pill of their own —
+Telakoille and Tehdyt työt are reachable only by clicking the tab bar itself,
+which is why `Tabs.jsx` always renders all four tab buttons regardless of
+what's in the nav.
+
+`TabPanelFX.jsx` draws a quiet, slow-rotating radar sweep (canvas 2D, not the
+WebGL weight of GradientWaves) behind whichever panel is open, tucked into
+one corner so it reads as an instrument rather than a bullseye over the
+text. It pauses off-screen and skips its motion under
+`prefers-reduced-motion`.
 
 ## Content and languages
 
@@ -125,18 +141,33 @@ wording). Two delivery modes:
 Phone, email and WhatsApp are always shown next to the form, in the header and
 in the footer.
 
-## Hero: wave background and the framed clip
+## Hero: wave background, wordmark and the framed clip
 
-The hero is a normal section, not full-bleed. `GradientWaves.jsx` (a React
-Bits component, `ogl` for WebGL2, added as supplied and left unmodified) fills
-it as an absolutely-positioned background — a slow, calm animated wave field
-in the same navy family as the rest of the site (`horizonColor="#050b16"`,
+The hero is a normal section, not full-bleed, and a single centred column:
+a small tagline badge off to the side, the video-filled wordmark, the sales
+headline and facts, then an enlarged framed photo/clip card — never a
+two-column split. `GradientWaves.jsx` (a React Bits component, `ogl` for
+WebGL2, added as supplied and left unmodified) fills it as an
+absolutely-positioned background — a slow, calm animated wave field in the
+same navy family as the rest of the site (`horizonColor="#050b16"`,
 `waveColor="#123a6b"`, `crestColor="#4fa8db"`; tuned down from the defaults:
-`speed=0.25`, `mouseInteraction` on but gentle). `prefers-reduced-motion` or
-data saver gets a static CSS gradient instead (`.hero__waves-fallback`) —
-Hero.jsx's own choice, not something built into the pasted component.
+`speed=0.25`, `mouseInteraction` on but gentle). Its uniforms are seeded from
+these props on the very first frame (not the library's default
+purple/pink), and the whole setup is wrapped so a failed WebGL2 context calls
+back into Hero.jsx instead of leaving a blank layer — either way you get
+`.hero__waves-fallback`, a static CSS gradient, which is also what
+`prefers-reduced-motion` or data saver gets. `.hero__fade`, a plain gradient
+overlay, sits over the bottom of the canvas so the section always ends on
+flat `--navy-900` — the shader's own bottom edge is wave-coloured, not flat,
+so without it the seam with `.tabs` (which starts on that same navy) would
+show a step. The hero has no bottom padding at all; the tab row starts right
+where the hero's own content ends, `.tabs`' own (small) top padding is the
+only space left.
 
-The photo/clip lives in its own card (`.hero__media`) next to the copy —
+"Nordic" / "Rigging" — `MaskedHeading.jsx`, see below — sits centred above
+the headline, sized well below the photo so it never competes with it.
+
+The photo/clip lives in its own enlarged, centred card (`.hero__media`),
 contained, never full-bleed, and never scroll-linked. Its `aspect-ratio: 3/4`
 matches the source media exactly, so `object-fit: cover` shows the whole
 frame (mast and boat both) rather than a tight crop; only the top two corners
@@ -144,6 +175,21 @@ are rounded (`border-radius: 24px 24px 0 0`). The clip just loops for as long
 as it's on screen — nothing pauses it, nothing hands its frame to the section
 below. With `prefers-reduced-motion` or data saver there is no clip; the
 poster photo carries the card alone.
+
+## The wordmark: MaskedHeading
+
+`MaskedHeading.jsx` (`gsap` for the motion) fills a heading's letterforms
+with a moving video (or image) instead of a flat colour: a hidden "measure"
+span sizes the row in real layout pixels so any text/font works, an SVG
+`<clipPath>` built from that same box clips a "reveal" layer to the
+letterforms, and the media inside — sized larger than the row — is nudged
+with a gsap-driven transform so the fill drifts instead of sitting static.
+Hero.jsx renders it twice, stacked ("Nordic", "Rigging"), both filled by the
+same clip (`public/video/masthead-fill.{mp4,webm}`, the Beneteau blueprint
+clip from `assets/source/hero-beneteau-blueprint.mp4` — an existing asset,
+nothing generated for this). It's decorative (`aria-hidden`); the real,
+indexable heading is still the `<h1>` below it. Skips its motion under
+`prefers-reduced-motion`.
 
 `public/images/hero.webp` (2000 px, with a 1200 px `srcset` variant for
 phones) is the customer's `header.webp` cleaned with Higgsfield `gpt_image_2`
@@ -179,6 +225,7 @@ Finland kept high in the frame.
 | `telakka.webp` | the Telakoille tab |
 | `portfolio/*.webp` | the Tehdyt työt tab's photo grid — see `PORTFOLIO` in `content.js` |
 | `logo.svg`, `favicon.svg` | header, footer, browser tab |
+| `video/masthead-fill.{mp4,webm}` | the "Nordic Rigging" wordmark's video fill (`MaskedHeading`) |
 
 The original photos the site images were cut from (and the Spinlock PNG with
 transparency) are kept in `assets/source/`, outside `public/`, so they are

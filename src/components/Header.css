@@ -10,6 +10,13 @@
   z-index: 80;
   padding: clamp(0.5rem, 1.4vw, 0.85rem) var(--pad) 0;
   pointer-events: none; /* only the bar itself is interactive */
+  /* Own compositor layer: without this, a fixed + backdrop-filter bar
+     sitting directly above the hero's live WebGL canvas gets repainted
+     on the main thread every scroll frame in Chromium/WebKit, which can
+     show up as the bar visibly detaching from the top and lagging mid-page
+     for a frame or two. Promoting it once keeps it pinned. */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .pill-nav {
@@ -156,39 +163,6 @@
   opacity: 1;
 }
 
-/* ————— the phone pill: always in the bar ————— */
-
-.pill-call {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
-  height: 42px;
-  padding: 0 1.05rem;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--navy-900);
-  font-weight: 800;
-  font-size: 0.98rem;
-  text-decoration: none;
-  white-space: nowrap;
-  flex: 0 0 auto;
-  transition: background 160ms ease, transform 160ms ease;
-}
-
-.pill-call:hover {
-  background: var(--accent-2);
-  transform: translateY(-1px);
-}
-
-.pill-call svg {
-  width: 1.15em;
-  height: 1.15em;
-}
-
-.pill-call__long {
-  display: none;
-}
-
 /* ————— language toggle, folded into the bar ————— */
 
 .pill-lang {
@@ -307,14 +281,8 @@
 
 .mobile-menu-foot {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  align-items: center;
+  justify-content: center;
   padding: 0.4rem 0.4rem 0.2rem;
-}
-
-.mobile-menu-foot .btn {
-  flex: 1 1 auto;
 }
 
 .pill-lang--mobile .pill-lang__btn {
@@ -365,14 +333,6 @@
   }
 }
 
-@media (min-width: 900px) {
-  .pill-call__long {
-    display: inline;
-  }
-  .pill-call__short {
-    display: none;
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .hover-circle {

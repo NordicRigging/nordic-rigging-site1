@@ -12,16 +12,10 @@ import './Header.css';
  * a fixed, translucent pill bar with the logo, link pills with a colour sweep
  * on hover, the FI/EN toggle folded into the bar, and a popover menu on
  * phones. The GSAP timelines are gone; the sweep and the label swap are CSS
- * transitions. Four of the five links open the tabbed section below the
- * hero on the matching tab; "Yhteystiedot" still goes straight to the
- * contact section. The phone number never leaves the bar.
+ * transitions. Telakoille and Tehdyt työt stay reachable from the tab bar
+ * itself, not from here. The phone number lives in the hero, the tab panels
+ * and the footer instead of the nav bar.
  */
-const PhoneIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z" />
-  </svg>
-);
-
 export function LangToggle({ className = '' }) {
   const { lang, changeLanguage, t } = useLang();
   return (
@@ -50,12 +44,13 @@ export default function Header() {
   const onHome = pathname === '/';
   const [open, setOpen] = useState(false);
 
+  // Telakoille and Tehdyt työt stay reachable from the tab bar itself under
+  // the hero — they just don't need their own top-nav entry. Contact comes
+  // before About in the bar (asked for in this order).
   const items = [
     { key: 'services', label: t.nav.services, tab: 'palvelut' },
-    { key: 'yards', label: t.nav.yards, tab: 'telakat' },
-    { key: 'portfolio', label: t.nav.portfolio, tab: 'tyot' },
-    { key: 'about', label: t.nav.about, tab: 'meista' },
-    { key: 'contact', label: t.nav.contact, target: 'yhteystiedot' }
+    { key: 'contact', label: t.nav.contact, target: 'yhteystiedot' },
+    { key: 'about', label: t.nav.about, tab: 'meista' }
   ];
 
   useEffect(() => {
@@ -118,12 +113,6 @@ export default function Header() {
           </ul>
         </div>
 
-        <a className="pill-call" href={CONTACT.phoneHref}>
-          <PhoneIcon />
-          <span className="pill-call__long">{CONTACT.phoneDisplay}</span>
-          <span className="pill-call__short">{t.nav.call}</span>
-        </a>
-
         <LangToggle className="desktop-only" />
 
         <button
@@ -150,10 +139,6 @@ export default function Header() {
           ))}
         </ul>
         <div className="mobile-menu-foot">
-          <a className="btn btn--accent" href={CONTACT.phoneHref}>
-            <PhoneIcon />
-            {t.nav.call} {CONTACT.phoneDisplay}
-          </a>
           <LangToggle className="pill-lang--mobile" />
         </div>
       </div>

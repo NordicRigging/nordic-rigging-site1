@@ -1,15 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { CONTACT } from '../lib/content.js';
 import { useLang } from '../lib/LanguageContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
 import GradientWaves from './GradientWaves.jsx';
+import MaskedHeading from './MaskedHeading.jsx';
 import './Hero.css';
 
 /**
  * The hero is a contained section, not full-bleed: an animated wave
- * background (GradientWaves) fills it, and the mast photo/clip sits in its
- * own rounded card next to the copy. The card's aspect ratio (3:4) matches
+ * background (GradientWaves) fills it, a video-filled "NORDIC RIGGING"
+ * wordmark sits centred above the copy, and the mast photo/clip sits in its
+ * own enlarged, centred card below. The card's aspect ratio (3:4) matches
  * the source media exactly, so `object-fit: cover` shows the whole frame —
  * mast and boat both — rather than a tight crop.
  */
@@ -19,6 +21,7 @@ export const HERO_VIDEO = {
   lg: { webm: '/video/hero-lg.webm', mp4: '/video/hero-lg.mp4' },
   sm: { webm: '/video/hero-sm.webm', mp4: '/video/hero-sm.mp4' }
 };
+const WORDMARK_VIDEO = { mp4: '/video/masthead-fill.mp4', webm: '/video/masthead-fill.webm' };
 const LG_MIN_WIDTH = 900;
 
 const PhoneIcon = () => (
@@ -43,6 +46,7 @@ export default function Hero() {
   const [motion, setMotion] = useState(false);
   const [size, setSize] = useState('sm');
   const [playing, setPlaying] = useState(false);
+  const [wavesFailed, setWavesFailed] = useState(false);
 
   useEffect(() => {
     setMotion(wantsMotion());
@@ -64,15 +68,22 @@ export default function Hero() {
     };
   }, [motion]);
 
+  const onWavesError = useCallback(err => {
+    console.error('GradientWaves failed to start, falling back to a static gradient:', err);
+    setWavesFailed(true);
+  }, []);
+
   const toContact = e => {
     e.preventDefault();
     scrollToId('yhteystiedot');
   };
 
+  const showWaves = motion && !wavesFailed;
+
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero__waves" aria-hidden="true">
-        {motion ? (
+        {showWaves ? (
           <GradientWaves
             horizonColor="#050b16"
             waveColor="#123a6b"
@@ -89,15 +100,26 @@ export default function Hero() {
             grainIntensity={0.03}
             mouseInteraction
             parallaxStrength={0.35}
+            onError={onWavesError}
           />
         ) : (
           <div className="hero__waves-fallback" />
         )}
+        {/* The wave shader's own bottom edge is wave/crest-coloured, not flat
+            navy — fade it to navy-900 so the seam with the tabs section
+            below (which starts at navy-900) never shows a hard edge. */}
+        <div className="hero__fade" />
       </div>
 
+      <p className="hero__badge">{h.eyebrow}</p>
+
       <div className="hero__inner">
+        <div className="hero__wordmark" aria-hidden="true">
+          <MaskedHeading text="Nordic" mediaType="video" videoSrc={WORDMARK_VIDEO} weight={800} />
+          <MaskedHeading text="Rigging" mediaType="video" videoSrc={WORDMARK_VIDEO} weight={800} />
+        </div>
+
         <div className="hero__copy">
-          <p className="eyebrow hero__eyebrow">{h.eyebrow}</p>
           <h1 id="hero-title" className="hero__title">
             {h.title}
           </h1>
@@ -124,7 +146,7 @@ export default function Hero() {
         </div>
 
         <div className="hero__media">
-          <img className="hero__poster" src={HERO_IMAGE} srcSet={HERO_IMAGE_SET} sizes="(min-width: 900px) 30rem, 100vw" alt="" fetchpriority="high" decoding="async" />
+          <img className="hero__poster" src={HERO_IMAGE} srcSet={HERO_IMAGE_SET} sizes="(min-width: 900px) 34rem, 100vw" alt="" fetchpriority="high" decoding="async" />
           {motion && (
             <video
               ref={videoRef}

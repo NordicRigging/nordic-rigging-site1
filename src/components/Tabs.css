@@ -6,7 +6,10 @@
    settles at navy-700 (the lightest stop) for the location section below
    to pick up from. */
 .tabs {
-  padding-top: clamp(2rem, 5vw, 3rem);
+  /* Hero has no bottom padding any more, so this is the only space between
+     the two sections — kept small on purpose, the tab row is meant to sit
+     right under the hero. */
+  padding-top: clamp(1rem, 2vw, 1.5rem);
   background: linear-gradient(180deg, var(--navy-900) 0%, var(--navy-800) 35%, var(--navy-700) 100%);
 }
 
@@ -47,14 +50,22 @@
 }
 
 .tabs__panel {
+  position: relative;
+  overflow: hidden;
   margin-top: clamp(1.5rem, 3vw, 2rem);
-  padding: clamp(1.25rem, 3.5vw, 2.5rem);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, var(--glass) 0%, var(--glass-2) 100%);
   backdrop-filter: blur(14px) saturate(1.2);
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
   box-shadow: 0 24px 60px rgba(3, 9, 20, 0.4);
+}
+
+/* the radar sweep (TabPanelFX) sits behind this at z-index 0 */
+.tabs__panel-content {
+  position: relative;
+  z-index: 1;
+  padding: clamp(1.25rem, 3.5vw, 2.5rem);
 }
 
 @media (min-width: 640px) {

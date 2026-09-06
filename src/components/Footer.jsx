@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CONTACT, SERVICES } from '../lib/content.js';
 import { useLang } from '../lib/LanguageContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
+import { useTabs } from '../lib/tabs.jsx';
 import { LangToggle } from './Header.jsx';
 import './Footer.css';
 
@@ -11,19 +12,24 @@ export default function Footer() {
   const f = t.footer;
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { setActiveTab } = useTabs();
 
-  const go = (target, e) => {
-    e.preventDefault();
-    if (pathname === '/') scrollToId(target);
-    else navigate('/', { state: { scrollTo: target } });
-  };
-
+  // Same tab-aware links as the header: pick the tab, then land on #ratkaisut.
   const links = [
-    { label: t.nav.services, target: 'palvelut' },
-    { label: t.nav.rigsense, target: 'rig-sense' },
-    { label: t.nav.partners, target: 'telakoille' },
+    { label: t.nav.services, tab: 'palvelut' },
+    { label: t.nav.yards, tab: 'telakat' },
+    { label: t.nav.portfolio, tab: 'tyot' },
+    { label: t.nav.about, tab: 'meista' },
     { label: t.nav.contact, target: 'yhteystiedot' }
   ];
+
+  const go = (l, e) => {
+    e.preventDefault();
+    const target = l.target || 'ratkaisut';
+    if (l.tab) setActiveTab(l.tab);
+    if (pathname === '/') scrollToId(target);
+    else navigate('/', { state: { scrollTo: target, tab: l.tab } });
+  };
 
   return (
     <footer className="footer">
@@ -40,8 +46,8 @@ export default function Footer() {
           <h3 className="footer__heading">{f.navHeading}</h3>
           <ul className="footer__list">
             {links.map(l => (
-              <li key={l.target}>
-                <a href={`/#${l.target}`} onClick={e => go(l.target, e)}>
+              <li key={l.label}>
+                <a href={`/#${l.target || 'ratkaisut'}`} onClick={e => go(l, e)}>
                   {l.label}
                 </a>
               </li>

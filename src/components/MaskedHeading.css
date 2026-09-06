@@ -1,0 +1,60 @@
+/* Video/image-filled heading. The measure span is real text (hidden but in
+   flow) so the row sizes itself in normal layout; the reveal layer and the
+   SVG clip-path text both key off that same box. */
+
+.masked-heading {
+  display: block;
+  line-height: 1;
+}
+
+.masked-heading__row {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+}
+
+.masked-heading__measure {
+  display: block;
+  visibility: hidden;
+  font-family: var(--font);
+  font-weight: var(--mh-weight, 800);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.masked-heading__reveal {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: block;
+  border-radius: 0.08em;
+}
+
+/* Oversized and centred with plain percentages (not a translate/transform),
+   so the only transform ever applied to this element is the gsap-driven
+   drift — nothing static to fight with it. */
+.masked-heading__media {
+  position: absolute;
+  top: -22.5%;
+  left: -22.5%;
+  width: 145%;
+  height: 145%;
+  max-width: none;
+  object-fit: cover;
+}
+
+.masked-heading__clip-text {
+  font-family: var(--font);
+  font-weight: var(--mh-weight, 800);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+.masked-heading__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}

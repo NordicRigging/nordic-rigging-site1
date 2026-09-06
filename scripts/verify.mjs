@@ -22,6 +22,27 @@ const check = (name, ok, detail = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + detail : ''}`);
 };
 
+/**
+ * `scroll-behavior: smooth` means a nav click keeps moving for a bit after
+ * it fires — how long depends on the distance, which depends on the page's
+ * height, which changes as the site grows. Rather than guess a fixed delay,
+ * or try to detect when the animation has "settled" (unreliable: near the
+ * end of a long eased scroll the position barely changes frame to frame
+ * anyway, which can look identical to "finished" while it's still moving),
+ * poll the actual thing each check cares about — is the target now near the
+ * top of the viewport — until it's true or a generous timeout runs out.
+ */
+async function scrolledNearTop(page, id, { min = -5, max = 200, timeout = 4000 } = {}) {
+  const start = Date.now();
+  let top = null;
+  while (Date.now() - start < timeout) {
+    top = await page.evaluate(sel => document.getElementById(sel)?.getBoundingClientRect().top, id);
+    if (top != null && top >= min && top < max) return top;
+    await page.waitForTimeout(50);
+  }
+  return top;
+}
+
 const browser = await launch();
 
 // ---------- desktop, Finnish ----------
@@ -36,6 +57,25 @@ const browser = await launch();
 
   check('html lang is fi by default', (await page.getAttribute('html', 'lang')) === 'fi');
   check('FI hero title', (await page.locator('h1').textContent()).includes('Purjeveneesi'));
+
+  // the wordmark: two video-filled rows, centred, not the sales h1
+  const wordmarkRows = await page.locator('.masked-heading__row').count();
+  check('wordmark has two rows (Nordic / Rigging)', wordmarkRows === 2, `rows=${wordmarkRows}`);
+  const wordmarkVideos = await page.evaluate(() =>
+    [...document.querySelectorAll('.masked-heading__media')].map(v => ({ playing: !v.paused && v.currentTime > 0 }))
+  );
+  check('wordmark videos are playing', wordmarkVideos.length === 2 && wordmarkVideos.every(v => v.playing), JSON.stringify(wordmarkVideos));
+
+  // the tagline moved out of the centre into its own badge
+  check('tagline is its own badge, not inline with the title', (await page.locator('.hero__badge').textContent()).includes('miehistö'));
+
+  // the fixed nav bar has a stable compositor layer (the fix for the
+  // scroll-flicker bug), and no bottom padding on the hero keeps it flush
+  // against the tab row below
+  const navLayer = await page.evaluate(() => getComputedStyle(document.querySelector('.pill-nav-container')).willChange);
+  check('nav bar has GPU layer promotion (scroll-flicker fix)', navLayer === 'transform', navLayer);
+  const heroPadBottom = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.hero')).paddingBottom));
+  check('hero has no bottom padding (tabs sit flush under it)', heroPadBottom === 0, `${heroPadBottom}px`);
 
   // the hero's wave background (GradientWaves) and the framed clip, both contained in the hero card
   await page.waitForTimeout(2000);
@@ -84,22 +124,34 @@ const browser = await launch();
   });
   check('price/area/crew facts visible in first viewport (desktop)', !!factsVisible);
 
-  // the four tabs: default, then each nav link opens the matching one and scrolls to it
+  // the four tabs: default, then the nav opens the ones it still links to
   check('Palvelut tab open by default', await page.locator('#tab-palvelut').getAttribute('aria-selected').then(v => v === 'true'));
   check('Palvelut panel shows the three services', (await page.locator('#panel-palvelut').textContent()).includes('Mastotyöt'));
 
-  const navChecks = [
-    { label: 'Telakoille', tabId: 'telakat', text: 'Tarvitsetko luotettavan' },
-    { label: 'Tehdyt työt', tabId: 'tyot', text: 'Referenssejä' },
-    { label: 'Meistä', tabId: 'meista', text: 'Isä ja poika' }
-  ];
-  for (const { label, tabId, text } of navChecks) {
-    await page.locator('.pill', { hasText: label }).click();
-    await page.waitForTimeout(700);
-    check(`nav "${label}" opens and scrolls to its tab`, await page.locator(`#tab-${tabId}`).getAttribute('aria-selected').then(v => v === 'true'));
-    check(`"${label}" panel shows its content`, (await page.locator(`#panel-${tabId}`).textContent()).includes(text));
-    const top = await page.evaluate(() => document.getElementById('ratkaisut').getBoundingClientRect().top);
-    check(`"${label}" scrolled the tabs section into view`, top >= -5 && top < 200, `top=${top.toFixed(0)}`);
+  // Telakoille and Tehdyt työt no longer have their own nav pill — only
+  // Palvelut, Ota Yhteyttä (before Meistä) and Meistä remain, no phone pill.
+  const pillLabels = await page.locator('.pill-list .pill-label').allTextContents();
+  check(
+    'nav is Palvelut / Ota Yhteyttä / Meistä, no Telakoille or Tehdyt työt pill',
+    JSON.stringify(pillLabels) === JSON.stringify(['Palvelut', 'Ota Yhteyttä', 'Meistä']),
+    JSON.stringify(pillLabels)
+  );
+  check('phone number removed from the nav bar', (await page.locator('.pill-nav .pill-call').count()) === 0);
+
+  await page.locator('.pill', { hasText: 'Meistä' }).click();
+  const meistaTop = await scrolledNearTop(page, 'ratkaisut');
+  check('"Meistä" scrolled the tabs section into view', meistaTop != null && meistaTop >= -5 && meistaTop < 200, `top=${meistaTop?.toFixed?.(0)}`);
+  check('nav "Meistä" opens and scrolls to its tab', await page.locator('#tab-meista').getAttribute('aria-selected').then(v => v === 'true'));
+  check('"Meistä" panel shows its content', (await page.locator('#panel-meista').textContent()).includes('Isä ja poika'));
+
+  // Telakoille / Tehdyt työt: reachable only from the on-page tab bar now
+  for (const { tabId, text } of [
+    { tabId: 'telakat', text: 'Tarvitsetko luotettavan' },
+    { tabId: 'tyot', text: 'Referenssejä' }
+  ]) {
+    await page.click(`#tab-${tabId}`);
+    await page.waitForTimeout(400);
+    check(`tab button "${tabId}" switches and shows its content`, (await page.locator(`#panel-${tabId}`).textContent()).includes(text));
   }
 
   // clicking a tab button directly also works, and only that tab's content is mounted
@@ -108,12 +160,15 @@ const browser = await launch();
   await page.waitForTimeout(200);
   check('clicking a tab button switches back', await page.locator('#tab-palvelut').getAttribute('aria-selected').then(v => v === 'true'));
   check('switching tabs unmounts the previous panel', (await page.locator('.portfolio-grid').count()) === 0);
+  check('simplified service card has no price/crew row, one "Lue lisää" button', (await page.locator('.ag-panel__price').count()) === 0 && (await page.locator('.ag-panel .crew').count()) === 0);
 
-  // nav scroll to contact (not a tab)
-  await page.locator('.pill', { hasText: 'Yhteystiedot' }).click();
-  await page.waitForTimeout(1200);
-  const contactTop = await page.evaluate(() => document.getElementById('yhteystiedot').getBoundingClientRect().top);
-  check('nav link scrolls to contact', contactTop >= 0 && contactTop < 200, `top=${contactTop.toFixed(0)}`);
+  // radar sweep behind the active panel
+  check('tab panel FX canvas is present', (await page.locator('.tab-fx').count()) === 1);
+
+  // nav scroll to contact (not a tab) — the button is now "Ota Yhteyttä"
+  await page.locator('.pill', { hasText: 'Ota Yhteyttä' }).click();
+  const contactTop = await scrolledNearTop(page, 'yhteystiedot');
+  check('nav link scrolls to contact', contactTop != null && contactTop >= -5 && contactTop < 200, `top=${contactTop?.toFixed?.(0)}`);
 
   // globe
   await page.waitForTimeout(3500);
@@ -122,8 +177,8 @@ const browser = await launch();
   const pinVisible = await page.evaluate(() => Number(document.querySelector('.globe__pin--turku')?.style.opacity) > 0.9);
   check('Turku pin visible', !!pinVisible);
 
-  // the B2B path: open the yards tab via its own button and pre-fill the shared form
-  await page.locator('.pill', { hasText: 'Telakoille' }).click();
+  // the B2B path: open the yards tab (from the tab bar, no nav pill any more) and pre-fill the shared form
+  await page.click('#tab-telakat');
   await page.waitForTimeout(600);
   await page.locator('#panel-telakat .btn--accent').click();
   await page.waitForTimeout(1200);
@@ -186,17 +241,21 @@ const browser = await launch();
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   check('no horizontal overflow on mobile', overflow <= 0, `overflow=${overflow}px`);
-  check('phone button visible in mobile header', await page.locator('.pill-call').isVisible());
+  check('phone pill removed from mobile header too', (await page.locator('.pill-call').count()) === 0);
 
   await page.locator('.mobile-menu-button').click();
   await page.waitForTimeout(300);
   check('mobile menu opens', await page.locator('#mobile-menu').isVisible());
-  await page.locator('.mobile-menu-link', { hasText: 'Tehdyt työt' }).click();
-  await page.waitForTimeout(900);
+  check('mobile menu has no Telakoille/Tehdyt työt link', (await page.locator('.mobile-menu-link', { hasText: 'Telakoille' }).count()) === 0);
+  await page.locator('.mobile-menu-link', { hasText: 'Meistä' }).click();
+  const tabsTop = await scrolledNearTop(page, 'ratkaisut');
+  check('mobile nav scrolled to the tabs section', tabsTop != null && tabsTop >= -5 && tabsTop < 200, `top=${tabsTop?.toFixed?.(0)}`);
   check('mobile menu closes after click', !(await page.locator('#mobile-menu').isVisible()));
-  check('mobile nav opened the Tehdyt työt tab', await page.locator('#tab-tyot').getAttribute('aria-selected').then(v => v === 'true'));
-  const tabsTop = await page.evaluate(() => document.getElementById('ratkaisut').getBoundingClientRect().top);
-  check('mobile nav scrolled to the tabs section', tabsTop >= -5 && tabsTop < 200, `top=${tabsTop.toFixed(0)}`);
+  check('mobile nav opened the Meistä tab', await page.locator('#tab-meista').getAttribute('aria-selected').then(v => v === 'true'));
+
+  await page.click('#tab-tyot');
+  await page.waitForTimeout(400);
+  check('mobile: tab bar itself opens Tehdyt työt', await page.locator('#tab-tyot').getAttribute('aria-selected').then(v => v === 'true'));
   check('portfolio grid has photos', (await page.locator('.portfolio-grid__item').count()) >= 4);
 
   await page.waitForTimeout(1200);

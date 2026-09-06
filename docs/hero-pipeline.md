@@ -89,6 +89,9 @@ another section.
 
 ## 6. Framing
 
-The photo/clip sits in its own card next to the copy, not full-bleed —
-`.hero__media` in `Hero.css`, `aspect-ratio: 3 / 4` (matching the source
-media exactly, so the whole frame shows) with the top two corners rounded.
+The photo/clip sits in its own enlarged, centred card, not full-bleed and not
+beside the copy any more — `.hero__media` in `Hero.css`, `aspect-ratio: 3 / 4`
+(matching the source media exactly, so the whole frame shows) with the top
+two corners rounded. It's the last thing in the hero's single centred column,
+below the video-filled "Nordic Rigging" wordmark (`MaskedHeading.jsx`) and
+the sales copy.
