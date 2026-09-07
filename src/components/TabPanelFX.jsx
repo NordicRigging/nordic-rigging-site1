@@ -46,10 +46,14 @@ export default function TabPanelFX() {
       // panels run very tall (three service cards, the Rig-Sense highlight,
       // the footer), and a size derived from that height would sweep the
       // effect down across the card grid instead of staying a small corner
-      // accent for the whole panel.
-      const cx = w - 110;
-      const cy = 90;
-      const r = Math.min(230, w * 0.4);
+      // accent for the whole panel. Kept small enough to clear the Palvelut
+      // panel's own card row (starts ~159px down, measured directly) too —
+      // this canvas is one shared, ever-present element behind whichever
+      // tab is showing, so its footprint has to stay clear of every panel's
+      // top content, not just the three shorter ones.
+      const cx = w - 85;
+      const cy = 50;
+      const r = Math.min(90, w * 0.32);
 
       ctx.strokeStyle = 'rgba(80, 230, 160, 0.22)';
       ctx.lineWidth = 1;

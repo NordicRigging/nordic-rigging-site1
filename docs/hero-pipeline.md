@@ -95,3 +95,30 @@ beside the copy any more — `.hero__media` in `Hero.css`, `aspect-ratio: 3 / 4`
 two corners rounded. It's the last thing in the hero's single centred column,
 below the video-filled "Nordic Rigging" wordmark (`MaskedHeading.jsx`) and
 the sales copy.
+
+## 7. Round 7/9 update — wider photo, regenerated clip
+
+Round 7 outpainted the photo to 16:9 (Higgsfield outpaint job `92c6b486`,
+from the same 4K upscale as step 4 — see `assets/source/hero-beneteau-outpaint-16x9.webp`,
+2752×1536). The blueprint clip was *not* regenerated at the time; it kept
+the original step-3 footage, sized down to a centred strip in `Hero.css` so
+it wouldn't zoom against the wider box. That strip's own edges read as a
+hard seam against the surrounding (newly wider) photo once the schematic
+overlay was on screen — round 9 item 1.
+
+Fixed by regenerating the clip from the *current* wide photo instead of
+patching the sizing again: same `seedance_2_5` / `omni_reference` model and
+prompt as step 3, `start_image`/`end_image` both the outpainted photo
+(uploaded fresh as media `3b23a910-69de-4673-9c38-01c2227c487c`), `16:9`,
+4 s (not 6 — this is the credit-budget tier; still ample for the hold), no
+audio. Result job `60d55ad8-0ee4-4c48-9f9e-cbbcdf87d9a6`, 1280×720 H.264,
+queued through the media relay as `hero-blueprint-16x9-raw.mp4` and copied
+to `public/video/raw/hero.mp4`. `npm run video` (unchanged pipeline/settings
+from round 8) re-encoded it into the usual four files.
+
+Being genuinely full-width footage now, `.hero__video` in `Hero.css` went
+back to a plain `inset: 0` — the same box as the poster, no left/width
+strip. `VIDEO_FREEZE_TIME` in `Hero.jsx` (and the copy in `scripts/verify.mjs`)
+changed to `2.6` — this clip's own hold timing, found the same way as
+before (extracting frames and checking directly), unrelated to the previous
+clip's `5.08`.

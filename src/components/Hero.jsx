@@ -37,11 +37,12 @@ const VIDEO_GRACE_MS = 1500;
 // loop ("the line drawing fades back into the original photograph, ending
 // exactly on the reference frame", per docs/hero-pipeline.md), not to be
 // scrubbed and held. Freezing at its literal duration would always land
-// back on the photo, which is the opposite of what the intro needs. 5.08s
-// is the last frame of the blueprint's hold, checked directly against the
-// source footage — a couple of frames before the glide-back-to-photo
-// starts (~5.29s onward) so there's no partial-fade blending in the freeze.
-const VIDEO_FREEZE_TIME = 5.08;
+// back on the photo, which is the opposite of what the intro needs. 2.6s is
+// inside the blueprint's full hold (checked directly against the source
+// footage: dimension callouts are stable roughly 2.0-2.7s in, then fade
+// out, then the whole schematic glides back to the photo from ~3.3s on) —
+// this is the round-9 regeneration's own timing, not the previous clip's.
+const VIDEO_FREEZE_TIME = 2.6;
 
 /** Skip the clip for people who asked for less motion or are saving data. */
 function wantsMotion() {
@@ -115,6 +116,28 @@ export default function Hero({ dimBoxRef }) {
     el.style.strokeDasharray = String(len);
     el.style.strokeDashoffset = String(len);
     return undefined;
+  }, []);
+
+  // stroke-width has to be set here, not in CSS: with non-scaling-stroke
+  // off (see Hero.css for why it has to be), a plain CSS stroke-width is in
+  // the same 0-100 viewBox units as the path itself and would scale with
+  // the box's rendered size. Re-deriving it from the SVG's own current
+  // width on every resize keeps the line a constant 1.5px on screen —
+  // matching TracingBeam's stroke-width — regardless of viewport size.
+  useLayoutEffect(() => {
+    const el = borderRef.current;
+    const svg = el?.ownerSVGElement;
+    if (!el || !svg) return undefined;
+    const TARGET_PX = 1.5;
+    const VIEWBOX_WIDTH = svg.viewBox.baseVal.width || 100;
+    const setStrokeWidth = () => {
+      const boxWidth = svg.getBoundingClientRect().width;
+      if (boxWidth > 0) el.style.strokeWidth = String((TARGET_PX * VIEWBOX_WIDTH) / boxWidth);
+    };
+    setStrokeWidth();
+    const ro = new ResizeObserver(setStrokeWidth);
+    ro.observe(svg);
+    return () => ro.disconnect();
   }, []);
 
   useEffect(() => {

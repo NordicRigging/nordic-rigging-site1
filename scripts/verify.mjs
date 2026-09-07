@@ -158,15 +158,54 @@ const browser = await launch();
     };
   });
   check('border trace fully closed (dashoffset 0) at reveal', seqEnd.borderDashoffset === 0, JSON.stringify(seqEnd));
+  // Round 9 root cause: vector-effect:non-scaling-stroke combined with a
+  // dashed stroke on this scaled (non 1:1) viewBox rendered as several
+  // disconnected marks instead of one growing line, in this exact browser —
+  // confirmed by screenshotting the live (slowed-down) animation, not just
+  // this end state. Removing it fixed the rendering; stroke-width is set by
+  // Hero.jsx instead, from the SVG's own live rendered size, so it still
+  // reads as a constant on-screen 1.5px. Guard both halves of that fix here.
+  const borderStrokeInfo = await page.evaluate(() => {
+    const rect = document.querySelector('.hero__border-rect');
+    const cs = getComputedStyle(rect);
+    return { vectorEffect: cs.vectorEffect, strokeWidth: parseFloat(rect.style.strokeWidth) };
+  });
+  check(
+    'border stroke does not use vector-effect:non-scaling-stroke (broke dash rendering)',
+    borderStrokeInfo.vectorEffect !== 'non-scaling-stroke',
+    JSON.stringify(borderStrokeInfo)
+  );
+  check(
+    'border stroke-width is set from the SVG\'s live rendered size (constant on-screen width)',
+    Number.isFinite(borderStrokeInfo.strokeWidth) && borderStrokeInfo.strokeWidth > 0,
+    JSON.stringify(borderStrokeInfo)
+  );
   check('percent counter reached 100 at reveal', seqEnd.counterText === '100', seqEnd.counterText);
   // Must match Hero.jsx's VIDEO_FREEZE_TIME, not videoDuration — the clip's
   // own last frame is the plain photo again (it was authored to loop), so
-  // freezing there would show no blueprint at all.
-  const VIDEO_FREEZE_TIME = 5.08;
+  // freezing there would show no blueprint at all. 2.6s is this round's
+  // regenerated (widescreen) clip's own hold timing, not the previous one's.
+  const VIDEO_FREEZE_TIME = 2.6;
   check(
     'blueprint clip is scrubbed to its held peak frame and frozen there, not its own last frame (which is the plain photo again)',
     seqEnd.videoActive === true && Math.abs(seqEnd.videoCurrentTime - VIDEO_FREEZE_TIME) < 0.05,
     JSON.stringify(seqEnd)
+  );
+  // Round 9 item 1: the clip used to be the original pre-outpaint 3:4
+  // footage, sized to a narrow centred strip so it wouldn't zoom — but that
+  // strip's own edges were a hard seam against the wider photo once the
+  // schematic overlay was on screen. Regenerated full-width from the
+  // current photo and simplified to the exact same inset:0 box as the
+  // poster (no separate left/width) — guard that they now share one box.
+  const videoVsPoster = await page.evaluate(() => {
+    const v = document.querySelector('.hero__video').getBoundingClientRect();
+    const p = document.querySelector('.hero__poster').getBoundingClientRect();
+    return { video: { l: v.left, w: v.width }, poster: { l: p.left, w: p.width } };
+  });
+  check(
+    'blueprint video fills the same box as the photo (no narrow strip, no seam against it)',
+    Math.abs(videoVsPoster.video.l - videoVsPoster.poster.l) < 1 && Math.abs(videoVsPoster.video.w - videoVsPoster.poster.w) < 1,
+    JSON.stringify(videoVsPoster)
   );
 
   // the glass contact card: tagline, a static Rig-Sense reading (not the
@@ -210,6 +249,23 @@ const browser = await launch();
   check('nav bar has GPU layer promotion (scroll-flicker fix)', navLayer === 'transform', navLayer);
   const heroPadBottom = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.hero')).paddingBottom));
   check('hero has no bottom padding (tabs sit flush under it)', heroPadBottom === 0, `${heroPadBottom}px`);
+
+  // item 4 (round 9): .hero__stage used to cap itself at max-width:64rem
+  // while .hero__inner/.tabs .wrap both size off --pad/--max — narrower than
+  // the tab row below it. It has no max-width of its own any more, so the
+  // photo and the tab row measure the same width, and the gap between them
+  // should read as flush, not a visible seam.
+  const heroTabsWidth = await page.evaluate(() => {
+    const media = document.querySelector('.hero__media').getBoundingClientRect();
+    const tabsWrap = document.querySelector('.tabs .wrap').getBoundingClientRect();
+    return { mediaLeft: media.left, mediaRight: media.right, tabsLeft: tabsWrap.left, tabsRight: tabsWrap.right, gap: tabsWrap.top - media.bottom };
+  });
+  check(
+    'hero photo width matches the tab row width exactly',
+    Math.abs(heroTabsWidth.mediaLeft - heroTabsWidth.tabsLeft) < 1 && Math.abs(heroTabsWidth.mediaRight - heroTabsWidth.tabsRight) < 1,
+    JSON.stringify(heroTabsWidth)
+  );
+  check('gap between hero photo and tab row reads as flush, not a visible seam', heroTabsWidth.gap < 50, `${heroTabsWidth.gap.toFixed(1)}px`);
 
   // the hero's wave background (GradientWaves) and the framed clip, both contained in the hero card
   await page.waitForTimeout(2000);
@@ -374,6 +430,30 @@ const browser = await launch();
     !!fxPixelAtCards && fxPixelAtCards.alpha === 0,
     JSON.stringify(fxPixelAtCards)
   );
+  // Round 9 item 5: the radar canvas is one shared, ever-present element
+  // behind whichever tab is active, so it was already tab-agnostic in the
+  // DOM/JS sense — but on Palvelut specifically (by far the tallest panel,
+  // three cards starting right under the lead paragraph) its footprint
+  // used to land partly under the third card's own photo, which is opaque
+  // and sits above the canvas in stacking order, so the sweep read as
+  // effectively invisible there while showing clearly on the other three
+  // tabs. Confirmed directly by sampling the canvas's own drawn pixels, not
+  // just checking the DOM node exists. It was shrunk to clear the card row;
+  // guard that a lit pixel still exists near its centre on Palvelut too.
+  const radarPixelOnPalvelut = await page.evaluate(() => {
+    const canvas = document.querySelector('.tab-fx');
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const x = Math.round((rect.width - 85) * dpr);
+    const y = Math.round(50 * dpr);
+    const data = canvas.getContext('2d').getImageData(x, y, 1, 1).data;
+    return { alpha: data[3] };
+  });
+  check(
+    'radar FX actually draws a lit pixel near its centre on the (default) Palvelut tab',
+    !!radarPixelOnPalvelut && radarPixelOnPalvelut.alpha > 0,
+    JSON.stringify(radarPixelOnPalvelut)
+  );
 
   // rapid re-clicking mid-transition must still land correctly, not throw
   await page.click('#tab-telakat');
@@ -481,7 +561,7 @@ const browser = await launch();
     const el = document.querySelector('.hero__video');
     return el ? { active: el.classList.contains('is-active'), t: el.currentTime } : { missing: true };
   });
-  check('hero clip scrubbed and frozen on mobile too', vm.active === true && Math.abs(vm.t - 5.08) < 0.05, JSON.stringify(vm));
+  check('hero clip scrubbed and frozen on mobile too', vm.active === true && Math.abs(vm.t - 2.6) < 0.05, JSON.stringify(vm));
 
   // below the ~640px breakpoint the contact card can't overlay the photo
   // without colliding with the title (not enough vertical room in 16:9 at

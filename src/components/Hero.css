@@ -44,7 +44,7 @@
   z-index: 1;
   width: min(100% - 2 * var(--pad), var(--max));
   margin-inline: auto;
-  padding-bottom: clamp(2rem, 5vw, 3.5rem);
+  padding-bottom: clamp(0.75rem, 1.5vw, 1.25rem);
 }
 
 /* Holds the title, the photo box and the contact card as siblings, all
@@ -52,11 +52,13 @@
    the photo to spill into (padding-top reserves it, pushing .hero__media
    down), and the contact card needs to be able to drop into normal flow
    below the photo on narrow screens (see its mobile override) — neither
-   works from inside a box that clips its overflow to the photo itself. */
+   works from inside a box that clips its overflow to the photo itself.
+   No max-width of its own: it fills .hero__inner exactly like .tabs .wrap
+   does (both are min(100% - 2*var(--pad), var(--max))), so the photo and
+   the tab row below always measure the same width. */
 .hero__stage {
   position: relative;
   width: 100%;
-  max-width: 64rem;
   margin-inline: auto;
   padding-top: clamp(1.75rem, 6vw, 3.75rem);
 }
@@ -83,29 +85,18 @@
   object-position: 50% 42%;
 }
 
-/* The clip's own footage was never re-shot after the photo was outpainted
-   wider (item 2, previous round) — it's still the original, narrower
-   pre-outpaint framing. Filling the whole card with it via inset:0 like the
-   poster forces object-fit:cover to blow that narrower content up to cover
-   the wider box, which is what read as "zooms in and stays zoomed": the
-   video was covering ~1.5x more than the photo needs to. The fix isn't a
-   transform (that would just crop further) — it's sizing the video to the
-   actual fraction of the outpainted photo's width its footage corresponds
-   to (measured directly: cropping hero.webp to its centre 41.86% reproduces
-   the video's own first frame almost exactly), so both sources land at the
-   same on-screen scale and the crossfade between them shows no zoom at all. */
+/* Round 9 regenerated this clip from the current outpainted (16:9) photo
+   directly, so it's full-width footage now, not the old pre-outpaint 3:4
+   crop — it fills the whole card exactly like the poster underneath it,
+   same inset:0/object-fit, no width/left sizing trick needed any more (that
+   was only ever there to compensate for the old clip's narrower footage,
+   and its own hard edge against the wider photo was the round-9 "seams"
+   complaint). Kept as a plain top-of-DOM sibling of .hero__poster so the
+   two crossfade in place. */
 .hero__video {
   position: absolute;
-  top: 0;
-  /* Centred via a plain left percentage ((100% - 41.86%) / 2), not
-     left:50% + transform:translateX(-50%): a CSS transform on a video
-     element this small, combined with object-fit:cover, leaves a freshly
-     seeked frame stuck on an old one in at least one real compositor
-     (verified directly — the exact same element with the transform removed
-     paints correctly) even though currentTime/readyState/seeking all
-     report the seek as long settled. Same end position, no transform. */
-  left: 29.07%;
-  width: 41.86%;
+  inset: 0;
+  width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 50% 42%;
@@ -120,13 +111,23 @@
 /* the tracing border: one continuous rect path inset from the media box's
    own edge, drawn by animating stroke-dashoffset from its full length
    (invisible) to 0 — a single stroke growing from its path's start point
-   all the way around and back, not separate corner marks. The viewBox
-   matches the box's aspect ratio, so non-scaling-stroke keeps the line a
-   constant width regardless of the box's actual rendered size. Colour and
+   all the way around and back, not separate corner marks. Colour and
    width match TracingBeam's gradient start (see TracingBeam.css) and its
    own fade-in on scroll picks up right where this one fades out (see
    .hero__border.is-handed-off and Hero.jsx's scroll IntersectionObserver),
-   so the two read as one beam handing off, not two different ones. */
+   so the two read as one beam handing off, not two different ones.
+
+   No vector-effect: non-scaling-stroke here, deliberately — combined with
+   stroke-dasharray on this viewBox (100 x 56.25, scaled up ~13-18x to the
+   box's real rendered size), it made the dash pattern render as several
+   short disconnected marks instead of one growing line, in this exact
+   Chromium build: verified directly by screenshotting the live animation
+   (slowed down, not just the end state) with and without it — turning it
+   off produces one unbroken line every time, on every build tested here.
+   The stroke-width tradeoff (it would now scale with the box's rendered
+   size, same as any other user-space stroke) is compensated in Hero.jsx: a
+   ResizeObserver keeps it pinned to a constant on-screen 1.5px, matching
+   TracingBeam's own stroke-width, instead of the CSS value below. */
 .hero__border {
   position: absolute;
   inset: 0;
@@ -144,8 +145,9 @@
 .hero__border-rect {
   fill: none;
   stroke: #2e8bc0;
+  /* overridden inline by Hero.jsx to hold a constant on-screen width — see
+     the comment above */
   stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
   filter: drop-shadow(0 0 6px rgba(46, 139, 192, 0.65));
 }
 
