@@ -247,7 +247,8 @@ export const CONTENT = {
       eyebrow: 'Purjeveneesi paras miehistö maalla',
       contactCta: 'Ota yhteyttä',
       videoLabel: 'Masto ja rikki teknisenä piirroksena',
-      quickFacts: 'Varsinais-Suomi ja Uusimaa · 100 €/h sis. alv'
+      spinlockHint: 'Spinlock Rig-Sense Pro -mittari',
+      scrollHint: 'Lue lisää'
     },
     services: {
       eyebrow: 'Palvelut',
@@ -305,7 +306,8 @@ export const CONTENT = {
       badge: 'Kuuluu jokaiseen mastonnostoon',
       imageAlt: 'Spinlock Rig-Sense Pro -rikimittari kiinnitettynä vanttiin',
       readingLabel: 'Mitattu kireys',
-      readingUnit: '% murtolujuudesta'
+      readingUnit: '% murtolujuudesta',
+      staticReading: '6,4 kN'
     },
     partners: {
       eyebrow: 'Telakoille ja satamille',
@@ -431,7 +433,8 @@ export const CONTENT = {
       eyebrow: 'Your sailboat’s best crew on land',
       contactCta: 'Get in touch',
       videoLabel: 'Mast and rigging as a technical drawing',
-      quickFacts: 'Varsinais-Suomi & Uusimaa · €100/h incl. VAT'
+      spinlockHint: 'Spinlock Rig-Sense Pro gauge',
+      scrollHint: 'Read more'
     },
     services: {
       eyebrow: 'Services',
@@ -489,7 +492,8 @@ export const CONTENT = {
       badge: 'Part of every mast stepping',
       imageAlt: 'Spinlock Rig-Sense Pro rig tension gauge clamped on a shroud',
       readingLabel: 'Measured tension',
-      readingUnit: '% of breaking load'
+      readingUnit: '% of breaking load',
+      staticReading: '6.4 kN'
     },
     partners: {
       eyebrow: 'For boatyards and marinas',

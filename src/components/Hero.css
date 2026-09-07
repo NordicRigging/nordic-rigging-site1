@@ -47,16 +47,18 @@
   padding-bottom: clamp(2rem, 5vw, 3.5rem);
 }
 
-/* Holds the photo box and the contact card as siblings: the card is
-   absolutely positioned over the photo's corner on wider screens, but it
-   needs to sit outside .hero__media's own clipping box to be able to drop
-   into normal flow below the photo instead once there isn't room to
-   overlay it (see .hero__dimbox's mobile override). */
+/* Holds the title, the photo box and the contact card as siblings, all
+   three outside .hero__media's own clip: the title needs empty space above
+   the photo to spill into (padding-top reserves it, pushing .hero__media
+   down), and the contact card needs to be able to drop into normal flow
+   below the photo on narrow screens (see its mobile override) — neither
+   works from inside a box that clips its overflow to the photo itself. */
 .hero__stage {
   position: relative;
   width: 100%;
   max-width: 64rem;
   margin-inline: auto;
+  padding-top: clamp(1.75rem, 6vw, 3.75rem);
 }
 
 /* the photo/clip — the intro sequence and the reveal both play out inside
@@ -72,8 +74,7 @@
   background: var(--navy-800);
 }
 
-.hero__poster,
-.hero__video {
+.hero__poster {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -82,7 +83,32 @@
   object-position: 50% 42%;
 }
 
+/* The clip's own footage was never re-shot after the photo was outpainted
+   wider (item 2, previous round) — it's still the original, narrower
+   pre-outpaint framing. Filling the whole card with it via inset:0 like the
+   poster forces object-fit:cover to blow that narrower content up to cover
+   the wider box, which is what read as "zooms in and stays zoomed": the
+   video was covering ~1.5x more than the photo needs to. The fix isn't a
+   transform (that would just crop further) — it's sizing the video to the
+   actual fraction of the outpainted photo's width its footage corresponds
+   to (measured directly: cropping hero.webp to its centre 41.86% reproduces
+   the video's own first frame almost exactly), so both sources land at the
+   same on-screen scale and the crossfade between them shows no zoom at all. */
 .hero__video {
+  position: absolute;
+  top: 0;
+  /* Centred via a plain left percentage ((100% - 41.86%) / 2), not
+     left:50% + transform:translateX(-50%): a CSS transform on a video
+     element this small, combined with object-fit:cover, leaves a freshly
+     seeked frame stuck on an old one in at least one real compositor
+     (verified directly — the exact same element with the transform removed
+     paints correctly) even though currentTime/readyState/seeking all
+     report the seek as long settled. Same end position, no transform. */
+  left: 29.07%;
+  width: 41.86%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 42%;
   opacity: 0;
   transition: opacity 400ms ease;
 }
@@ -91,10 +117,16 @@
   opacity: 1;
 }
 
-/* the tracing border: a rect inset from the media box's own edge, drawn by
-   animating stroke-dashoffset from its full length (invisible) to 0. The
-   viewBox matches the box's aspect ratio, so non-scaling-stroke keeps the
-   line a constant width regardless of the box's actual rendered size. */
+/* the tracing border: one continuous rect path inset from the media box's
+   own edge, drawn by animating stroke-dashoffset from its full length
+   (invisible) to 0 — a single stroke growing from its path's start point
+   all the way around and back, not separate corner marks. The viewBox
+   matches the box's aspect ratio, so non-scaling-stroke keeps the line a
+   constant width regardless of the box's actual rendered size. Colour and
+   width match TracingBeam's gradient start (see TracingBeam.css) and its
+   own fade-in on scroll picks up right where this one fades out (see
+   .hero__border.is-handed-off and Hero.jsx's scroll IntersectionObserver),
+   so the two read as one beam handing off, not two different ones. */
 .hero__border {
   position: absolute;
   inset: 0;
@@ -102,14 +134,34 @@
   height: 100%;
   z-index: 2;
   pointer-events: none;
+  transition: opacity 700ms ease;
+}
+
+.hero__border.is-handed-off {
+  opacity: 0;
 }
 
 .hero__border-rect {
   fill: none;
-  stroke: var(--accent-2);
-  stroke-width: 1.6;
+  stroke: #2e8bc0;
+  stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 6px rgba(142, 208, 255, 0.6));
+  filter: drop-shadow(0 0 6px rgba(46, 139, 192, 0.65));
+}
+
+/* the leading point of the trace, positioned each frame via
+   getPointAtLength at the same progress the dashoffset uses — makes the
+   growing line read unmistakably as one travelling beam, not a static
+   stroke that happens to lengthen. */
+.hero__border-head {
+  fill: var(--text);
+  opacity: 0;
+  filter: drop-shadow(0 0 4px rgba(142, 208, 255, 0.95)) drop-shadow(0 0 9px rgba(46, 139, 192, 0.7));
+  transition: opacity 200ms ease;
+}
+
+.hero__border-head.is-visible {
+  opacity: 1;
 }
 
 /* the percent readout — lives in the same upper zone the title settles
@@ -149,19 +201,26 @@
   text-shadow: 0 4px 26px rgba(3, 9, 20, 0.75);
 }
 
+/* Sits above .hero__media in DOM and z-index (a sibling, not a child of
+   the clipped box), pinned to the top of .hero__stage — .hero__stage's own
+   padding-top is empty space, so the title's top portion lands there while
+   the rest of its height (it's taller than that padding) spills down over
+   the photo, the overlap effect the reference used. */
 .hero__wordmark-heading {
   position: absolute;
   left: 50%;
-  top: 28%;
+  top: 0;
   z-index: 3;
   margin: 0;
   font: inherit;
+  width: 100%;
+  text-align: center;
   /* translate only, no scale: the SVG clip-text's own getComputedTextLength
      lives in SVG user-space and ignores an ancestor's CSS transform, while
      the row's getBoundingClientRect does not — a scale here would make a
      correctly-fitted row measure as "overflowing" for the length of the
      transition, for no real visual gain over a plain slide-up. */
-  transform: translate(-50%, -46%);
+  transform: translate(-50%, -8px);
   opacity: 0;
   transition: opacity 650ms ease, transform 650ms cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
@@ -169,7 +228,7 @@
 
 .hero__wordmark-heading.is-revealed {
   opacity: 1;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, 0);
 }
 
 .hero__wordmark {
@@ -177,13 +236,19 @@
   flex-direction: column;
   align-items: center;
   gap: 0.03em;
-  padding: 0.5em 1em;
-  border-radius: 18px;
-  background: radial-gradient(65% 100% at 50% 50%, rgba(3, 9, 20, 0.58) 0%, transparent 75%);
 }
 
+/* Widened at every breakpoint (the row sizes to its own text at this
+   font-size, not to a fixed box) — big enough that its lower portion, once
+   it descends onto the photo, still needs its own legibility backdrop. */
 .hero__wordmark .masked-heading {
-  font-size: clamp(2rem, 7vw, 4.5rem);
+  font-size: clamp(2.6rem, 10vw, 6.5rem);
+}
+
+.hero__wordmark .masked-heading__row {
+  padding: 0 0.2em;
+  border-radius: 0.12em;
+  background: radial-gradient(70% 100% at 50% 100%, rgba(3, 9, 20, 0.55) 0%, transparent 78%);
 }
 
 /* the glass contact card — bottom-right corner of the photo, same spot the
@@ -217,6 +282,8 @@
   color: var(--text);
 }
 
+/* A static reading, not a control — "Mitattu kireys" is a fact of this
+   install, not something to animate or replay. */
 .hero__gauge {
   display: flex;
   align-items: center;
@@ -227,17 +294,6 @@
   border-radius: 12px;
   border: 1px solid var(--line);
   background: rgba(79, 163, 255, 0.1);
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease;
-}
-
-.hero__gauge:hover,
-.hero__gauge:focus-visible {
-  background: rgba(79, 163, 255, 0.18);
-  border-color: var(--line-strong);
 }
 
 .hero__gauge-label {
@@ -255,22 +311,101 @@
   font-variant-numeric: tabular-nums;
 }
 
-.hero__dimbox-facts {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--text-2);
-}
-
 .hero__dimbox-cta {
   width: 100%;
   min-height: 2.85rem;
   font-size: 0.95rem;
 }
 
+/* Bottom-left corner of the photo: a small Spinlock reference with its own
+   short beam accent (styled like the border/tracing beam system, but its
+   own independent element — not a segment of that one continuous path) and
+   an arrow inviting a scroll down to the fuller Rig-Sense section. */
+.hero__spinlock-hint {
+  position: absolute;
+  left: clamp(0.75rem, 3vw, 1.5rem);
+  bottom: clamp(0.75rem, 3vw, 1.5rem);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 650ms ease, transform 650ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero__spinlock-hint.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hero__spinlock-beam {
+  width: 1.5rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #2e8bc0, transparent);
+  box-shadow: 0 0 6px rgba(46, 139, 192, 0.85);
+  animation: hero-spinlock-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes hero-spinlock-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.hero__spinlock-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  text-shadow: 0 2px 10px rgba(3, 9, 20, 0.75);
+  white-space: nowrap;
+}
+
+.hero__scroll-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: rgba(3, 9, 20, 0.45);
+  color: var(--accent-2);
+  cursor: pointer;
+  animation: hero-arrow-bounce 1.8s ease-in-out infinite;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.hero__scroll-arrow:hover,
+.hero__scroll-arrow:focus-visible {
+  background: rgba(79, 163, 255, 0.22);
+  border-color: var(--accent-2);
+}
+
+@keyframes hero-arrow-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
 /* Below this width a 16:9 photo isn't tall enough to overlay both the
    title and a full contact card without them colliding — so the card
    drops out of the overlay and stacks below the photo in normal flow,
-   full width, where it has all the room it needs. */
+   full width, where it has all the room it needs. The title's own peek
+   above the photo (.hero__stage's padding-top) doesn't compete with that
+   — it's reserved space above the photo, not on it — so it stays as-is. */
 @media (max-width: 640px) {
   .hero__dimbox {
     position: static;
@@ -282,10 +417,6 @@
   .hero__dimbox.is-revealed {
     transform: none;
   }
-
-  .hero__wordmark-heading {
-    top: 50%;
-  }
 }
 
 @media (min-width: 900px) {
@@ -295,12 +426,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero__wordmark-heading,
-  .hero__dimbox {
+  .hero__wordmark-heading {
     transition: opacity 300ms ease;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0);
   }
-  .hero__dimbox {
+  .hero__dimbox,
+  .hero__spinlock-hint {
+    transition: opacity 300ms ease;
     transform: none;
+  }
+  .hero__spinlock-beam,
+  .hero__scroll-arrow {
+    animation: none;
   }
 }

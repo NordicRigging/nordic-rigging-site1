@@ -159,42 +159,49 @@ const browser = await launch();
   });
   check('border trace fully closed (dashoffset 0) at reveal', seqEnd.borderDashoffset === 0, JSON.stringify(seqEnd));
   check('percent counter reached 100 at reveal', seqEnd.counterText === '100', seqEnd.counterText);
+  // Must match Hero.jsx's VIDEO_FREEZE_TIME, not videoDuration — the clip's
+  // own last frame is the plain photo again (it was authored to loop), so
+  // freezing there would show no blueprint at all.
+  const VIDEO_FREEZE_TIME = 5.08;
   check(
-    'blueprint clip is scrubbed to its own last frame and frozen there (not autoplay-looping)',
-    seqEnd.videoActive === true && seqEnd.videoDuration > 0 && Math.abs(seqEnd.videoCurrentTime - seqEnd.videoDuration) < 0.05,
+    'blueprint clip is scrubbed to its held peak frame and frozen there, not its own last frame (which is the plain photo again)',
+    seqEnd.videoActive === true && Math.abs(seqEnd.videoCurrentTime - VIDEO_FREEZE_TIME) < 0.05,
     JSON.stringify(seqEnd)
   );
 
-  // the glass contact card: tagline, the Rig-Sense mini gauge, a short
-  // area+rate line and the one "Ota Yhteyttä" button — nothing here repeats
-  // the old duplicated facts/lead/call-message block from earlier rounds
+  // the glass contact card: tagline, a static Rig-Sense reading (not the
+  // animated percentage from the previous round) and the one "Ota
+  // Yhteyttä" button — no toimialue+hinta line (removed this round) and
+  // nothing here repeats the old duplicated facts/lead/call-message block
   check('old duplicate hero copy block is gone', (await page.locator('.hero__facts, .hero__lead, .hero__actions, .hero__cta').count()) === 0);
   check('dim box is captioned onto the hero photo', (await page.locator('.hero__dimbox-tagline').textContent()).includes('miehistö'));
+  check('area+rate line removed from the dim box', (await page.locator('.hero__dimbox-facts').count()) === 0);
   const dimboxCtaButtons = await page.locator('.hero__dimbox .btn').count();
   check('hero has exactly one compact contact button, inside the dim box', dimboxCtaButtons === 1, `count=${dimboxCtaButtons}`);
-
-  // the Rig-Sense mini gauge runs its own short rise, separate from the
-  // sequence counter above — give it its ~900ms and confirm it lands on the
-  // stated reading, then confirm pressing it re-triggers the same rise
-  const gaugeLanded = await eventually(async () => (await page.locator('.hero__gauge .hero__gauge-value span').first().textContent()) === '22');
-  check('Rig-Sense gauge rises to its reading (22%) after reveal', gaugeLanded);
-
-  // Prove the click re-runs the rise rather than just guessing a short wait
-  // will land inside the ~900ms animation (this sandbox's rAF throttling
-  // makes any such fixed-window assertion unreliable, per round 6's
-  // tab-crossfade diagnosis): stamp a sentinel directly on the node the
-  // animation writes to, click, then poll for it to reach 22 again — that
-  // can only happen if the click actually started a fresh rise.
-  await page.evaluate(() => {
-    const span = document.querySelector('.hero__gauge .hero__gauge-value span');
-    if (span) span.textContent = '—';
-  });
-  await page.locator('.hero__gauge').click();
-  const gaugeReRan = await eventually(
-    async () => (await page.locator('.hero__gauge .hero__gauge-value span').first().textContent()) === '22',
-    { timeout: 3000 }
+  check(
+    'Rig-Sense reading is a static kN figure, not an animated percentage',
+    (await page.locator('.hero__gauge-value').textContent()).includes('kN'),
+    await page.locator('.hero__gauge-value').textContent()
   );
-  check('Rig-Sense gauge is a real button that re-runs its rise on click', gaugeReRan);
+
+  // item 6: the Spinlock hint in the photo's bottom-left corner, with its
+  // own small beam accent and a scroll-down arrow that's a real control
+  check('Spinlock hint present in the hero photo', (await page.locator('.hero__spinlock-hint').textContent()).includes('Spinlock'));
+  check('Spinlock hint has its own beam accent (not the border trace)', (await page.locator('.hero__spinlock-beam').count()) === 1);
+  const scrollArrowVisible = await page.locator('.hero__scroll-arrow').isVisible();
+  check('Spinlock hint has a scroll-down arrow', scrollArrowVisible);
+
+  // item 4: the wordmark now spills out above the photo into empty space
+  // (a sibling of .hero__media, not clipped inside it) instead of sitting
+  // fully inside the card
+  const titleOverlap = await page.evaluate(() => {
+    const title = document.querySelector('.hero__wordmark-heading');
+    const media = document.querySelector('.hero__media');
+    const t = title.getBoundingClientRect();
+    const m = media.getBoundingClientRect();
+    return { titleTop: t.top, mediaTop: m.top, titleBottom: t.bottom, aboveAndOverlapping: t.top < m.top && t.bottom > m.top };
+  });
+  check('wordmark spills above the photo and overlaps down onto it', titleOverlap.aboveAndOverlapping, JSON.stringify(titleOverlap));
 
   // the fixed nav bar has a stable compositor layer (the fix for the
   // scroll-flicker bug), and no bottom padding on the hero keeps it flush
@@ -241,6 +248,13 @@ const browser = await launch();
   // scrolls out of view, then keeps following scroll further down the page
   const beamBeforeScroll = await page.evaluate(() => getComputedStyle(document.querySelector('.tracing-beam__anchor')).opacity);
   check('tracing beam is invisible while the hero contact card is still visible', Number(beamBeforeScroll) < 0.05, beamBeforeScroll);
+  const borderColorAtStart = await page.evaluate(() => getComputedStyle(document.querySelector('.hero__border-rect')).stroke);
+  const beamColorAtStart = 'rgb(46, 139, 192)'; // #2e8bc0, the gradient's own start stop in TracingBeam.jsx
+  check(
+    'hero border and tracing beam share one colour (so the handoff reads as one beam)',
+    borderColorAtStart === beamColorAtStart,
+    borderColorAtStart
+  );
 
   const boxBottom = await page.evaluate(() => document.querySelector('.hero__dimbox').getBoundingClientRect().bottom + window.scrollY);
   await page.evaluate(y => window.scrollTo({ top: y, behavior: 'instant' }), boxBottom + 60);
@@ -248,6 +262,16 @@ const browser = await launch();
     page.evaluate(() => document.querySelector('.tracing-beam__anchor')?.classList.contains('is-revealed'))
   );
   check('tracing beam reveals once the hero contact card scrolls out of view', beamRevealed);
+  // .hero__border's own fade-out is a 700ms CSS transition, not instant,
+  // and this sandbox's scheduling throttling (see README) means even the
+  // class flip that starts it can lag — give it real margin.
+  await page.waitForTimeout(1500);
+  const heroBorderOpacity = await page.evaluate(() => getComputedStyle(document.querySelector('.hero__border')).opacity);
+  check(
+    'hero border fades out as the tracing beam takes over, not left showing alongside it',
+    Number(heroBorderOpacity) < 0.05,
+    heroBorderOpacity
+  );
 
   const beamTopAtReveal = await page.evaluate(() => document.querySelector('.tracing-beam__anchor').getBoundingClientRect().top);
   await page.evaluate(() => window.scrollBy({ top: window.innerHeight, behavior: 'instant' }));
@@ -455,9 +479,9 @@ const browser = await launch();
   check('hero intro sequence reaches revealed state on mobile', mobileRevealed);
   const vm = await page.evaluate(() => {
     const el = document.querySelector('.hero__video');
-    return el ? { active: el.classList.contains('is-active'), t: el.currentTime, d: el.duration } : { missing: true };
+    return el ? { active: el.classList.contains('is-active'), t: el.currentTime } : { missing: true };
   });
-  check('hero clip scrubbed and frozen on mobile too', vm.active === true && Math.abs(vm.t - vm.d) < 0.05, JSON.stringify(vm));
+  check('hero clip scrubbed and frozen on mobile too', vm.active === true && Math.abs(vm.t - 5.08) < 0.05, JSON.stringify(vm));
 
   // below the ~640px breakpoint the contact card can't overlay the photo
   // without colliding with the title (not enough vertical room in 16:9 at

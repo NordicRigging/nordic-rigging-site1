@@ -106,7 +106,7 @@ export default function TracingBeam({ children, className = '', anchorFromRef })
             d={`M 1 0V -36 l 18 24 V ${svgHeight * 0.8} l -18 24V ${svgHeight}`}
             fill="none"
             stroke="url(#tracing-beam-gradient)"
-            strokeWidth="1.25"
+            strokeWidth="1.5"
             className="tracing-beam__svg-glow"
           />
           <defs>
