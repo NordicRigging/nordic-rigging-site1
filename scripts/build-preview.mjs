@@ -71,7 +71,12 @@ for (const font of built.filter(f => /\.woff2?$/.test(f))) {
 
 // —— inline everything under public/ (paths appear as string literals) ————
 // public/video/raw/ holds the untouched Higgsfield download; it is not shipped.
-const publicFiles = walk(PUBLIC).filter(f => !f.includes(`${join('video', 'raw')}`));
+// .webm sources are skipped here too: they exist for real-world browser
+// coverage in the deployed dist/ build, but doubling up both formats blows
+// this single-file snapshot past the 16 MB artefact limit. Every browser a
+// reviewer actually opens this file in plays the .mp4 source directly, so
+// the <video> tag still works — it just won't fall back to webm.
+const publicFiles = walk(PUBLIC).filter(f => !f.includes(`${join('video', 'raw')}`) && extname(f) !== '.webm');
 let inlined = 0;
 let bytes = 0;
 for (const file of publicFiles) {
