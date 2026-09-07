@@ -1,0 +1,62 @@
+.tracing-beam {
+  position: relative;
+}
+
+/* Same left edge .wrap itself centres on (see global.css), so the beam
+   tracks the content column at every width instead of a fixed offset
+   tuned for a different layout. */
+.tracing-beam__anchor {
+  position: absolute;
+  left: max(calc(var(--pad) - 0.9rem), calc((100vw - var(--max)) / 2 - 0.9rem));
+  top: 0.75rem;
+  z-index: 2;
+  opacity: 0;
+  transform: translate(var(--beam-from-x, 0px), var(--beam-from-y, 0px));
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1), opacity 700ms ease;
+  pointer-events: none;
+}
+
+.tracing-beam__anchor.is-revealed {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+.tracing-beam__anchor.no-fly {
+  transition: opacity 300ms ease;
+}
+
+.tracing-beam__dot {
+  display: flex;
+  height: 1.1rem;
+  width: 1.1rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+}
+
+.tracing-beam__dot-inner {
+  height: 0.55rem;
+  width: 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--glass-2);
+}
+
+.tracing-beam__svg {
+  display: block;
+  margin-left: 0.45rem;
+}
+
+@media (min-width: 900px) {
+  .tracing-beam__anchor {
+    left: max(calc(var(--pad) - 2.75rem), calc((100vw - var(--max)) / 2 - 2.75rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tracing-beam__anchor {
+    transition: opacity 300ms ease;
+    transform: none;
+  }
+}
