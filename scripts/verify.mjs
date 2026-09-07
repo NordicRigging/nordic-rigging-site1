@@ -43,6 +43,23 @@ async function scrolledNearTop(page, id, { min = -5, max = 200, timeout = 4000 }
   return top;
 }
 
+/**
+ * The tab panel now crossfades (gsap) instead of swapping instantly, and how
+ * long that takes for a browser to actually get through depends on the
+ * machine — polling for the real end state beats guessing a fixed wait here
+ * too.
+ */
+async function panelEventuallyShows(page, tabId, text, { timeout = 4000 } = {}) {
+  const start = Date.now();
+  let content = '';
+  while (Date.now() - start < timeout) {
+    content = (await page.locator(`#panel-${tabId}`).textContent().catch(() => '')) || '';
+    if (content.includes(text)) return true;
+    await page.waitForTimeout(50);
+  }
+  return false;
+}
+
 const browser = await launch();
 
 // ---------- desktop, Finnish ----------
@@ -56,7 +73,10 @@ const browser = await launch();
   await page.goto(base + '/', { waitUntil: 'networkidle' });
 
   check('html lang is fi by default', (await page.getAttribute('html', 'lang')) === 'fi');
-  check('FI hero title', (await page.locator('h1').textContent()).includes('Purjeveneesi'));
+  // the page's one real <h1> wraps the decorative wordmark and carries the
+  // brand name + tagline as its accessible name (the wordmark itself is
+  // aria-hidden, so a screen reader only ever hears this once)
+  check('FI hero h1 accessible name', (await page.locator('h1').getAttribute('aria-label')).includes('Purjeveneesi'));
 
   // the wordmark: two video-filled rows, centred, not the sales h1
   const wordmarkRows = await page.locator('.masked-heading__row').count();
@@ -65,9 +85,33 @@ const browser = await launch();
     [...document.querySelectorAll('.masked-heading__media')].map(v => ({ playing: !v.paused && v.currentTime > 0 }))
   );
   check('wordmark videos are playing', wordmarkVideos.length === 2 && wordmarkVideos.every(v => v.playing), JSON.stringify(wordmarkVideos));
+  // the clip-path text must fit inside its own row — this is the fix for the
+  // "RIGGING" clipping bug: the SVG text is measured against the row's own
+  // width and shrunk to fit, not just sized from height
+  const wordmarkFit = await page.evaluate(() =>
+    [...document.querySelectorAll('.masked-heading__row')].map(row => {
+      const text = row.querySelector('.masked-heading__clip-text');
+      const w = row.getBoundingClientRect().width;
+      return { rowWidth: Math.round(w), textWidth: Math.round(text.getComputedTextLength()) };
+    })
+  );
+  check(
+    'wordmark text never overflows its row (no clipping)',
+    wordmarkFit.every(f => f.textWidth <= f.rowWidth + 1),
+    JSON.stringify(wordmarkFit)
+  );
 
-  // the tagline moved out of the centre into its own badge
-  check('tagline is its own badge, not inline with the title', (await page.locator('.hero__badge').textContent()).includes('miehistö'));
+  // the tagline is captioned onto the hero photo's own corner, not a
+  // free-floating badge
+  check('tagline is captioned onto the hero photo', (await page.locator('.hero__tagline').textContent()).includes('miehistö'));
+  const taglineInMedia = await page.evaluate(() => !!document.querySelector('.hero__media .hero__tagline'));
+  check('tagline sits inside .hero__media, anchored to the photo', taglineInMedia);
+
+  // the old duplicate block (sales h1 text, lead, call/message pair, facts
+  // row) is gone — the hero has exactly one compact contact button instead
+  check('old duplicate hero copy block is gone', (await page.locator('.hero__facts, .hero__lead, .hero__actions').count()) === 0);
+  const heroCtaButtons = await page.locator('.hero__cta .btn').count();
+  check('hero has exactly one compact contact button', heroCtaButtons === 1, `count=${heroCtaButtons}`);
 
   // the fixed nav bar has a stable compositor layer (the fix for the
   // scroll-flicker bug), and no bottom padding on the hero keeps it flush
@@ -101,8 +145,8 @@ const browser = await launch();
     return r && cs ? { w: Math.round(r.width), h: Math.round(r.height), radius: cs.borderTopLeftRadius, radiusBottom: cs.borderBottomLeftRadius } : null;
   });
   check(
-    'hero media is a contained 3:4 card with rounded top only',
-    !!mediaBox && Math.abs(mediaBox.w / mediaBox.h - 0.75) < 0.02 && mediaBox.radius !== '0px' && mediaBox.radiusBottom === '0px',
+    'hero media is a wide landscape card (16:10-ish), rounded all round',
+    !!mediaBox && mediaBox.w / mediaBox.h > 1.3 && mediaBox.radius !== '0px' && mediaBox.radiusBottom !== '0px',
     JSON.stringify(mediaBox)
   );
 
@@ -110,19 +154,12 @@ const browser = await launch();
   await page.getByRole('button', { name: 'EN', exact: true }).first().click();
   await page.waitForTimeout(300);
   check('EN toggle switches html lang', (await page.getAttribute('html', 'lang')) === 'en');
-  check('EN hero title', (await page.locator('h1').textContent()).includes('sorted'));
+  check('EN hero h1 accessible name', (await page.locator('h1').getAttribute('aria-label')).includes('crew on land'));
   check('EN nav label', (await page.locator('.pill .pill-label').first().textContent()) === 'Services');
   check('EN choice persisted', (await page.evaluate(() => localStorage.getItem('userLang'))) === 'en');
   await page.getByRole('button', { name: 'FI', exact: true }).first().click();
   await page.waitForTimeout(300);
   check('back to FI', (await page.getAttribute('html', 'lang')) === 'fi');
-
-  // price, area and crew are readable without scrolling
-  const factsVisible = await page.evaluate(() => {
-    const r = document.querySelector('.hero__facts')?.getBoundingClientRect();
-    return r && r.bottom <= window.innerHeight;
-  });
-  check('price/area/crew facts visible in first viewport (desktop)', !!factsVisible);
 
   // the four tabs: default, then the nav opens the ones it still links to
   check('Palvelut tab open by default', await page.locator('#tab-palvelut').getAttribute('aria-selected').then(v => v === 'true'));
@@ -142,7 +179,9 @@ const browser = await launch();
   const meistaTop = await scrolledNearTop(page, 'ratkaisut');
   check('"Meistä" scrolled the tabs section into view', meistaTop != null && meistaTop >= -5 && meistaTop < 200, `top=${meistaTop?.toFixed?.(0)}`);
   check('nav "Meistä" opens and scrolls to its tab', await page.locator('#tab-meista').getAttribute('aria-selected').then(v => v === 'true'));
-  check('"Meistä" panel shows its content', (await page.locator('#panel-meista').textContent()).includes('Isä ja poika'));
+  // the panel now crossfades in (gsap) instead of swapping instantly, so
+  // give it a moment rather than asserting the text is there immediately
+  check('"Meistä" panel shows its content', await panelEventuallyShows(page, 'meista', 'Isä ja poika'));
 
   // Telakoille / Tehdyt työt: reachable only from the on-page tab bar now
   for (const { tabId, text } of [
@@ -150,20 +189,62 @@ const browser = await launch();
     { tabId: 'tyot', text: 'Referenssejä' }
   ]) {
     await page.click(`#tab-${tabId}`);
-    await page.waitForTimeout(400);
-    check(`tab button "${tabId}" switches and shows its content`, (await page.locator(`#panel-${tabId}`).textContent()).includes(text));
+    check(`tab button "${tabId}" switches and shows its content`, await panelEventuallyShows(page, tabId, text));
   }
 
-  // clicking a tab button directly also works, and only that tab's content is mounted
-  // (we were just on "Tehdyt työt", so its portfolio grid should be gone now)
+  // clicking a tab button directly also works, and only that tab's content is
+  // mounted (we were just on "Tehdyt työt", so its portfolio grid should be
+  // gone once the crossfade finishes unmounting it)
   await page.click('#tab-palvelut');
-  await page.waitForTimeout(200);
-  check('clicking a tab button switches back', await page.locator('#tab-palvelut').getAttribute('aria-selected').then(v => v === 'true'));
-  check('switching tabs unmounts the previous panel', (await page.locator('.portfolio-grid').count()) === 0);
-  check('simplified service card has no price/crew row, one "Lue lisää" button', (await page.locator('.ag-panel__price').count()) === 0 && (await page.locator('.ag-panel .crew').count()) === 0);
+  check('clicking a tab button switches back', await panelEventuallyShows(page, 'palvelut', 'Mastotyöt'));
+  const portfolioGridGone = await (async () => {
+    const start = Date.now();
+    while (Date.now() - start < 4000) {
+      if ((await page.locator('.portfolio-grid').count()) === 0) return true;
+      await page.waitForTimeout(50);
+    }
+    return false;
+  })();
+  check('switching tabs unmounts the previous panel', portfolioGridGone);
+  check(
+    'simplified service card has no checklist/price/crew row, one "Lue lisää" button',
+    (await page.locator('.ag-panel__checks').count()) === 0 &&
+      (await page.locator('.ag-panel__price').count()) === 0 &&
+      (await page.locator('.ag-panel .crew').count()) === 0
+  );
 
-  // radar sweep behind the active panel
+  // radar sweep behind the active panel — capped size, so on a tall panel
+  // like this one (three cards + Rig-Sense + footer) it stays a small corner
+  // accent instead of sweeping down across the card grid. The <canvas>
+  // element itself always spans the whole panel (that's just its box); what
+  // matters is whether it actually *draws* anything down at card height —
+  // sample a pixel there and it should be fully transparent.
   check('tab panel FX canvas is present', (await page.locator('.tab-fx').count()) === 1);
+  const fxPixelAtCards = await page.evaluate(() => {
+    const canvas = document.querySelector('.tab-fx');
+    const card = document.querySelector('.ag-panel');
+    if (!canvas || !card) return null;
+    const canvasRect = canvas.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const x = Math.round((cardRect.left + cardRect.width / 2 - canvasRect.left) * dpr);
+    const y = Math.round((cardRect.top + 20 - canvasRect.top) * dpr);
+    const ctx = canvas.getContext('2d');
+    const data = ctx.getImageData(Math.max(0, x), Math.max(0, y), 1, 1).data;
+    return { alpha: data[3] };
+  });
+  check(
+    'radar FX draws nothing down at card-grid height (does not sweep across the cards)',
+    !!fxPixelAtCards && fxPixelAtCards.alpha === 0,
+    JSON.stringify(fxPixelAtCards)
+  );
+
+  // rapid re-clicking mid-transition must still land correctly, not throw
+  await page.click('#tab-telakat');
+  await page.click('#tab-meista');
+  check('rapid tab re-click settles on the last one clicked', await panelEventuallyShows(page, 'meista', 'Isä ja poika'));
+  await page.click('#tab-palvelut');
+  check('back on Palvelut after the rapid-click test', await panelEventuallyShows(page, 'palvelut', 'Mastotyöt'));
 
   // nav scroll to contact (not a tab) — the button is now "Ota Yhteyttä"
   await page.locator('.pill', { hasText: 'Ota Yhteyttä' }).click();
@@ -179,7 +260,7 @@ const browser = await launch();
 
   // the B2B path: open the yards tab (from the tab bar, no nav pill any more) and pre-fill the shared form
   await page.click('#tab-telakat');
-  await page.waitForTimeout(600);
+  await panelEventuallyShows(page, 'telakat', 'Tarvitsetko luotettavan');
   await page.locator('#panel-telakat .btn--accent').click();
   await page.waitForTimeout(1200);
   const who = await page.evaluate(() => document.querySelector('input[name="who"]:checked')?.value);
@@ -254,8 +335,8 @@ const browser = await launch();
   check('mobile nav opened the Meistä tab', await page.locator('#tab-meista').getAttribute('aria-selected').then(v => v === 'true'));
 
   await page.click('#tab-tyot');
-  await page.waitForTimeout(400);
   check('mobile: tab bar itself opens Tehdyt työt', await page.locator('#tab-tyot').getAttribute('aria-selected').then(v => v === 'true'));
+  await panelEventuallyShows(page, 'tyot', 'Referenssejä');
   check('portfolio grid has photos', (await page.locator('.portfolio-grid__item').count()) >= 4);
 
   await page.waitForTimeout(1200);

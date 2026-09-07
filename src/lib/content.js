@@ -245,16 +245,7 @@ export const CONTENT = {
     },
     hero: {
       eyebrow: 'Purjeveneesi paras miehistö maalla',
-      title: 'Purjeveneesi rikki kuntoon Turussa.',
-      lead:
-        'Mastotyöt, köysivarasto ja kausihuolto. Tulemme veneesi luo satamaan tai telakalle Varsinais-Suomessa ja Uudellamaalla.',
-      callCta: 'Soita 050 548 7766',
-      messageCta: 'Lähetä viesti',
-      facts: [
-        { label: 'Tuntihinta', value: '100 € sis. alv' },
-        { label: 'Toimialue', value: 'Varsinais-Suomi ja Uusimaa' },
-        { label: 'Tekijät', value: 'Tuomas ja Lukas Eloranta' }
-      ],
+      contactCta: 'Ota yhteyttä',
       videoLabel: 'Masto ja rikki teknisenä piirroksena'
     },
     services: {
@@ -437,16 +428,7 @@ export const CONTENT = {
     },
     hero: {
       eyebrow: 'Your sailboat’s best crew on land',
-      title: 'Your rig, sorted. In Turku.',
-      lead:
-        'Mast work, rope stock and seasonal maintenance. We come to your boat at the marina or the yard, across Varsinais-Suomi and Uusimaa.',
-      callCta: 'Call +358 50 548 7766',
-      messageCta: 'Send a message',
-      facts: [
-        { label: 'Hourly rate', value: '€100 incl. VAT' },
-        { label: 'Service area', value: 'Varsinais-Suomi and Uusimaa' },
-        { label: 'The crew', value: 'Tuomas and Lukas Eloranta' }
-      ],
+      contactCta: 'Get in touch',
       videoLabel: 'Mast and rigging as a technical drawing'
     },
     services: {

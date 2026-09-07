@@ -42,9 +42,14 @@ export default function TabPanelFX() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
-      const cx = w * 0.86;
-      const cy = h * 0.14;
-      const r = Math.max(w, h) * 0.6;
+      // Fixed pixel size, not proportional to the panel's full height: some
+      // panels run very tall (three service cards, the Rig-Sense highlight,
+      // the footer), and a size derived from that height would sweep the
+      // effect down across the card grid instead of staying a small corner
+      // accent for the whole panel.
+      const cx = w - 110;
+      const cy = 90;
+      const r = Math.min(230, w * 0.4);
 
       ctx.strokeStyle = 'rgba(80, 230, 160, 0.22)';
       ctx.lineWidth = 1;

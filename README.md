@@ -75,7 +75,7 @@ price, crew and full detail live on the service's own page.
 
 | Section | Component | Anchor |
 | --- | --- | --- |
-| Hero: wave background, a video-filled "Nordic Rigging" wordmark, a side tagline badge, headline, call + message buttons, price / area / crew facts, an enlarged framed photo/clip card | `Hero.jsx`, `GradientWaves.jsx`, `MaskedHeading.jsx` | top |
+| Hero: wave background, a video-filled "Nordic Rigging" wordmark, a wide landscape photo/clip with the tagline captioned in its corner, one contact button | `Hero.jsx`, `GradientWaves.jsx`, `MaskedHeading.jsx` | top |
 | Four tabs — Palvelut, Telakoille, Tehdyt työt, Meistä — one panel below a tab bar, a quiet radar-sweep animation behind it | `Tabs.jsx`, `TabPanelFX.jsx` | `#ratkaisut` |
 | ↳ Palvelut: the three services (short card, "Lue lisää" through to the full page), a Spinlock Rig-Sense Pro highlight, pricing/area, contact CTA | `ServicesTab.jsx`, `RigSenseHighlight.jsx` (uses `Services.jsx`'s `ServicePanel`) | |
 | ↳ Telakoille: the B2B pitch for yards and marinas | `YardsTab.jsx` | |
@@ -107,7 +107,20 @@ what's in the nav.
 `TabPanelFX.jsx` draws a quiet, slow-rotating radar sweep (canvas 2D, not the
 WebGL weight of GradientWaves) behind whichever panel is open, tucked into
 one corner so it reads as an instrument rather than a bullseye over the
-text. It pauses off-screen and skips its motion under
+text. Its size is capped in pixels, not derived from the panel's full
+height, so on a tall panel (Palvelut, with three cards plus Rig-Sense plus
+the pricing footer) it stays a small corner accent instead of sweeping down
+across the card grid. It pauses off-screen and skips its motion under
+`prefers-reduced-motion`.
+
+Switching tabs crossfades (gsap) instead of hard-cutting: `Tabs.jsx` fades
+the outgoing panel out, swaps it once that finishes, then fades the new one
+in while animating the panel's height from the old panel's height to the
+new one's, so a short panel (Meistä) settling in under a tall one
+(Palvelut) doesn't jump the page below it. `displayedTab` (what's actually
+mounted) lags one crossfade behind `activeTab` (what the tab buttons show
+as selected) for exactly this reason — clicking a tab is instant feedback,
+the content swap is the animated part. Skips straight to the swap under
 `prefers-reduced-motion`.
 
 ## Content and languages
@@ -144,9 +157,11 @@ in the footer.
 ## Hero: wave background, wordmark and the framed clip
 
 The hero is a normal section, not full-bleed, and a single centred column:
-a small tagline badge off to the side, the video-filled wordmark, the sales
-headline and facts, then an enlarged framed photo/clip card — never a
-two-column split. `GradientWaves.jsx` (a React Bits component, `ogl` for
+the video-filled wordmark, then a wide landscape photo/clip with the
+tagline captioned onto its own corner, then one compact contact button —
+nothing else. Price, area, the crew and the call/message pair already live
+in the nav and the Palvelut tab, so the hero doesn't repeat them.
+`GradientWaves.jsx` (a React Bits component, `ogl` for
 WebGL2, added as supplied and left unmodified) fills it as an
 absolutely-positioned background — a slow, calm animated wave field in the
 same navy family as the rest of the site (`horizonColor="#050b16"`,
@@ -165,16 +180,24 @@ where the hero's own content ends, `.tabs`' own (small) top padding is the
 only space left.
 
 "Nordic" / "Rigging" — `MaskedHeading.jsx`, see below — sits centred above
-the headline, sized well below the photo so it never competes with it.
+the photo, sized well below it so it never competes for attention. It's the
+page's only decorative element in the `<h1>`: the wordmark itself is
+`aria-hidden`, and the real `<h1>` wrapping it carries "Nordic Rigging —
+<tagline>" as its accessible name, so the page still has exactly one real,
+indexable heading even though there's no visible sales-copy title any more.
 
 The photo/clip lives in its own enlarged, centred card (`.hero__media`),
-contained, never full-bleed, and never scroll-linked. Its `aspect-ratio: 3/4`
-matches the source media exactly, so `object-fit: cover` shows the whole
-frame (mast and boat both) rather than a tight crop; only the top two corners
-are rounded (`border-radius: 24px 24px 0 0`). The clip just loops for as long
-as it's on screen — nothing pauses it, nothing hands its frame to the section
-below. With `prefers-reduced-motion` or data saver there is no clip; the
-poster photo carries the card alone.
+contained, never full-bleed, and never scroll-linked — a wide landscape
+crop (`aspect-ratio: 16/10`) of the same source photo, not the portrait 3:4
+crop used in `hero.webp` itself, so `object-position` is biased toward the
+top of the frame to keep the mast and crane in view rather than centring
+strictly. All four corners are rounded. The tagline
+(`.hero__tagline`) is captioned onto the photo's own bottom-left corner over
+a gradient scrim, fading and sliding in on mount — anchored to the photo,
+not a free-floating badge. The clip just loops for as long as it's on
+screen — nothing pauses it, nothing hands its frame to the section below.
+With `prefers-reduced-motion` or data saver there is no clip; the poster
+photo carries the card alone.
 
 ## The wordmark: MaskedHeading
 
@@ -184,12 +207,19 @@ span sizes the row in real layout pixels so any text/font works, an SVG
 `<clipPath>` built from that same box clips a "reveal" layer to the
 letterforms, and the media inside — sized larger than the row — is nudged
 with a gsap-driven transform so the fill drifts instead of sitting static.
+The clip-path `<text>` is sized from the row's height first, then measured
+with its own `getComputedTextLength()` and shrunk if it doesn't fit the
+row's width — SVG and HTML don't always agree on a variable font's rendered
+width, so a height-only size can overflow and get clipped by the reveal
+layer's `overflow: hidden`; measuring the actual glyphs it's about to paint
+closes that gap regardless of font-loading timing or which word is wider.
 Hero.jsx renders it twice, stacked ("Nordic", "Rigging"), both filled by the
-same clip (`public/video/masthead-fill.{mp4,webm}`, the Beneteau blueprint
-clip from `assets/source/hero-beneteau-blueprint.mp4` — an existing asset,
-nothing generated for this). It's decorative (`aria-hidden`); the real,
-indexable heading is still the `<h1>` below it. Skips its motion under
-`prefers-reduced-motion`.
+same clip (`public/video/masthead-fill.{mp4,webm}`, a Seedance 2.5 clip of a
+sailboat under sail on open water — `assets/source/hero-sailing-openwater-raw.mp4`,
+audio stripped on encode). It's decorative (`aria-hidden`); the `<h1>`
+wrapping it carries "Nordic Rigging — <tagline>" as its accessible name
+instead, so the page still has exactly one real, indexable heading. Skips
+its motion under `prefers-reduced-motion`.
 
 `public/images/hero.webp` (2000 px, with a 1200 px `srcset` variant for
 phones) is the customer's `header.webp` cleaned with Higgsfield `gpt_image_2`

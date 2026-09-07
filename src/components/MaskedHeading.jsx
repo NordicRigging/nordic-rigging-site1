@@ -27,7 +27,9 @@ export default function MaskedHeading({
   const clipId = `mh-clip-${rawId.replace(/[^a-zA-Z0-9]/g, '')}`;
   const rowRef = useRef(null);
   const mediaRef = useRef(null);
+  const textRef = useRef(null);
   const [box, setBox] = useState({ w: 0, h: 0 });
+  const [fitFontSize, setFitFontSize] = useState(0);
 
   useLayoutEffect(() => {
     const el = rowRef.current;
@@ -39,6 +41,35 @@ export default function MaskedHeading({
     ro.observe(el);
     return () => ro.disconnect();
   }, [text]);
+
+  // The row's width comes from the hidden HTML measure span; the visible
+  // glyphs are an SVG <text> sized from the row's height. SVG and HTML don't
+  // always agree on a variable font's rendered advance widths, so a
+  // height-only size can occasionally overflow the row and get clipped by
+  // the reveal layer's overflow:hidden. Fix it at the source: apply the
+  // height-based candidate directly to the DOM, measure the SVG text's own
+  // rendered width with getComputedTextLength (self-consistent — same
+  // engine that will paint it), and shrink to fit before it ever reaches
+  // React state, so there's no oversized frame in between.
+  useLayoutEffect(() => {
+    if (!box.h) return undefined;
+    const candidate = box.h * 1.08;
+    const el = textRef.current;
+    if (!el || !box.w) {
+      setFitFontSize(candidate);
+      return undefined;
+    }
+    const fit = size => {
+      el.setAttribute('font-size', String(size));
+      const width = el.getComputedTextLength();
+      return width > box.w ? (size * box.w) / width - 1 : size;
+    };
+    setFitFontSize(fit(candidate));
+
+    // re-measure once webfonts finish loading, in case the first pass ran
+    // against a fallback font with different metrics
+    document.fonts?.ready.then(() => setFitFontSize(size => fit(size)));
+  }, [box.w, box.h]);
 
   useEffect(() => {
     const media = mediaRef.current;
@@ -64,8 +95,6 @@ export default function MaskedHeading({
     return () => ctx.revert();
   }, [box.w, box.h]);
 
-  const fontSize = box.h ? box.h * 1.08 : 0;
-
   return (
     <Tag className={`masked-heading ${className}`.trim()} style={{ '--mh-weight': weight }} aria-hidden="true">
       <span className="masked-heading__row" ref={rowRef}>
@@ -87,7 +116,7 @@ export default function MaskedHeading({
         <svg className="masked-heading__defs" aria-hidden="true" focusable="false">
           <defs>
             <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
-              <text x="0" y={box.h / 2} dominantBaseline="central" fontSize={fontSize} className="masked-heading__clip-text">
+              <text ref={textRef} x="0" y={box.h / 2} dominantBaseline="central" fontSize={fitFontSize || box.h * 1.08} className="masked-heading__clip-text">
                 {text}
               </text>
             </clipPath>

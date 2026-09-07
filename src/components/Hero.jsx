@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { CONTACT } from '../lib/content.js';
 import { useLang } from '../lib/LanguageContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
 import GradientWaves from './GradientWaves.jsx';
@@ -9,11 +8,12 @@ import './Hero.css';
 
 /**
  * The hero is a contained section, not full-bleed: an animated wave
- * background (GradientWaves) fills it, a video-filled "NORDIC RIGGING"
- * wordmark sits centred above the copy, and the mast photo/clip sits in its
- * own enlarged, centred card below. The card's aspect ratio (3:4) matches
- * the source media exactly, so `object-fit: cover` shows the whole frame —
- * mast and boat both — rather than a tight crop.
+ * background (GradientWaves) fills it, a video-filled "Nordic Rigging"
+ * wordmark sits above a landscape photo/clip of the boat, and the tagline is
+ * a caption anchored to that photo's own corner. Everything else — price,
+ * area, the crew, the call/message buttons — already lives in the nav and
+ * the Palvelut tab, so the hero doesn't repeat any of it: just the wordmark,
+ * the tagline, the photo, and one way to get in touch.
  */
 export const HERO_IMAGE = '/images/hero.webp';
 export const HERO_IMAGE_SET = '/images/hero-1200.webp 1200w, /images/hero.webp 2000w';
@@ -23,12 +23,6 @@ export const HERO_VIDEO = {
 };
 const WORDMARK_VIDEO = { mp4: '/video/masthead-fill.mp4', webm: '/video/masthead-fill.webm' };
 const LG_MIN_WIDTH = 900;
-
-const PhoneIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z" />
-  </svg>
-);
 
 /** Skip the clip for people who asked for less motion or are saving data. */
 function wantsMotion() {
@@ -111,42 +105,19 @@ export default function Hero() {
         <div className="hero__fade" />
       </div>
 
-      <p className="hero__badge">{h.eyebrow}</p>
-
       <div className="hero__inner">
-        <div className="hero__wordmark" aria-hidden="true">
-          <MaskedHeading text="Nordic" mediaType="video" videoSrc={WORDMARK_VIDEO} weight={800} />
-          <MaskedHeading text="Rigging" mediaType="video" videoSrc={WORDMARK_VIDEO} weight={800} />
-        </div>
-
-        <div className="hero__copy">
-          <h1 id="hero-title" className="hero__title">
-            {h.title}
-          </h1>
-          <p className="hero__lead">{h.lead}</p>
-
-          <div className="btn-row hero__actions">
-            <a className="btn btn--accent" href={CONTACT.phoneHref}>
-              <PhoneIcon />
-              {h.callCta}
-            </a>
-            <a className="btn btn--ghost" href="#yhteystiedot" onClick={toContact}>
-              {h.messageCta}
-            </a>
+        {/* The wordmark is decorative (video-filled letterforms); the page's
+            one real, accessible <h1> wraps it with the actual brand name and
+            tagline as its accessible name. */}
+        <h1 id="hero-title" className="hero__wordmark-heading" aria-label={`Nordic Rigging — ${h.eyebrow}`}>
+          <div className="hero__wordmark">
+            <MaskedHeading text="Nordic" mediaType="video" videoSrc={WORDMARK_VIDEO} weight={800} />
+            <MaskedHeading text="Rigging" mediaType="video" videoSrc={WORDMARK_VIDEO} weight={800} />
           </div>
-
-          <dl className="hero__facts">
-            {h.facts.map(f => (
-              <div key={f.label} className="hero__fact">
-                <dt>{f.label}</dt>
-                <dd>{f.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+        </h1>
 
         <div className="hero__media">
-          <img className="hero__poster" src={HERO_IMAGE} srcSet={HERO_IMAGE_SET} sizes="(min-width: 900px) 34rem, 100vw" alt="" fetchpriority="high" decoding="async" />
+          <img className="hero__poster" src={HERO_IMAGE} srcSet={HERO_IMAGE_SET} sizes="(min-width: 900px) 60rem, 100vw" alt="" fetchpriority="high" decoding="async" />
           {motion && (
             <video
               ref={videoRef}
@@ -163,6 +134,14 @@ export default function Hero() {
               <source src={HERO_VIDEO[size].webm} type="video/webm" />
             </video>
           )}
+          <div className="hero__media-scrim" aria-hidden="true" />
+          <p className="hero__tagline">{h.eyebrow}</p>
+        </div>
+
+        <div className="hero__cta">
+          <a className="btn btn--accent" href="#yhteystiedot" onClick={toContact}>
+            {h.contactCta}
+          </a>
         </div>
       </div>
     </section>

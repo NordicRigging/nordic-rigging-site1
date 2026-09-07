@@ -9,7 +9,7 @@
   /* Hero has no bottom padding any more, so this is the only space between
      the two sections — kept small on purpose, the tab row is meant to sit
      right under the hero. */
-  padding-top: clamp(1rem, 2vw, 1.5rem);
+  padding-top: clamp(0.6rem, 1.2vw, 0.9rem);
   background: linear-gradient(180deg, var(--navy-900) 0%, var(--navy-800) 35%, var(--navy-700) 100%);
 }
 

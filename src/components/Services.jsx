@@ -37,8 +37,9 @@ export function AskButton({ slug, className = 'btn', children, onHome = true }) 
  * One service panel. The look is the v2 accordion gallery: tall photo
  * panels in a row, a dark gradient rising from the bottom, an accent bar and
  * a big title, and the row breathing as the pointer moves across it. Unlike
- * v2 nothing waits for a hover: every panel shows what the service includes
- * and the result; price, crew and full detail live on its own page now.
+ * v2 nothing waits for a hover. Kept short on purpose: a title, the short
+ * description, the outcome line and a link through — the full checklist,
+ * price and crew live on the service's own page.
  */
 export function ServicePanel({ service, index }) {
   const { lang, t } = useLang();
@@ -68,12 +69,6 @@ export function ServicePanel({ service, index }) {
         </div>
 
         <p className="ag-panel__short">{s.short}</p>
-
-        <ul className="checks ag-panel__checks">
-          {s.includes.map(item => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
 
         <p className="ag-panel__outcome">
           <strong>{c.outcomeTitle}:</strong> {s.outcome}
