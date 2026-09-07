@@ -246,7 +246,8 @@ export const CONTENT = {
     hero: {
       eyebrow: 'Purjeveneesi paras miehistö maalla',
       contactCta: 'Ota yhteyttä',
-      videoLabel: 'Masto ja rikki teknisenä piirroksena'
+      videoLabel: 'Masto ja rikki teknisenä piirroksena',
+      quickFacts: 'Varsinais-Suomi ja Uusimaa · 100 €/h sis. alv'
     },
     services: {
       eyebrow: 'Palvelut',
@@ -429,7 +430,8 @@ export const CONTENT = {
     hero: {
       eyebrow: 'Your sailboat’s best crew on land',
       contactCta: 'Get in touch',
-      videoLabel: 'Mast and rigging as a technical drawing'
+      videoLabel: 'Mast and rigging as a technical drawing',
+      quickFacts: 'Varsinais-Suomi & Uusimaa · €100/h incl. VAT'
     },
     services: {
       eyebrow: 'Services',
