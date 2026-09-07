@@ -60,6 +60,33 @@ async function panelEventuallyShows(page, tabId, text, { timeout = 4000 } = {}) 
   return false;
 }
 
+/**
+ * The hero now runs a timed intro (~2s settle, then a border trace +
+ * blueprint scrub + percent counter driven off one shared progress value)
+ * before the title and contact card are meaningfully present. The timeout
+ * here is generous well beyond the nominal ~4.8s because a slow/throttled
+ * environment can push real elapsed time well past the component's own
+ * internal clock — poll for the actual reveal rather than guess a wait.
+ */
+async function heroRevealed(page, { timeout = 20000 } = {}) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    if (await page.evaluate(() => document.querySelector('.hero__wordmark-heading')?.classList.contains('is-revealed'))) return true;
+    await page.waitForTimeout(50);
+  }
+  return false;
+}
+
+/** Same idea, for any polled condition not tied to a specific locator/tab. */
+async function eventually(fn, { timeout = 4000 } = {}) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    if (await fn()) return true;
+    await new Promise(r => setTimeout(r, 50));
+  }
+  return false;
+}
+
 const browser = await launch();
 
 // ---------- desktop, Finnish ----------
@@ -67,8 +94,12 @@ const browser = await launch();
   const ctx = await browser.newContext(contextOptions({ width: 1440, height: 900 }));
   const page = await ctx.newPage();
   const errors = [];
+  const heroIntroLogs = [];
   page.on('pageerror', e => errors.push(e.message));
-  page.on('console', m => m.type() === 'error' && !m.text().includes('404') && errors.push(m.text()));
+  page.on('console', m => {
+    if (m.text().includes('hero-intro')) heroIntroLogs.push(m.text());
+    if (m.type() === 'error' && !m.text().includes('404')) errors.push(m.text());
+  });
   page.on('response', r => r.status() >= 400 && !r.url().includes('/src/lib/') && errors.push(`HTTP ${r.status()} ${r.url()}`));
   await page.goto(base + '/', { waitUntil: 'networkidle' });
 
@@ -101,17 +132,69 @@ const browser = await launch();
     JSON.stringify(wordmarkFit)
   );
 
-  // the tagline is captioned onto the hero photo's own corner, not a
-  // free-floating badge
-  check('tagline is captioned onto the hero photo', (await page.locator('.hero__tagline').textContent()).includes('miehistö'));
-  const taglineInMedia = await page.evaluate(() => !!document.querySelector('.hero__media .hero__tagline'));
-  check('tagline sits inside .hero__media, anchored to the photo', taglineInMedia);
+  // the intro sequence: a settle beat, then a border trace + blueprint scrub
+  // + percent counter driven off one shared progress value, landing on the
+  // title and the contact card at the same instant — wait for that landing
+  // before checking anything it reveals.
+  const revealed = await heroRevealed(page);
+  check('hero intro sequence reaches its revealed state', revealed);
 
-  // the old duplicate block (sales h1 text, lead, call/message pair, facts
-  // row) is gone — the hero has exactly one compact contact button instead
-  check('old duplicate hero copy block is gone', (await page.locator('.hero__facts, .hero__lead, .hero__actions').count()) === 0);
-  const heroCtaButtons = await page.locator('.hero__cta .btn').count();
-  check('hero has exactly one compact contact button', heroCtaButtons === 1, `count=${heroCtaButtons}`);
+  check(
+    '[hero-intro] synced-completion log fired (the sync proof)',
+    heroIntroLogs.some(l => l.includes('synced completion')),
+    heroIntroLogs.join(' | ').slice(0, 200)
+  );
+
+  const seqEnd = await page.evaluate(() => {
+    const rect = document.querySelector('.hero__border-rect');
+    const counter = document.querySelector('.hero__sequence-counter');
+    const video = document.querySelector('.hero__video');
+    return {
+      borderDashoffset: rect ? parseFloat(rect.style.strokeDashoffset) : null,
+      counterText: counter?.textContent,
+      videoCurrentTime: video?.currentTime,
+      videoDuration: video?.duration,
+      videoActive: video?.classList.contains('is-active')
+    };
+  });
+  check('border trace fully closed (dashoffset 0) at reveal', seqEnd.borderDashoffset === 0, JSON.stringify(seqEnd));
+  check('percent counter reached 100 at reveal', seqEnd.counterText === '100', seqEnd.counterText);
+  check(
+    'blueprint clip is scrubbed to its own last frame and frozen there (not autoplay-looping)',
+    seqEnd.videoActive === true && seqEnd.videoDuration > 0 && Math.abs(seqEnd.videoCurrentTime - seqEnd.videoDuration) < 0.05,
+    JSON.stringify(seqEnd)
+  );
+
+  // the glass contact card: tagline, the Rig-Sense mini gauge, a short
+  // area+rate line and the one "Ota Yhteyttä" button — nothing here repeats
+  // the old duplicated facts/lead/call-message block from earlier rounds
+  check('old duplicate hero copy block is gone', (await page.locator('.hero__facts, .hero__lead, .hero__actions, .hero__cta').count()) === 0);
+  check('dim box is captioned onto the hero photo', (await page.locator('.hero__dimbox-tagline').textContent()).includes('miehistö'));
+  const dimboxCtaButtons = await page.locator('.hero__dimbox .btn').count();
+  check('hero has exactly one compact contact button, inside the dim box', dimboxCtaButtons === 1, `count=${dimboxCtaButtons}`);
+
+  // the Rig-Sense mini gauge runs its own short rise, separate from the
+  // sequence counter above — give it its ~900ms and confirm it lands on the
+  // stated reading, then confirm pressing it re-triggers the same rise
+  const gaugeLanded = await eventually(async () => (await page.locator('.hero__gauge .hero__gauge-value span').first().textContent()) === '22');
+  check('Rig-Sense gauge rises to its reading (22%) after reveal', gaugeLanded);
+
+  // Prove the click re-runs the rise rather than just guessing a short wait
+  // will land inside the ~900ms animation (this sandbox's rAF throttling
+  // makes any such fixed-window assertion unreliable, per round 6's
+  // tab-crossfade diagnosis): stamp a sentinel directly on the node the
+  // animation writes to, click, then poll for it to reach 22 again — that
+  // can only happen if the click actually started a fresh rise.
+  await page.evaluate(() => {
+    const span = document.querySelector('.hero__gauge .hero__gauge-value span');
+    if (span) span.textContent = '—';
+  });
+  await page.locator('.hero__gauge').click();
+  const gaugeReRan = await eventually(
+    async () => (await page.locator('.hero__gauge .hero__gauge-value span').first().textContent()) === '22',
+    { timeout: 3000 }
+  );
+  check('Rig-Sense gauge is a real button that re-runs its rise on click', gaugeReRan);
 
   // the fixed nav bar has a stable compositor layer (the fix for the
   // scroll-flicker bug), and no bottom padding on the hero keeps it flush
@@ -131,13 +214,8 @@ const browser = await launch();
   });
   check('GradientWaves canvas renders behind the hero', waves.present && waves.w > 0 && waves.lost === false, JSON.stringify(waves));
 
-  const v = await page.evaluate(() => {
-    const el = document.querySelector('.hero__video');
-    if (!el) return { present: false };
-    return { present: true, playing: !el.paused && el.currentTime > 0, t: el.currentTime, w: el.videoWidth, h: el.videoHeight };
-  });
-  check('hero clip element present', v.present, JSON.stringify(v));
-  check('hero clip is playing', !!v.playing, `t=${v.t?.toFixed?.(2)} ${v.w}x${v.h}`);
+  // hero clip presence/scrub-freeze state is already covered by seqEnd above
+  // (it's paused and driven by currentTime, not autoplay-"playing")
   const mediaBox = await page.evaluate(() => {
     const el = document.querySelector('.hero__media');
     const r = el?.getBoundingClientRect();
@@ -145,10 +223,44 @@ const browser = await launch();
     return r && cs ? { w: Math.round(r.width), h: Math.round(r.height), radius: cs.borderTopLeftRadius, radiusBottom: cs.borderBottomLeftRadius } : null;
   });
   check(
-    'hero media is a wide landscape card (16:10-ish), rounded all round',
+    'hero media is a wide landscape card (16:9), rounded all round',
     !!mediaBox && mediaBox.w / mediaBox.h > 1.3 && mediaBox.radius !== '0px' && mediaBox.radiusBottom !== '0px',
     JSON.stringify(mediaBox)
   );
+
+  // the outpainted photo is a real landscape source, not stretched from a
+  // portrait crop — check the underlying <img>'s natural (file) dimensions
+  const naturalRatio = await page.evaluate(() => {
+    const img = document.querySelector('.hero__poster');
+    return img ? img.naturalWidth / img.naturalHeight : null;
+  });
+  check('hero photo source itself is landscape (outpainted, not just cropped)', naturalRatio > 1.4, naturalRatio?.toFixed(2));
+
+  // TracingBeam: invisible while the hero's contact card is still on
+  // screen, detaches from the card's last position and reveals once it
+  // scrolls out of view, then keeps following scroll further down the page
+  const beamBeforeScroll = await page.evaluate(() => getComputedStyle(document.querySelector('.tracing-beam__anchor')).opacity);
+  check('tracing beam is invisible while the hero contact card is still visible', Number(beamBeforeScroll) < 0.05, beamBeforeScroll);
+
+  const boxBottom = await page.evaluate(() => document.querySelector('.hero__dimbox').getBoundingClientRect().bottom + window.scrollY);
+  await page.evaluate(y => window.scrollTo({ top: y, behavior: 'instant' }), boxBottom + 60);
+  const beamRevealed = await eventually(async () =>
+    page.evaluate(() => document.querySelector('.tracing-beam__anchor')?.classList.contains('is-revealed'))
+  );
+  check('tracing beam reveals once the hero contact card scrolls out of view', beamRevealed);
+
+  const beamTopAtReveal = await page.evaluate(() => document.querySelector('.tracing-beam__anchor').getBoundingClientRect().top);
+  await page.evaluate(() => window.scrollBy({ top: window.innerHeight, behavior: 'instant' }));
+  await page.waitForTimeout(300);
+  const beamTopAfterScroll = await page.evaluate(() => document.querySelector('.tracing-beam__anchor').getBoundingClientRect().top);
+  check(
+    'tracing beam keeps following scroll further down the page',
+    beamTopAfterScroll < beamTopAtReveal - 100,
+    `${beamTopAtReveal.toFixed(0)} -> ${beamTopAfterScroll.toFixed(0)}`
+  );
+
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await page.waitForTimeout(150);
 
   // language toggle
   await page.getByRole('button', { name: 'EN', exact: true }).first().click();
@@ -339,12 +451,38 @@ const browser = await launch();
   await panelEventuallyShows(page, 'tyot', 'Referenssejä');
   check('portfolio grid has photos', (await page.locator('.portfolio-grid__item').count()) >= 4);
 
-  await page.waitForTimeout(1200);
+  const mobileRevealed = await heroRevealed(page);
+  check('hero intro sequence reaches revealed state on mobile', mobileRevealed);
   const vm = await page.evaluate(() => {
     const el = document.querySelector('.hero__video');
-    return el ? { playing: !el.paused && el.currentTime > 0 } : { playing: false, missing: true };
+    return el ? { active: el.classList.contains('is-active'), t: el.currentTime, d: el.duration } : { missing: true };
   });
-  check('hero clip plays on mobile', !!vm.playing, JSON.stringify(vm));
+  check('hero clip scrubbed and frozen on mobile too', vm.active === true && Math.abs(vm.t - vm.d) < 0.05, JSON.stringify(vm));
+
+  // below the ~640px breakpoint the contact card can't overlay the photo
+  // without colliding with the title (not enough vertical room in 16:9 at
+  // this width) — it drops into normal flow below the photo instead
+  const stackedLayout = await page.evaluate(() => {
+    const stage = document.querySelector('.hero__stage');
+    const media = document.querySelector('.hero__media');
+    const box = document.querySelector('.hero__dimbox');
+    const title = document.querySelector('.hero__wordmark-heading');
+    const mediaRect = media.getBoundingClientRect();
+    const boxRect = box.getBoundingClientRect();
+    const titleRect = title.getBoundingClientRect();
+    return {
+      position: getComputedStyle(box).position,
+      boxBelowMedia: boxRect.top >= mediaRect.bottom - 1,
+      noOverlapWithTitle: boxRect.top >= titleRect.bottom - 1 || titleRect.top >= boxRect.bottom - 1,
+      widthWithinStage: boxRect.width <= stage.getBoundingClientRect().width + 1
+    };
+  });
+  check(
+    'contact card stacks below the photo on mobile, not overlapping the title',
+    stackedLayout.position === 'static' && stackedLayout.boxBelowMedia && stackedLayout.noOverlapWithTitle && stackedLayout.widthWithinStage,
+    JSON.stringify(stackedLayout)
+  );
+
   check('no page errors (mobile)', errors.length === 0, errors.join(' | ').slice(0, 300));
   await ctx.close();
 }
