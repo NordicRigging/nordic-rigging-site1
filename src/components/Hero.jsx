@@ -37,12 +37,13 @@ const VIDEO_GRACE_MS = 1500;
 // loop ("the line drawing fades back into the original photograph, ending
 // exactly on the reference frame", per docs/hero-pipeline.md), not to be
 // scrubbed and held. Freezing at its literal duration would always land
-// back on the photo, which is the opposite of what the intro needs. 2.6s is
-// inside the blueprint's full hold (checked directly against the source
-// footage: dimension callouts are stable roughly 2.0-2.7s in, then fade
-// out, then the whole schematic glides back to the photo from ~3.3s on) —
-// this is the round-9 regeneration's own timing, not the previous clip's.
-const VIDEO_FREEZE_TIME = 2.6;
+// back on the photo, which is the opposite of what the intro needs. 3.8s is
+// inside this clip's own full hold (checked directly against the source
+// footage: the full schematic — mast, dimension callouts, the one gauge
+// icon — is stable through about 4.2s, then fades out, then glides back to
+// the photo by ~5s) — this is the round-10 1080p regeneration's own timing,
+// unrelated to either previous clip's freeze point.
+const VIDEO_FREEZE_TIME = 3.8;
 
 /** Skip the clip for people who asked for less motion or are saving data. */
 function wantsMotion() {

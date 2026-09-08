@@ -159,3 +159,39 @@ better fidelity:
 One-off image-registration work, not added as a committed script — this
 repo has no other Python step, and it only needs re-running if the photo
 or the clip is regenerated again.
+
+## 9. Round 10 items 2-3 — 1080p regeneration, mast and gauge-icon fixes
+
+The round-9 clip's own drawing had two content errors: the mast read as
+visually cut in the middle instead of one continuous line, and it carried
+two instrument-icon circles instead of one — both on top of being capped
+at 720p (the round-9 credit-budget tier), noticeably softer than the
+photo once displayed at the card's real size.
+
+Root cause of the mast break: the round-9 prompt's own wording. It asked
+for "masthead, spreaders, radar, shroud terminals and mast sections
+separate slightly and hover apart as schematic parts" — Seedance took
+"mast sections... separate and hover apart" close to literally, drawing a
+visible gap where the mast "splits". Not a resolution or seed problem;
+re-running the same prompt at a higher resolution would not have fixed
+it.
+
+Fixed with one fresh generation (`seedance_2_5`, `omni_reference`, same
+start/end image as round 9's, `16:9`, `1080p`, 6 s — job
+`8aebdf1f-fa74-47ec-b3df-dbdb4edeee83`, 54 credits) and a revised prompt:
+dropped the "mast sections separate and hover apart" line entirely,
+replaced it with an explicit instruction that the mast is traced as one
+unbroken line for its full height and never appears cut, split, or
+gapped, and added an explicit "exactly one small circular instrument
+icon... never two, never a duplicated pair" line (the duplicate icon was
+never called out at all in the round-9 prompt, which invited exactly the
+ambiguity that produced it). Both fixes held on inspection: the mast is
+one continuous line start to end, one gauge icon.
+
+Same media relay + alignment-warp process as item 1 above (frame-matched
+against `hero.webp` fresh, since a new generation drifts independently —
+this one needed less correction, `k = 1.03`, 250/250 ORB inliers).
+`VIDEO_FREEZE_TIME` moved again, to `3.8` — this clip's own full-hold
+window (checked the same way: extract frames, find where the schematic
+is stable vs. fading), unrelated to the two previous clips' freeze
+points.

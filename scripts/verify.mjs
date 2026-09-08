@@ -183,9 +183,9 @@ const browser = await launch();
   check('percent counter reached 100 at reveal', seqEnd.counterText === '100', seqEnd.counterText);
   // Must match Hero.jsx's VIDEO_FREEZE_TIME, not videoDuration — the clip's
   // own last frame is the plain photo again (it was authored to loop), so
-  // freezing there would show no blueprint at all. 2.6s is this round's
-  // regenerated (widescreen) clip's own hold timing, not the previous one's.
-  const VIDEO_FREEZE_TIME = 2.6;
+  // freezing there would show no blueprint at all. 3.8s is round 10's
+  // 1080p regeneration's own hold timing, not either previous clip's.
+  const VIDEO_FREEZE_TIME = 3.8;
   check(
     'blueprint clip is scrubbed to its held peak frame and frozen there, not its own last frame (which is the plain photo again)',
     seqEnd.videoActive === true && Math.abs(seqEnd.videoCurrentTime - VIDEO_FREEZE_TIME) < 0.05,
@@ -596,7 +596,7 @@ const browser = await launch();
     const el = document.querySelector('.hero__video');
     return el ? { active: el.classList.contains('is-active'), t: el.currentTime } : { missing: true };
   });
-  check('hero clip scrubbed and frozen on mobile too', vm.active === true && Math.abs(vm.t - 2.6) < 0.05, JSON.stringify(vm));
+  check('hero clip scrubbed and frozen on mobile too', vm.active === true && Math.abs(vm.t - 3.8) < 0.05, JSON.stringify(vm));
 
   // below the ~640px breakpoint the contact card can't overlay the photo
   // without colliding with the title (not enough vertical room in 16:9 at
