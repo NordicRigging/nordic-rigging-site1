@@ -474,6 +474,41 @@ const browser = await launch();
   const pinVisible = await page.evaluate(() => Number(document.querySelector('.globe__pin--turku')?.style.opacity) > 0.9);
   check('Turku pin visible', !!pinVisible);
 
+  // Round 10 item 4: the beam used to paint on top of real content wherever
+  // its left-margin column overlapped one — most visibly the globe, which
+  // deliberately spills wide into that same margin (see Location.css). A
+  // paint-order bug isn't directly queryable, so this proves it two ways:
+  // z-index itself (the beam must not out-rank the globe) and an actual
+  // hit-test at their overlap point with the beam's pointer-events
+  // temporarily forced on, which answers "what's really on top" instead of
+  // inferring it from CSS values alone.
+  const beamVsGlobe = await page.evaluate(() => {
+    const beam = document.querySelector('.tracing-beam__anchor');
+    const globe = document.querySelector('.globe');
+    if (!beam || !globe) return null;
+    const beamZ = Number(getComputedStyle(beam).zIndex) || 0;
+    const globeZ = Number(getComputedStyle(globe).zIndex) || 0;
+    const gr = globe.getBoundingClientRect();
+    const br = beam.getBoundingClientRect();
+    const px = (br.left + br.right) / 2;
+    const py = Math.max(gr.top + 50, 100);
+    const prevPE = beam.style.pointerEvents;
+    beam.style.pointerEvents = 'auto';
+    const hit = document.elementFromPoint(px, py);
+    beam.style.pointerEvents = prevPE;
+    return { beamZ, globeZ, hitIsGlobe: hit ? globe.contains(hit) || hit === globe : null, hitTag: hit?.tagName };
+  });
+  check(
+    'tracing beam does not out-rank the globe by z-index',
+    !!beamVsGlobe && beamVsGlobe.beamZ <= beamVsGlobe.globeZ,
+    JSON.stringify(beamVsGlobe)
+  );
+  check(
+    'the globe actually paints above the beam at their overlap point (hit-test, not just z-index values)',
+    !!beamVsGlobe && beamVsGlobe.hitIsGlobe === true,
+    JSON.stringify(beamVsGlobe)
+  );
+
   // the B2B path: open the yards tab (from the tab bar, no nav pill any more) and pre-fill the shared form
   await page.click('#tab-telakat');
   await panelEventuallyShows(page, 'telakat', 'Tarvitsetko luotettavan');

@@ -1,15 +1,38 @@
+/* isolation: isolate contains every z-index comparison for the beam and
+   the real content (Tabs/Location/Footer, passed in as children) inside
+   this one box, so the beam's own stacking never leaks out to compete
+   with unrelated z-indexed elements elsewhere on the page (the fixed nav,
+   for instance) and, the other way round, nothing three sections down
+   ever has to know the beam exists to out-rank it. */
 .tracing-beam {
   position: relative;
+  isolation: isolate;
 }
 
 /* Same left edge .wrap itself centres on (see global.css), so the beam
    tracks the content column at every width instead of a fixed offset
-   tuned for a different layout. */
+   tuned for a different layout.
+
+   z-index: 0, deliberately not a small positive number like the old 2:
+   the beam is position:absolute, so any z-index (even auto/0) already
+   paints it above each section's own plain background — which is right,
+   that's what makes it read as a line running down the page at all. The
+   bug was specifically that 2 also beat real foreground elements that
+   happen to share its left-margin column, the one on this page being the
+   globe, which deliberately spills wide (.globe's width:150%/negative
+   margin in Location.css) into the same gutter. .globe's own z-index (0,
+   set in Location.css for its relationship to the contact-info column,
+   .location__main) now ties with the beam's, and the tie breaks by DOM
+   order — .globe is the later element (nested inside this component's own
+   `children`, which render after the anchor), so it wins, unaffected by
+   anything Tabs/Footer set locally. Isolated by the parent rule above, so
+   this comparison is contained to the beam and its own `children` prop,
+   not the whole page's z-index space. */
 .tracing-beam__anchor {
   position: absolute;
   left: max(calc(var(--pad) - 0.9rem), calc((100vw - var(--max)) / 2 - 0.9rem));
   top: 0.75rem;
-  z-index: 2;
+  z-index: 0;
   opacity: 0;
   transform: translate(var(--beam-from-x, 0px), var(--beam-from-y, 0px));
   transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1), opacity 700ms ease;

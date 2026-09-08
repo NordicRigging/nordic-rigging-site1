@@ -122,3 +122,40 @@ strip. `VIDEO_FREEZE_TIME` in `Hero.jsx` (and the copy in `scripts/verify.mjs`)
 changed to `2.6` — this clip's own hold timing, found the same way as
 before (extracting frames and checking directly), unrelated to the previous
 clip's `5.08`.
+
+## 8. Round 10 — aligning the clip to the photo's own framing
+
+Even generated from the current photo, `omni_reference` doesn't reproduce
+it pixel-exact: round 10 item 1 was the crossfade from the (sharp, exact)
+photo to the (AI-regenerated) video reading as a small but real "zoom" the
+instant the video faded in. Measured directly rather than guessed at —
+feature-matched the video's own frame 0 against `hero.webp` (OpenCV ORB +
+`findHomography`, RANSAC) and got a highly confident fit (249/250 inliers):
+roughly a 1-3% non-uniform scale plus an ~10-18px offset, no meaningful
+perspective/rotation component. Small enough to miss glancing at a still,
+large enough to read as a jump once the two crossfade.
+
+Fixed by warping the raw clip to the photo's framing before re-encoding,
+not by patching the crossfade timing or trying to prompt the model into
+better fidelity:
+
+1. Extracted frame 0 from `public/video/raw/hero.mp4` (`cv2.VideoCapture`)
+   and `public/images/hero.webp`, ORB-matched keypoints between them, and
+   fit a homography (`cv2.findHomography`, RANSAC) mapping the video's own
+   pixel space onto the photo's.
+2. Composed that with the native-resolution → photo-resolution scale to
+   get one `native video pixel → photo pixel` matrix, then pre-multiplied
+   a small extra centred zoom (`k = 1.04`) so the warp's own out-of-frame
+   borders (the video's edges no longer land exactly on the photo's once
+   corrected — checked directly: a few percent of black border at
+   `k = 1.0`) fall fully outside the output canvas at every edge.
+3. Applied that one fixed matrix to every frame with
+   `cv2.warpPerspective` (the prompt's "locked-off static camera, no camera
+   movement" held up — checked frame 0 and the last frame both against the
+   photo, alignment is equally tight at both ends) into a 1600-wide
+   intermediate, re-encoded through `libx264 -crf 16` as the new
+   `public/video/raw/hero.mp4`, then the normal `npm run video` pass.
+
+One-off image-registration work, not added as a committed script — this
+repo has no other Python step, and it only needs re-running if the photo
+or the clip is regenerated again.

@@ -92,7 +92,18 @@
    was only ever there to compensate for the old clip's narrower footage,
    and its own hard edge against the wider photo was the round-9 "seams"
    complaint). Kept as a plain top-of-DOM sibling of .hero__poster so the
-   two crossfade in place. */
+   two crossfade in place.
+
+   Round 10 item 1: even generated from the current photo, the model's own
+   frame 0 didn't reproduce it pixel-exact — a ~1-3% scale drift plus a
+   small offset, confirmed by feature-matching the two (ORB + homography,
+   249/250 inliers) — small enough to be easy to dismiss as noise, but
+   large enough that crossfading photo-to-video read as a visible little
+   "zoom" the instant the video faded in. No CSS fixes a content mismatch
+   between two different images, so the raw video itself was re-warped
+   frame-by-frame (scripts referenced in docs/hero-pipeline.md) to the
+   photo's own framing before this round's process-video.mjs pass — the
+   crossfade is now between two sources that actually agree. */
 .hero__video {
   position: absolute;
   inset: 0;
