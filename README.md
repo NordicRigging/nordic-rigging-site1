@@ -319,12 +319,39 @@ transparent`, was `#18CCFC → #6344F5 → #AE48FF`):
   not a fixed `-left-4 md:-left-20` tuned for a `max-w-4xl` column that
   doesn't exist here.
 - The beam stays invisible (`opacity: 0`) until the hero's contact card
-  (`Hero`'s `dimBoxRef`, threaded through `Home.jsx` to both components)
-  scrolls out of view — an `IntersectionObserver` on that node captures its
-  last on-screen position the moment it stops intersecting, and the beam's
-  anchor animates from there to its resting spot at the content's left
-  edge (a one-time, one-way CSS transition, not scroll-linked). Below that,
+  scrolls out of view, then its anchor animates from the card's last
+  on-screen position to its resting spot at the content's left edge (a
+  one-time CSS transition, not scroll-linked). Below that,
   `scrollYProgress`-driven behaviour is unchanged from the original.
+
+### The hero/beam handoff (`launched`)
+
+`Home.jsx` owns one `scroll` listener (not the two separate
+`IntersectionObserver`s — one per component — this used to be) that checks
+`Hero`'s `dimBoxRef` node directly: once its `getBoundingClientRect().bottom`
+crosses above 0 it sets `heroLaunched`, passed as `launched` to both `Hero`
+(fades `.hero__stage` — the photo, wordmark and contact box together, via
+`.hero__stage--launched`) and `TracingBeam` (reveals the beam) — one trigger,
+so the two happen the same instant instead of as two independently-observed
+events. Round 11 item 3's regression ("the beam is missing while scrolling")
+turned out to be exactly that independence: verified directly, a single
+instant scroll past the card could leave one or both `IntersectionObserver`
+callbacks not yet fired by the time of the very next check, and round 9/10
+had already found `IntersectionObserver` timing unreliable once before, for
+the hero's own border fade-out. `TracingBeam` still runs its own
+`IntersectionObserver` on the card for the fly-in's exact start position,
+but only that cosmetic detail depends on it now — if it fires late the beam
+still reveals on schedule via `launched`, just without the precise fly-from
+offset that one time, rather than not appearing at all.
+
+Scrolling back to the very top (`window.scrollY <= 2`) resets
+`heroLaunched` to `false` and bumps `introRunId`, passed to `Hero` as
+`restartKey`. Hero's intro effect depends on it, and unconditionally resets
+to the pre-intro state (video paused and seeked to 0, border dashoffset back
+to full, `running`/`revealed` both false) at the top of that effect before
+either skipping motion or starting the settle-then-play sequence again — the
+same reset runs on first mount too (a no-op there, since nothing has run
+yet), so there's one code path for "first visit" and "replay," not two.
 
 `cn()` (`src/lib/utils.js`) is a bare `clsx` wrapper — `tailwind-merge` was
 left out of the install; there's no Tailwind class conflicts for it to

@@ -332,8 +332,15 @@ const browser = await launch();
   check('hero photo source itself is landscape (outpainted, not just cropped)', naturalRatio > 1.4, naturalRatio?.toFixed(2));
 
   // TracingBeam: invisible while the hero's contact card is still on
-  // screen, detaches from the card's last position and reveals once it
-  // scrolls out of view, then keeps following scroll further down the page
+  // screen, launches together with the hero itself fading out (round 11
+  // item 3) once the card scrolls out of view, then keeps following scroll
+  // further down the page. Both are now driven by one plain scroll listener
+  // in Home.jsx (a synchronous rect check), not — as before — two separate
+  // IntersectionObservers, one per component, each independently watching
+  // the same dim box: verified directly, that version's async callbacks
+  // didn't reliably have fired yet immediately after a single instant jump
+  // scroll like the one below, leaving the beam at opacity 0 — which is
+  // exactly what "the beam is missing" turned out to be.
   const beamBeforeScroll = await page.evaluate(() => getComputedStyle(document.querySelector('.tracing-beam__anchor')).opacity);
   check('tracing beam is invisible while the hero contact card is still visible', Number(beamBeforeScroll) < 0.05, beamBeforeScroll);
   const borderColorAtStart = await page.evaluate(() => getComputedStyle(document.querySelector('.hero__border-rect')).stroke);
@@ -345,20 +352,34 @@ const browser = await launch();
   );
 
   const boxBottom = await page.evaluate(() => document.querySelector('.hero__dimbox').getBoundingClientRect().bottom + window.scrollY);
+  // A single instant jump, deliberately not several small scrolls — this is
+  // the pattern that used to leave the beam not-yet-revealed by the time of
+  // the very next check (see the comment above).
   await page.evaluate(y => window.scrollTo({ top: y, behavior: 'instant' }), boxBottom + 60);
   const beamRevealed = await eventually(async () =>
     page.evaluate(() => document.querySelector('.tracing-beam__anchor')?.classList.contains('is-revealed'))
   );
   check('tracing beam reveals once the hero contact card scrolls out of view', beamRevealed);
-  // .hero__border's own fade-out is a 700ms CSS transition, not instant,
-  // and this sandbox's scheduling throttling (see README) means even the
-  // class flip that starts it can lag — give it real margin.
+  const heroLaunchedTogether = await page.evaluate(() =>
+    document.querySelector('.hero__stage')?.classList.contains('hero__stage--launched')
+  );
+  check('hero stage launches (starts fading out) the same instant the beam reveals', heroLaunchedTogether);
+
+  // .hero__border's / .hero__stage's own fade-out is a CSS transition, not
+  // instant, and this sandbox's scheduling throttling (see README) means
+  // even the class flip that starts it can lag — give it real margin.
   await page.waitForTimeout(1500);
   const heroBorderOpacity = await page.evaluate(() => getComputedStyle(document.querySelector('.hero__border')).opacity);
   check(
     'hero border fades out as the tracing beam takes over, not left showing alongside it',
     Number(heroBorderOpacity) < 0.05,
     heroBorderOpacity
+  );
+  const heroStageOpacity = await page.evaluate(() => getComputedStyle(document.querySelector('.hero__stage')).opacity);
+  check(
+    'hero photo/title/box have dissolved away, not left showing under the tab content',
+    Number(heroStageOpacity) < 0.05,
+    heroStageOpacity
   );
 
   const beamTopAtReveal = await page.evaluate(() => document.querySelector('.tracing-beam__anchor').getBoundingClientRect().top);
@@ -371,8 +392,35 @@ const browser = await launch();
     `${beamTopAtReveal.toFixed(0)} -> ${beamTopAfterScroll.toFixed(0)}`
   );
 
+  // Round 11 item 3's new requirement: scrolling all the way back to the
+  // very top undoes the launch and replays the hero's intro from scratch —
+  // not just re-showing the end state, an actual fresh run (border back to
+  // 0, video back to frame 0, then the same settle-then-play sequence as a
+  // first visit).
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-  await page.waitForTimeout(150);
+  const midReplay = await eventually(async () =>
+    page.evaluate(() => {
+      const head = document.querySelector('.hero__border-head');
+      const title = document.querySelector('.hero__wordmark-heading');
+      return !!head?.classList.contains('is-visible') && !title?.classList.contains('is-revealed');
+    })
+  );
+  check('scrolling back to the top restarts the hero intro (border running again, title not yet revealed)', midReplay);
+  const stageUnlaunched = await page.evaluate(
+    () => !document.querySelector('.hero__stage')?.classList.contains('hero__stage--launched')
+  );
+  check('hero stage is no longer launched once back at the top', stageUnlaunched);
+  const replayRevealed = await heroRevealed(page);
+  check('the replayed intro reaches revealed state again', replayRevealed);
+  const replayVideoState = await page.evaluate(() => {
+    const v = document.querySelector('.hero__video');
+    return { currentTime: v?.currentTime, active: v?.classList.contains('is-active') };
+  });
+  check(
+    'replayed intro pauses the video at the same freeze frame as the first run',
+    replayVideoState.active === true && Math.abs(replayVideoState.currentTime - VIDEO_FREEZE_TIME) < 0.05,
+    JSON.stringify(replayVideoState)
+  );
 
   // language toggle
   await page.getByRole('button', { name: 'EN', exact: true }).first().click();

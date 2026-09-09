@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import Header from '../components/Header.jsx';
@@ -28,12 +28,45 @@ export default function Home() {
     return () => cancelAnimationFrame(raf);
   }, [state, hash, setActiveTab]);
 
+  // Round 11 item 3: the single trigger both Hero and TracingBeam key off —
+  // "launched" once the dim box has scrolled out of view (the beam flies in
+  // from it, the hero's photo/title/box fade away), latched back off (and
+  // introRunId bumped, so Hero replays its intro from scratch) only once
+  // the user scrolls all the way back to the very top. This used to be two
+  // separate IntersectionObservers (one in Hero for its own fade, one in
+  // TracingBeam for its reveal) independently watching the same dim box —
+  // async observer callbacks that, verified directly, didn't reliably fire
+  // in time on a fast/instant scroll in this project's test environment,
+  // which is exactly the "beam missing" regression this replaces: a plain
+  // scroll listener reads the box's current rect synchronously, so there's
+  // no callback scheduling left to race.
+  const [heroLaunched, setHeroLaunched] = useState(false);
+  const [introRunId, setIntroRunId] = useState(0);
+
+  useEffect(() => {
+    let launched = false;
+    const onScroll = () => {
+      const box = dimBoxRef.current;
+      if (box && !launched && box.getBoundingClientRect().bottom < 0) {
+        launched = true;
+        setHeroLaunched(true);
+      } else if (launched && window.scrollY <= 2) {
+        launched = false;
+        setHeroLaunched(false);
+        setIntroRunId(id => id + 1);
+      }
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <>
       <Header />
       <main id="sisalto">
-        <Hero dimBoxRef={dimBoxRef} />
-        <TracingBeam anchorFromRef={dimBoxRef}>
+        <Hero dimBoxRef={dimBoxRef} launched={heroLaunched} restartKey={introRunId} />
+        <TracingBeam anchorFromRef={dimBoxRef} launched={heroLaunched}>
           <Tabs />
           <Location />
           <Footer />

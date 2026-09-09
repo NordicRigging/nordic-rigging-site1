@@ -61,6 +61,22 @@
   width: 100%;
   margin-inline: auto;
   padding-top: clamp(1.75rem, 6vw, 3.75rem);
+  opacity: 1;
+  filter: blur(0);
+  transition: opacity 900ms ease, filter 900ms ease;
+}
+
+/* Round 11 item 3: launched the moment the dim box (below) scrolls out of
+   view — the same instant TracingBeam launches from that same box (see
+   Home.jsx, the one scroll listener both key off). Dissolves rather than a
+   flat fade so the handoff reads as the photo/title/box giving way to the
+   beam, not just disappearing; pointer-events off so the now-invisible
+   contact button can't still be clicked/tabbed to underneath the tab
+   section that has scrolled up over it. */
+.hero__stage--launched {
+  opacity: 0;
+  filter: blur(6px);
+  pointer-events: none;
 }
 
 /* the photo/clip — the intro sequence and the reveal both play out inside
@@ -443,5 +459,11 @@
   .hero__spinlock-beam,
   .hero__scroll-arrow {
     animation: none;
+  }
+  .hero__stage {
+    transition: opacity 300ms ease;
+  }
+  .hero__stage--launched {
+    filter: none;
   }
 }

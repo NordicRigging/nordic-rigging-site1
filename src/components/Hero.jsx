@@ -61,7 +61,7 @@ function wantsMotion() {
 const prefersReduced = () =>
   typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export default function Hero({ dimBoxRef }) {
+export default function Hero({ dimBoxRef, launched, restartKey }) {
   const { t } = useLang();
   const h = t.hero;
   const rs = t.rigsense;
@@ -87,12 +87,12 @@ export default function Hero({ dimBoxRef }) {
   // "running": the sequence is past the settle beat, the video is playing
   // and the border is tracing along with it. "revealed": the video reached
   // its hold frame and paused there for good — title and contact card
-  // shown. "scrolledPast": the whole stage has scrolled out of view — only
-  // used to fade the border out as the tracing beam picks the same line
-  // back up further down the page.
+  // shown. `launched` (a prop, not state here — see Home.jsx) is the same
+  // signal the tracing beam launches on: past that point the whole stage
+  // (photo, title, box, border) fades out together, so the border doesn't
+  // need its own separate fade-out trigger any more.
   const [running, setRunning] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const [scrolledPast, setScrolledPast] = useState(false);
 
   useEffect(() => {
     setMotionOk(wantsMotion());
@@ -145,8 +145,34 @@ export default function Hero({ dimBoxRef }) {
     return () => ro.disconnect();
   }, []);
 
+  // restartKey is bumped by Home.jsx once the user scrolls all the way back
+  // to the top after the hero has launched (see .hero__stage--launched
+  // below) — putting it in this effect's own dependency array is what
+  // replays the whole sequence. The reset below runs unconditionally at the
+  // top so the same code path covers both the first mount (a no-op: nothing
+  // has run yet) and a restart (undoes wherever the previous run left off —
+  // the video paused mid-clip or held on its last frame, the border drawn
+  // in) before either falls through to skip-motion or starts the sequence
+  // fresh.
   useEffect(() => {
     if (motionOk === null) return undefined;
+
+    setRunning(false);
+    setRevealed(false);
+    const resetVideo = videoRef.current;
+    if (resetVideo) {
+      resetVideo.pause();
+      resetVideo.currentTime = 0;
+    }
+    if (borderRef.current && borderLenRef.current) {
+      borderRef.current.style.strokeDashoffset = String(borderLenRef.current);
+      if (borderHeadRef.current) {
+        const pt = borderRef.current.getPointAtLength(0);
+        borderHeadRef.current.setAttribute('cx', String(pt.x));
+        borderHeadRef.current.setAttribute('cy', String(pt.y));
+      }
+    }
+
     if (!motionOk || prefersReduced()) {
       setRunning(true);
       setRevealed(true);
@@ -240,23 +266,7 @@ export default function Hero({ dimBoxRef }) {
       cancelAnimationFrame(raf);
       clearTimeout(settleTimer);
     };
-  }, [motionOk]);
-
-  // Fade the border out the instant the contact card scrolls out of view —
-  // watching the same element TracingBeam.jsx watches (via the same
-  // dimBoxRef) to trigger its own reveal, not the taller .hero__stage
-  // (which includes the title above the photo and so exits later), is
-  // what keeps the two triggers landing in the same moment: the border
-  // fades out right as the beam flies in, in matching colour and
-  // thickness, so the two read as one beam handing off rather than a beam
-  // disappearing and a different one appearing.
-  useEffect(() => {
-    const el = dimBoxRef?.current;
-    if (!el || scrolledPast) return undefined;
-    const io = new IntersectionObserver(([entry]) => !entry.isIntersecting && setScrolledPast(true), { threshold: 0 });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [scrolledPast, dimBoxRef]);
+  }, [motionOk, restartKey]);
 
   const onWavesError = useCallback(err => {
     console.error('GradientWaves failed to start, falling back to a static gradient:', err);
@@ -308,7 +318,7 @@ export default function Hero({ dimBoxRef }) {
       </div>
 
       <div className="hero__inner">
-        <div className="hero__stage">
+        <div className={`hero__stage${launched ? ' hero__stage--launched' : ''}`}>
           {/* A sibling of .hero__media, not a child: that box clips its own
               overflow to the photo's aspect ratio, and the title needs to
               spill out above it (empty space) with the rest overlapping
@@ -379,7 +389,7 @@ export default function Hero({ dimBoxRef }) {
             )}
 
             <svg
-              className={`hero__border${scrolledPast ? ' is-handed-off' : ''}`}
+              className={`hero__border${launched ? ' is-handed-off' : ''}`}
               aria-hidden="true"
               preserveAspectRatio="none"
               viewBox="0 0 100 56.25"

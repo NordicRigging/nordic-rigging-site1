@@ -10,25 +10,28 @@ const prefersReduced = () =>
 /**
  * Adapted from the community TracingBeam pattern (motion's useScroll/
  * useTransform/useSpring driving a gradient that travels down a path as the
- * wrapped content scrolls by). Two changes from the original beyond the
+ * wrapped content scrolls by). Changes from the original beyond the
  * navy/cyan recolour:
  *
  * 1. No Tailwind here, so the beam's resting horizontal position is derived
  *    from the same --pad/--max expression .wrap itself centres on, rather
  *    than a fixed -left-4/-left-20 offset tuned for a max-w-4xl column.
- * 2. `anchorFromRef` (the hero's dim box) is watched with an
- *    IntersectionObserver: the beam stays invisible until that box scrolls
- *    out of view, then it animates in from the box's last on-screen
- *    position to its resting spot at the content's left edge — a one-time,
- *    one-way reveal, not a scroll-linked position.
+ * 2. `launched` (from Home.jsx, one scroll listener shared with Hero's own
+ *    fade — see its comment) gates visibility: the beam stays invisible
+ *    until the hero's dim box scrolls out of view, then animates in to its
+ *    resting spot at the content's left edge. `anchorFromRef` is now only
+ *    used for the cosmetic fly-in start point (still captured via
+ *    IntersectionObserver, best-effort — if it fires late the beam still
+ *    reveals on time via `launched`, just without the exact fly-from
+ *    offset, rather than not appearing at all).
  */
-export default function TracingBeam({ children, className = '', anchorFromRef }) {
+export default function TracingBeam({ children, className = '', anchorFromRef, launched }) {
   const ref = useRef(null);
   const contentRef = useRef(null);
   const anchorRef = useRef(null);
   const [svgHeight, setSvgHeight] = useState(0);
-  const [revealed, setRevealed] = useState(!anchorFromRef);
   const [flyFrom, setFlyFrom] = useState(null);
+  const revealed = anchorFromRef ? !!launched : true;
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
 
@@ -40,11 +43,16 @@ export default function TracingBeam({ children, className = '', anchorFromRef })
     return () => ro.disconnect();
   }, []);
 
-  // Reveal once, the moment the hero's dim box leaves the viewport — capture
-  // its last on-screen position so the beam can visibly travel from there.
+  // Best-effort only (see the component doc above): capture the dim box's
+  // last on-screen position so the beam's reveal can visibly travel from
+  // there. Armed whenever not currently launched — which includes after a
+  // restart (Home.jsx resets `launched` to false when the user scrolls back
+  // to the top), so the next launch captures a fresh position rather than
+  // reusing the previous cycle's.
   useEffect(() => {
+    if (launched) return undefined;
     const box = anchorFromRef?.current;
-    if (!box || revealed) return undefined;
+    if (!box) return undefined;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) return;
@@ -56,14 +64,13 @@ export default function TracingBeam({ children, className = '', anchorFromRef })
             y: boxRect.top - anchorRect.top
           });
         }
-        setRevealed(true);
         io.disconnect();
       },
       { threshold: 0 }
     );
     io.observe(box);
     return () => io.disconnect();
-  }, [anchorFromRef, revealed]);
+  }, [anchorFromRef, launched]);
 
   const y1 = useSpring(useTransform(scrollYProgress, [0, 0.8], [50, svgHeight]), { stiffness: 500, damping: 90 });
   const y2 = useSpring(useTransform(scrollYProgress, [0, 1], [50, svgHeight]), { stiffness: 500, damping: 90 });
