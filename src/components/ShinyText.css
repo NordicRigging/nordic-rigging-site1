@@ -1,0 +1,7 @@
+/* The shine gradient itself is inline (colours/spread/backgroundPosition
+   are per-instance props driven from JS in ShinyText.jsx) — this file only
+   needs the one thing a text-clipped gradient span doesn't get by default. */
+
+.shiny-text {
+  display: inline-block;
+}

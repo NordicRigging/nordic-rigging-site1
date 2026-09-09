@@ -13,7 +13,18 @@
  *
  * Exits non-zero if any check fails, so it can gate a deploy.
  */
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { contextOptions, launch } from './browser.mjs';
+
+// Shared with Hero.jsx (its sole timing source under round 11's video-driven
+// intro) and process-video.mjs/render_counter_frames.py (where the baked-in
+// counter stops climbing) — one file so this can't quietly drift from what
+// the site actually does.
+const { freezeTimeSeconds: VIDEO_FREEZE_TIME } = JSON.parse(
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'lib', 'hero-timing.json'), 'utf8')
+);
 
 const [base = 'http://localhost:5173', endpoint = ''] = process.argv.slice(2);
 const results = [];
@@ -109,49 +120,71 @@ const browser = await launch();
   // aria-hidden, so a screen reader only ever hears this once)
   check('FI hero h1 accessible name', (await page.locator('h1').getAttribute('aria-label')).includes('Purjeveneesi'));
 
-  // the wordmark: two video-filled rows, centred, not the sales h1
-  const wordmarkRows = await page.locator('.masked-heading__row').count();
+  // the wordmark: two shine-text rows, centred, not the sales h1 (round 11
+  // item 5 — was two video-filled MaskedHeading rows, now plain CSS text run
+  // through ShinyText's animated gradient clip)
+  const wordmarkRows = await page.locator('.hero__wordmark-row').count();
   check('wordmark has two rows (Nordic / Rigging)', wordmarkRows === 2, `rows=${wordmarkRows}`);
-  const wordmarkVideos = await page.evaluate(() =>
-    [...document.querySelectorAll('.masked-heading__media')].map(v => ({ playing: !v.paused && v.currentTime > 0 }))
-  );
-  check('wordmark videos are playing', wordmarkVideos.length === 2 && wordmarkVideos.every(v => v.playing), JSON.stringify(wordmarkVideos));
-  // the clip-path text must fit inside its own row — this is the fix for the
-  // "RIGGING" clipping bug: the SVG text is measured against the row's own
-  // width and shrunk to fit, not just sized from height
-  const wordmarkFit = await page.evaluate(() =>
-    [...document.querySelectorAll('.masked-heading__row')].map(row => {
-      const text = row.querySelector('.masked-heading__clip-text');
-      const w = row.getBoundingClientRect().width;
-      return { rowWidth: Math.round(w), textWidth: Math.round(text.getComputedTextLength()) };
-    })
-  );
+
+  // the sweep is a motion/react animation writing backgroundPosition to the
+  // element's own inline style every frame — sampling it twice with a wait
+  // between is the same "is it actually animating, not frozen" proof the old
+  // wordmark-videos-are-playing check gave for the video fill
+  const shineSample = () =>
+    page.evaluate(() => [...document.querySelectorAll('.hero__wordmark-shiny')].map(el => el.style.backgroundPosition));
+  const shine1 = await shineSample();
+  await page.waitForTimeout(400);
+  const shine2 = await shineSample();
   check(
-    'wordmark text never overflows its row (no clipping)',
-    wordmarkFit.every(f => f.textWidth <= f.rowWidth + 1),
+    'wordmark shine is animating (not frozen)',
+    shine1.length === 2 && shine1.some((v, i) => v !== shine2[i]),
+    JSON.stringify({ shine1, shine2 })
+  );
+
+  // a plain CSS-sized span can't overflow its own row the way MaskedHeading's
+  // independently-measured SVG clip-text once did, but the clamp() sizing it
+  // shares with the old wordmark could still, in principle, size text wider
+  // than the hero itself
+  const wordmarkFit = await page.evaluate(() => {
+    const stageWidth = document.querySelector('.hero__stage').getBoundingClientRect().width;
+    return [...document.querySelectorAll('.hero__wordmark-row')].map(row => ({
+      rowWidth: Math.round(row.getBoundingClientRect().width),
+      stageWidth: Math.round(stageWidth)
+    }));
+  });
+  check(
+    'wordmark text never overflows the hero stage',
+    wordmarkFit.every(f => f.rowWidth <= f.stageWidth),
     JSON.stringify(wordmarkFit)
   );
 
-  // the intro sequence: a settle beat, then a border trace + blueprint scrub
-  // + percent counter driven off one shared progress value, landing on the
-  // title and the contact card at the same instant — wait for that landing
-  // before checking anything it reveals.
+  // the intro sequence: a settle beat, then the blueprint clip actually
+  // plays and the border trace reads its progress straight off the video's
+  // own currentTime/freezeTime every frame — round 11 item 4 retired the
+  // separate JS timer (and the DOM percent counter it drove) that used to
+  // be a second clock a browser hiccup could knock out of step with the
+  // video; the counter is baked into the clip's own pixels now (see
+  // process-video.mjs). Wait for the landing before checking anything it
+  // reveals.
   const revealed = await heroRevealed(page);
   check('hero intro sequence reaches its revealed state', revealed);
 
   check(
-    '[hero-intro] synced-completion log fired (the sync proof)',
-    heroIntroLogs.some(l => l.includes('synced completion')),
+    '[hero-intro] video-driven completion log fired (currentTime is the only clock)',
+    heroIntroLogs.some(l => l.includes('video-driven completion')),
     heroIntroLogs.join(' | ').slice(0, 200)
+  );
+
+  check(
+    'DOM percent counter is gone (round 11 item 4 baked it into the video instead)',
+    (await page.locator('.hero__sequence-counter').count()) === 0 && (await page.locator('.hero__sequence').count()) === 0
   );
 
   const seqEnd = await page.evaluate(() => {
     const rect = document.querySelector('.hero__border-rect');
-    const counter = document.querySelector('.hero__sequence-counter');
     const video = document.querySelector('.hero__video');
     return {
       borderDashoffset: rect ? parseFloat(rect.style.strokeDashoffset) : null,
-      counterText: counter?.textContent,
       videoCurrentTime: video?.currentTime,
       videoDuration: video?.duration,
       videoActive: video?.classList.contains('is-active')
@@ -180,14 +213,13 @@ const browser = await launch();
     Number.isFinite(borderStrokeInfo.strokeWidth) && borderStrokeInfo.strokeWidth > 0,
     JSON.stringify(borderStrokeInfo)
   );
-  check('percent counter reached 100 at reveal', seqEnd.counterText === '100', seqEnd.counterText);
-  // Must match Hero.jsx's VIDEO_FREEZE_TIME, not videoDuration — the clip's
-  // own last frame is the plain photo again (it was authored to loop), so
-  // freezing there would show no blueprint at all. 3.8s is round 10's
-  // 1080p regeneration's own hold timing, not either previous clip's.
-  const VIDEO_FREEZE_TIME = 3.8;
+  // VIDEO_FREEZE_TIME (from hero-timing.json, not videoDuration) is the
+  // frame Hero.jsx pauses real playback on — the clip's own last frame is
+  // the plain photo again (it was authored to loop), so freezing there
+  // would show no blueprint at all. 3.8s is round 10's 1080p regeneration's
+  // own hold timing, not either previous clip's.
   check(
-    'blueprint clip is scrubbed to its held peak frame and frozen there, not its own last frame (which is the plain photo again)',
+    'blueprint clip is played to its held peak frame and paused there, not its own last frame (which is the plain photo again)',
     seqEnd.videoActive === true && Math.abs(seqEnd.videoCurrentTime - VIDEO_FREEZE_TIME) < 0.05,
     JSON.stringify(seqEnd)
   );
@@ -596,7 +628,7 @@ const browser = await launch();
     const el = document.querySelector('.hero__video');
     return el ? { active: el.classList.contains('is-active'), t: el.currentTime } : { missing: true };
   });
-  check('hero clip scrubbed and frozen on mobile too', vm.active === true && Math.abs(vm.t - 3.8) < 0.05, JSON.stringify(vm));
+  check('hero clip played and paused on mobile too', vm.active === true && Math.abs(vm.t - VIDEO_FREEZE_TIME) < 0.05, JSON.stringify(vm));
 
   // below the ~640px breakpoint the contact card can't overlay the photo
   // without colliding with the title (not enough vertical room in 16:9 at

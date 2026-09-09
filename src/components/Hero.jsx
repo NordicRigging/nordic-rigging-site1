@@ -1,49 +1,53 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import heroTiming from '../lib/hero-timing.json';
 import { useLang } from '../lib/LanguageContext.jsx';
 import { scrollToId } from '../lib/scroll.js';
 import { useTabs } from '../lib/tabs.jsx';
 import GradientWaves from './GradientWaves.jsx';
-import MaskedHeading from './MaskedHeading.jsx';
+import ShinyText from './ShinyText.jsx';
 import './Hero.css';
 
 /**
  * The hero is a contained section, not full-bleed: an animated wave
  * background (GradientWaves) fills it, and a landscape mast photo holds a
- * timed intro sequence — a settle beat, then a border trace, a blueprint
- * video scrub and a percent counter run from one shared progress value, and
- * land together on the wordmark title and the contact card. Nothing here
- * repeats price, area, the crew or the call/message pair — those already
- * live in the nav and the Palvelut tab.
+ * timed intro sequence — a settle beat, then the blueprint video plays and
+ * a border trace reads its progress straight off that video's own
+ * currentTime (its 0-100 counter is baked into its own pixels — see
+ * process-video.mjs — not a separate DOM element), landing on the wordmark
+ * title and the contact card together when the video reaches its hold
+ * frame. Nothing here repeats price, area, the crew or the call/message
+ * pair — those already live in the nav and the Palvelut tab.
  */
 export const HERO_IMAGE = '/images/hero.webp';
-export const HERO_IMAGE_SET = '/images/hero-1200.webp 1200w, /images/hero.webp 2200w';
 export const HERO_VIDEO = {
   lg: { mp4: '/video/hero-lg.mp4', webm: '/video/hero-lg.webm' },
   sm: { mp4: '/video/hero-sm.mp4', webm: '/video/hero-sm.webm' }
 };
-const WORDMARK_VIDEO = { mp4: '/video/masthead-fill.mp4', webm: '/video/masthead-fill.webm' };
 const LG_MIN_WIDTH = 900;
 
-// One shared timeline for the intro: a settle beat doing nothing, then a
-// single run phase whose 0-1 progress drives the border trace, the percent
-// counter and the blueprint video's own currentTime together — see the
-// effect below for why that (not three independently-timed animations) is
-// what guarantees they land in the same frame.
+// The intro: a settle beat doing nothing, then the blueprint clip actually
+// plays (round 11 item 4 — see the effect below) and the border trace reads
+// its own progress straight off the video's currentTime, so there is only
+// ever one clock. VIDEO_GRACE_MS is how long to wait for the video's
+// metadata beyond the settle beat before giving up on it and revealing
+// immediately (a slow/broken source shouldn't leave the intro stuck).
 const SETTLE_MS = 2000;
-const RUN_MS = 2800;
 const VIDEO_GRACE_MS = 1500;
 // The clip's own last frame is the plain photo again — it was authored to
 // loop ("the line drawing fades back into the original photograph, ending
 // exactly on the reference frame", per docs/hero-pipeline.md), not to be
-// scrubbed and held. Freezing at its literal duration would always land
-// back on the photo, which is the opposite of what the intro needs. 3.8s is
-// inside this clip's own full hold (checked directly against the source
-// footage: the full schematic — mast, dimension callouts, the one gauge
-// icon — is stable through about 4.2s, then fades out, then glides back to
-// the photo by ~5s) — this is the round-10 1080p regeneration's own timing,
-// unrelated to either previous clip's freeze point.
-const VIDEO_FREEZE_TIME = 3.8;
+// played through and held. Pausing at its literal duration would always
+// land back on the photo, which is the opposite of what the intro needs.
+// 3.8s is inside this clip's own full hold (checked directly against the
+// source footage: the full schematic — mast, dimension callouts, the one
+// gauge icon — is stable through about 4.2s, then fades out, then glides
+// back to the photo by ~5s) — round 10's 1080p regeneration's own timing,
+// unrelated to either previous clip's freeze point. Shared with
+// process-video.mjs/render_counter_frames.py via hero-timing.json: it's
+// both where the video pauses and where the counter baked into its pixels
+// stops climbing, so the two can't independently drift apart.
+const VIDEO_FREEZE_TIME = heroTiming.freezeTimeSeconds;
 
 /** Skip the clip for people who asked for less motion or are saving data. */
 function wantsMotion() {
@@ -67,7 +71,6 @@ export default function Hero({ dimBoxRef }) {
   const borderRef = useRef(null);
   const borderLenRef = useRef(0);
   const borderHeadRef = useRef(null);
-  const counterRef = useRef(null);
 
   // null = not yet determined (the mount effect below hasn't run yet) —
   // kept distinct from false so the sequence effect can wait for a real
@@ -81,11 +84,12 @@ export default function Hero({ dimBoxRef }) {
   // a video element showing nothing — same defensive pattern as GradientWaves'
   // own onError below.
   const [videoFailed, setVideoFailed] = useState(false);
-  // "running": the sequence is past the settle beat, border/counter/scrub
-  // are live. "revealed": it landed on 100% — title and contact card shown,
-  // video frozen on its last scrubbed frame for good. "scrolledPast": the
-  // whole stage has scrolled out of view — only used to fade the border out
-  // as the tracing beam picks the same line back up further down the page.
+  // "running": the sequence is past the settle beat, the video is playing
+  // and the border is tracing along with it. "revealed": the video reached
+  // its hold frame and paused there for good — title and contact card
+  // shown. "scrolledPast": the whole stage has scrolled out of view — only
+  // used to fade the border out as the tracing beam picks the same line
+  // back up further down the page.
   const [running, setRunning] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [scrolledPast, setScrolledPast] = useState(false);
@@ -150,23 +154,19 @@ export default function Hero({ dimBoxRef }) {
     }
 
     let raf = 0;
-    let runStart = null;
+    let cancelled = false;
+    let graceTimer = 0;
     let settleTimer = 0;
-    const t0 = performance.now();
 
-    const tick = now => {
-      const elapsed = now - t0;
-      if (runStart === null) {
-        const metadataOk = videoReadyRef.current || elapsed > SETTLE_MS + VIDEO_GRACE_MS;
-        if (elapsed < SETTLE_MS || !metadataOk) {
-          raf = requestAnimationFrame(tick);
-          return;
-        }
-        runStart = now;
-        setRunning(true);
-      }
-
-      const p = Math.min(1, (now - runStart) / RUN_MS);
+    // Border progress is a pure read of the video's own currentTime every
+    // frame — timeupdate fires too coarsely for a smooth trace, but nothing
+    // here ever writes currentTime while this loop runs, so it's still just
+    // sampling the one clock, not competing with it.
+    const tick = () => {
+      if (cancelled) return;
+      const v = videoRef.current;
+      if (!v) return;
+      const p = Math.min(1, v.currentTime / VIDEO_FREEZE_TIME);
 
       if (borderRef.current && borderLenRef.current) {
         const len = borderLenRef.current;
@@ -177,55 +177,66 @@ export default function Hero({ dimBoxRef }) {
           borderHeadRef.current.setAttribute('cy', String(pt.y));
         }
       }
-      if (counterRef.current) counterRef.current.textContent = String(Math.round(p * 100));
-      const v = videoRef.current;
-      if (v && v.duration) v.currentTime = p * Math.min(VIDEO_FREEZE_TIME, v.duration);
 
-      if (p >= 1) {
-        const finish = () => {
-          // The proof the closing gate asks for: border offset, counter and
-          // video currentTime are all read here, because they're all just
-          // `p` — not three timers that happened to agree. videoCurrentTime
-          // lands on VIDEO_FREEZE_TIME, not the clip's own duration —
-          // freezing at its actual last frame would show the plain photo
-          // again (see VIDEO_FREEZE_TIME's comment above).
-          console.log('[hero-intro] synced completion', {
-            elapsedMs: Math.round(performance.now() - t0),
-            borderDashoffset: 0,
-            counterPercent: 100,
-            videoCurrentTime: v?.currentTime ?? null,
-            videoFreezeTarget: VIDEO_FREEZE_TIME
-          });
-          setRevealed(true);
-        };
-
-        // A rapid scrub (a currentTime seek nearly every animation frame,
-        // which is what the loop above just did) can leave the decoder's
-        // presented frame stale even once currentTime and seeking both
-        // report the seek as settled — verified directly against this
-        // exact seek pattern. One more explicit seek to the same target,
-        // waited out via the seeked event, reliably forces the correct
-        // frame; the timeout is only a safety net in case that event is
-        // ever missed.
-        if (v && v.duration) {
-          const onSeeked = () => {
-            v.removeEventListener('seeked', onSeeked);
-            clearTimeout(settleTimer);
-            finish();
-          };
-          v.addEventListener('seeked', onSeeked);
-          settleTimer = setTimeout(onSeeked, 400);
-          v.currentTime = Math.min(VIDEO_FREEZE_TIME, v.duration);
-        } else {
-          finish();
-        }
+      if (v.currentTime >= VIDEO_FREEZE_TIME) {
+        v.pause();
+        // A single corrective seek, not a rapid scrub loop, so there's no
+        // decoder-staleness risk here the way there was when this used to
+        // scrub currentTime every animation frame — this just guards against
+        // playback overshooting slightly past the target between ticks.
+        v.currentTime = VIDEO_FREEZE_TIME;
+        // The proof the closing gate asks for: this is the video's own
+        // currentTime, read back after the loop above drove the border from
+        // nothing else — there's no second timer left to have drifted from it.
+        console.log('[hero-intro] video-driven completion', {
+          videoCurrentTime: v.currentTime,
+          videoFreezeTarget: VIDEO_FREEZE_TIME,
+          borderDashoffset: 0
+        });
+        setRevealed(true);
         return;
       }
       raf = requestAnimationFrame(tick);
     };
 
-    raf = requestAnimationFrame(tick);
+    const startPlayback = () => {
+      if (cancelled) return;
+      const v = videoRef.current;
+      if (!v) return;
+      setRunning(true);
+      v.play()
+        .then(() => {
+          if (!cancelled) raf = requestAnimationFrame(tick);
+        })
+        .catch(() => {
+          // muted + playsInline should satisfy every major browser's
+          // autoplay policy, but if playback still can't start there's
+          // nothing left to sync the border/reveal to — skip cleanly.
+          if (!cancelled) setRevealed(true);
+        });
+    };
+
+    // Waits out VIDEO_GRACE_MS for the video's metadata beyond the settle
+    // beat; a source that never becomes ready has nothing for the intro to
+    // play or read currentTime from, so it reveals immediately instead of
+    // hanging on a border that can never reach 100%.
+    const waitForVideo = () => {
+      if (cancelled) return;
+      if (videoReadyRef.current) {
+        startPlayback();
+        return;
+      }
+      graceTimer += 50;
+      if (graceTimer >= VIDEO_GRACE_MS) {
+        setRevealed(true);
+        return;
+      }
+      settleTimer = setTimeout(waitForVideo, 50);
+    };
+
+    settleTimer = setTimeout(waitForVideo, SETTLE_MS);
     return () => {
+      cancelled = true;
       cancelAnimationFrame(raf);
       clearTimeout(settleTimer);
     };
@@ -307,9 +318,29 @@ export default function Hero({ dimBoxRef }) {
             className={`hero__wordmark-heading${revealed ? ' is-revealed' : ''}`}
             aria-label={`Nordic Rigging — ${h.eyebrow}`}
           >
-            <div className="hero__wordmark">
-              <MaskedHeading text="Nordic" mediaType="video" videoSrc={WORDMARK_VIDEO} weight={800} />
-              <MaskedHeading text="Rigging" mediaType="video" videoSrc={WORDMARK_VIDEO} weight={800} />
+            <div className="hero__wordmark" aria-hidden="true">
+              <span className="hero__wordmark-row">
+                <ShinyText
+                  text="Nordic"
+                  className="hero__wordmark-shiny"
+                  disabled={!motionOk}
+                  speed={3}
+                  spread={110}
+                  color="#9aa4ad"
+                  shineColor="#dbe9ff"
+                />
+              </span>
+              <span className="hero__wordmark-row">
+                <ShinyText
+                  text="Rigging"
+                  className="hero__wordmark-shiny"
+                  disabled={!motionOk}
+                  speed={3}
+                  spread={110}
+                  color="#9aa4ad"
+                  shineColor="#dbe9ff"
+                />
+              </span>
             </div>
           </h1>
 
@@ -317,8 +348,6 @@ export default function Hero({ dimBoxRef }) {
             <img
               className="hero__poster"
               src={HERO_IMAGE}
-              srcSet={HERO_IMAGE_SET}
-              sizes="(min-width: 900px) 60rem, 100vw"
               alt=""
               fetchpriority="high"
               decoding="async"
@@ -358,13 +387,6 @@ export default function Hero({ dimBoxRef }) {
               <rect ref={borderRef} className="hero__border-rect" x="1.4" y="1.4" width="97.2" height="53.45" rx="3" />
               <circle ref={borderHeadRef} className={`hero__border-head${running && !revealed ? ' is-visible' : ''}`} r="1.9" />
             </svg>
-
-            <div className={`hero__sequence${running && !revealed ? ' is-visible' : ''}`} aria-hidden="true">
-              <span className="hero__sequence-counter" ref={counterRef}>
-                0
-              </span>
-              <span className="hero__sequence-percent">%</span>
-            </div>
 
             <div className={`hero__spinlock-hint${revealed ? ' is-revealed' : ''}`}>
               <span className="hero__spinlock-beam" aria-hidden="true" />

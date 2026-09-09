@@ -12,9 +12,12 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # production build in dist/
 npm run preview    # serve dist/
-npm run video      # re-encode public/video/raw/hero.mp4 → hero.mp4 + hero.webm
+npm run video       # re-encode public/video/raw/hero.mp4 → hero-{lg,sm}.{mp4,webm}
 npm run preview:file   # one self-contained preview/nordic-rigging.html
 ```
+
+`npm run video` also needs `python3` with Pillow on PATH (`pip install pillow`) —
+it renders the intro's baked-in counter overlay (`scripts/render_counter_frames.py`).
 
 ## Checking a change
 
@@ -75,7 +78,7 @@ price, crew and full detail live on the service's own page.
 
 | Section | Component | Anchor |
 | --- | --- | --- |
-| Hero: wave background behind a landscape mast photo that runs a timed intro (border trace + blueprint scrub + percent counter), landing on a video-filled "Nordic Rigging" wordmark and a glass contact card | `Hero.jsx`, `GradientWaves.jsx`, `MaskedHeading.jsx` | top |
+| Hero: wave background behind a landscape mast photo that runs a timed intro (border trace + blueprint playback, its own baked-in percent counter), landing on a shine-swept "Nordic Rigging" wordmark and a glass contact card | `Hero.jsx`, `GradientWaves.jsx`, `ShinyText.jsx` | top |
 | Everything below the hero, wrapped in the tracing beam that detaches from the hero card on scroll | `TracingBeam.jsx` | |
 | Four tabs — Palvelut, Telakoille, Tehdyt työt, Meistä — one panel below a tab bar, a quiet radar-sweep animation behind it | `Tabs.jsx`, `TabPanelFX.jsx` | `#ratkaisut` |
 | ↳ Palvelut: the three services (short card, "Lue lisää" through to the full page), a Spinlock Rig-Sense Pro highlight, pricing/area, contact CTA | `ServicesTab.jsx`, `RigSenseHighlight.jsx` (uses `Services.jsx`'s `ServicePanel`) | |
@@ -184,49 +187,58 @@ show a step.
 ### The intro sequence
 
 At mount, only the nav, the waves and the plain photo show — a ~2s settle
-beat (`SETTLE_MS`). Then one `requestAnimationFrame` loop computes a single
-`progress` value (0→1) over `RUN_MS` (2.8s) and drives three things off that
-one number, so they land on their end state in the same tick by
-construction rather than as three independently-timed animations that
-happen to agree:
+beat (`SETTLE_MS`). Then the blueprint clip actually plays (`video.play()`),
+and a `requestAnimationFrame` loop traces an SVG rect around the photo's
+edge via `stroke-dashoffset`, reading `video.currentTime / freezeTime`
+straight off the video every frame — no separate progress value, because
+the video's own playback position already is one.
+(`vector-effect="non-scaling-stroke"` looked like the right way to keep the
+line a constant width regardless of the box's rendered size, but round 9
+found it breaks `stroke-dasharray` into disconnected marks in this
+project's Chromium build; stroke-width is instead re-derived from the SVG's
+own live rendered size on every resize, in Hero.jsx.)
 
-- an SVG rect traced around the photo's edge, via `stroke-dashoffset`
-  (`vector-effect="non-scaling-stroke"` keeps the line a constant width
-  regardless of the box's rendered size);
-- a percent counter (plain `textContent`, no React re-render per frame);
-- the blueprint clip's own `currentTime`, scrubbed directly
-  (`video.currentTime = progress * video.duration`) rather than played —
-  it's never `.play()`-ed, so it stays exactly where the last scrub left
-  it once `progress` reaches 1, instead of looping back to the plain photo.
+Round 11 item 4 retired the percent counter this used to also drive as a
+DOM element (`textContent`, no React re-render per frame) — a second
+JS-timer-driven value racing the video was a repeated source of the two
+drifting apart. The counter is baked into the clip's own pixels now
+(`scripts/render_counter_frames.py`, composited in during
+`scripts/process-video.mjs`'s scale/encode pass — see Images below), so
+there's nothing left to keep in sync: the video's `currentTime` is the only
+clock, for the border, for what the readout shows, and for completion.
 
-All three DOM writes happen inside the same `if (p >= 1)` block, which is
-also where the completion is logged
-(`console.log('[hero-intro] synced completion', {...})`) — the border's
-`dashoffset`, the counter's text and the video's `currentTime` are read
-back from that exact tick, which is the proof they agree: they were never
-three separate clocks to begin with. `scripts/verify.mjs` waits for
-`.hero__wordmark-heading.is-revealed` (`heroRevealed()`) rather than a fixed
-delay, then asserts all three end states directly.
+Once `currentTime` reaches `freezeTime` (`src/lib/hero-timing.json`,
+3.8s — shared with the two video scripts above so the readout, the pause
+point and Hero.jsx's own reveal trigger can't drift apart from each other),
+the loop pauses the video and makes one corrective seek back to exactly
+that time (playback can overshoot it slightly between animation frames) —
+not the rapid-fire scrub the old currentTime-writing version needed a
+seeked-event wait to recover from, since nothing here writes currentTime
+except that one seek. `console.log('[hero-intro] video-driven completion',
+{...})` fires right after, reading the same `currentTime` back as the
+proof: there's no second clock left that could have disagreed with it.
+`scripts/verify.mjs` waits for `.hero__wordmark-heading.is-revealed`
+(`heroRevealed()`) rather than a fixed delay, then asserts the end state
+directly.
 
 The wordmark and the contact card are always mounted (for the `<h1>`'s
 accessibility and so nothing needs to be timed into existence) but sit at
 `opacity: 0` until `.is-revealed` — a CSS transition handles the fade, not a
 second animation loop. Reduced motion or data saver (`wantsMotion()`) skips
-straight to the revealed state — no border, no counter, no scrub.
+straight to the revealed state — no border, no playback.
 
 ### Wordmark and the glass contact card
 
-"Nordic" / "Rigging" — `MaskedHeading.jsx`, see below — sits centred over
+"Nordic" / "Rigging" — `ShinyText.jsx`, see below — sits centred over
 the photo's upper half once revealed. It's the page's only decorative
 element in the `<h1>`: the wordmark itself is `aria-hidden`, and the real
 `<h1>` wrapping it carries "Nordic Rigging — <tagline>" as its accessible
 name, so the page still has exactly one real, indexable heading even though
 there's no visible sales-copy title. Its reveal transition is translate-only
-(no scale) — a scale on an ancestor would make `.masked-heading__row`'s
-`getBoundingClientRect().width` shrink while the SVG clip-text's own
-`getComputedTextLength()` (SVG user-space, unaffected by an ancestor's CSS
-transform) stays put, making a correctly-fitted row measure as briefly
-"overflowing" for the length of the transition.
+(no scale) — plain enough now that there's no separate reason to give: the
+title is ordinary CSS text sized by `clamp()`, not a box fitted against an
+independent SVG measurement, so there's nothing a scale could put out of
+sync in the first place.
 
 The contact card (`.hero__dimbox`, over the photo's bottom-right corner,
 styled with the shared `.card` glass treatment) holds the tagline, a small
@@ -249,47 +261,48 @@ shot — see Images below — all four corners rounded, `object-position: 50%
 `prefers-reduced-motion` or data saver there is no clip; the poster photo
 carries the card alone, revealed state shown immediately.
 
-## The wordmark: MaskedHeading
+## The wordmark: ShinyText
 
-`MaskedHeading.jsx` (`gsap` for the motion) fills a heading's letterforms
-with a moving video (or image) instead of a flat colour: a hidden "measure"
-span sizes the row in real layout pixels so any text/font works, an SVG
-`<clipPath>` built from that same box clips a "reveal" layer to the
-letterforms, and the media inside — sized larger than the row — is nudged
-with a gsap-driven transform so the fill drifts instead of sitting static.
-The clip-path `<text>` is sized from the row's height first, then measured
-with its own `getComputedTextLength()` and shrunk if it doesn't fit the
-row's width — SVG and HTML don't always agree on a variable font's rendered
-width, so a height-only size can overflow and get clipped by the reveal
-layer's `overflow: hidden`; measuring the actual glyphs it's about to paint
-closes that gap regardless of font-loading timing or which word is wider.
-Hero.jsx renders it twice, stacked ("Nordic", "Rigging"), both filled by the
-same clip (`public/video/masthead-fill.{mp4,webm}`, a Seedance 2.5 clip of a
-sailboat under sail on open water — `assets/source/hero-sailing-openwater-raw.mp4`,
-audio stripped on encode). It's decorative (`aria-hidden`); the `<h1>`
-wrapping it carries "Nordic Rigging — <tagline>" as its accessible name
-instead, so the page still has exactly one real, indexable heading. Skips
-its motion under `prefers-reduced-motion`.
+`ShinyText.jsx` (`motion`/`useAnimationFrame` for the sweep, replacing the
+earlier `MaskedHeading.jsx` video-fill from round 11 on) fills a heading's
+letterforms with a moving metallic shine instead of a flat colour or a
+video: a `linear-gradient` (base `color` → `shineColor` → base, at `spread`
+degrees) is clipped to the text with `background-clip: text` +
+`WebkitTextFillColor: transparent`, and a `motion` value drives
+`background-position` across it every frame — no separate clip-path or
+letterform measurement, since the gradient rides the browser's own text
+layout instead of an SVG box built to match it. Hero.jsx renders it twice,
+stacked ("Nordic", "Rigging") inside `.hero__wordmark-row`, each sized off
+that row's `font-size: clamp(2.6rem, 10vw, 6.5rem)` — the same clamp the old
+`.masked-heading` rule used — with a silver-grey base (`#9aa4ad`) and a light
+blue shine (`#dbe9ff`). It's decorative (`aria-hidden` on the wrapping
+`.hero__wordmark`); the `<h1>` around it carries "Nordic Rigging —
+<tagline>" as its accessible name instead, so the page still has exactly one
+real, indexable heading. `disabled={!motionOk}` freezes the sweep (the text
+stays visible, just static) under `prefers-reduced-motion` or data saver,
+the same gate the rest of the hero's motion respects.
 
-`public/images/hero.webp` (2200 px, with a 1200 px `srcset` variant for
-phones) is the customer's `header.webp` cleaned with Higgsfield
+`public/images/hero.webp` (2200 px, one fixed `src` at every breakpoint —
+see Hero.css for why a `srcset`/`sizes` variant was dropped in round 11) is
+the customer's `header.webp` cleaned with Higgsfield
 `gpt_image_2` (brand marks removed, sky deepened), upscaled to 4K, then
 outpainted 4K→2752×1536 (`outpaint_image`, `aspect_ratio: "16:9"`) from both
 sides so the full mast is visible at the top and the deck/hull at the
 bottom instead of getting cropped away — the portrait 4K upscale stayed
 narrower than the hero card's landscape display box, so `object-fit: cover`
 was cropping into both ends of the mast; widening the source narrows that
-mismatch. `public/video/hero-{lg,sm}.{mp4,webm}` is one Seedance 2.5 clip
-upscaled to 1440×1920: static camera, the mast turns into an exploded
-blueprint and back to itself over ~6s. It's the clip the intro sequence
-scrubs through (see above) — `lg` (1440 px) is served from 900 px up, `sm`
-(960 px) on phones. Job ids, prompts and settings are in
-`docs/hero-pipeline.md`.
+mismatch. `public/video/hero-{lg,sm}.{mp4,webm}` is one Seedance 2.5 clip, its raw
+source 1920×1072: static camera, the mast turns into an exploded blueprint
+and back to itself over ~6s, its own 0-100 counter baked in (see The intro
+sequence, above) as part of `scripts/process-video.mjs`'s scale/encode pass.
+It's the clip the intro sequence plays through — `lg` (scaled to 1440 px
+wide) is served from 900 px up, `sm` (960 px) on phones. Job ids, prompts
+and settings are in `docs/hero-pipeline.md`.
 
 To regenerate the photo or clip: download to `public/video/raw/hero.mp4` and
 run `npm run video`, or re-run the outpaint job against the same 4K upscale
-and re-export `hero.webp`/`hero-1200.webp`. The raw clip and the outpaint's
-PNG source stay untracked outside `assets/source/`.
+and re-export `hero.webp`. The raw clip and the outpaint's PNG source stay
+untracked outside `assets/source/`.
 
 ## Tracing beam
 
@@ -331,14 +344,13 @@ Finland kept high in the frame.
 
 | File | Used by |
 | --- | --- |
-| `hero.webp`, `hero-1200.webp`, `og.jpg` | the hero card's poster (two sizes, outpainted 16:9), social share |
+| `hero.webp`, `og.jpg` | the hero card's poster (outpainted 16:9), social share |
 | `logo-light.png` | the mark, used as a CSS mask so it takes the text colour |
 | `mastotyot.webp`, `koysivarasto.webp`, `huolto.webp` | service cards and pages |
 | `rig-sense.webp` | the Rig-Sense highlight in the Palvelut tab (transparent background) |
 | `telakka.webp` | the Telakoille tab |
 | `portfolio/*.webp` | the Tehdyt työt tab's photo grid — see `PORTFOLIO` in `content.js` |
 | `logo.svg`, `favicon.svg` | header, footer, browser tab |
-| `video/masthead-fill.{mp4,webm}` | the "Nordic Rigging" wordmark's video fill (`MaskedHeading`) |
 
 The original photos the site images were cut from (and the Spinlock PNG with
 transparency) are kept in `assets/source/`, outside `public/`, so they are

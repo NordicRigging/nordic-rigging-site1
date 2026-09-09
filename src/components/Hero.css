@@ -76,6 +76,19 @@
   background: var(--navy-800);
 }
 
+/* Round 11 item 1: this used to be a responsive srcset (hero-1200.webp /
+   hero.webp) with a sizes hint of "60rem" — stale since round 9 dropped
+   .hero__stage's own max-width, so the box has rendered wider than that
+   hint ever since. A stale sizes value can make a spec-compliant browser
+   pick a too-small candidate and upscale it, softer than the video (which
+   sizes itself off window.innerWidth directly, no hint to go stale) —
+   confirmed directly: the same sizes value on an isolated test element
+   picked hero-1200.webp and read back a naturalWidth of ~960, matching
+   the (wrong) hint, not either real file's actual pixels. Simplified to
+   one fixed src at full resolution instead of re-deriving a correct sizes
+   value: the file is 200KB, cheap enough that chasing bandwidth savings
+   here isn't worth re-breaking silently the next time this box's width
+   changes. */
 .hero__poster {
   position: absolute;
   inset: 0;
@@ -177,42 +190,11 @@
   opacity: 1;
 }
 
-/* the percent readout — lives in the same upper zone the title settles
-   into once it's replaced, so the handoff between the two reads as one
-   continuous spot rather than a jump */
-.hero__sequence {
-  position: absolute;
-  left: 50%;
-  top: 30%;
-  z-index: 3;
-  display: flex;
-  align-items: baseline;
-  gap: 0.15em;
-  transform: translate(-50%, -50%);
-  opacity: 0;
-  transition: opacity 400ms ease;
-  pointer-events: none;
-}
-
-.hero__sequence.is-visible {
-  opacity: 1;
-}
-
-.hero__sequence-counter {
-  font-size: clamp(2.5rem, 8vw, 4.75rem);
-  font-weight: 800;
-  color: var(--text);
-  text-shadow: 0 4px 26px rgba(3, 9, 20, 0.75);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.hero__sequence-percent {
-  font-size: clamp(1.2rem, 3vw, 2rem);
-  font-weight: 700;
-  color: var(--accent-2);
-  text-shadow: 0 4px 26px rgba(3, 9, 20, 0.75);
-}
+/* Round 11 item 4: the percent readout that used to live here (.hero__sequence
+   + its counter/percent spans, a DOM element a JS timer wrote into) is gone —
+   baked into the blueprint clip's own pixels instead (process-video.mjs),
+   at the same upper zone this used to occupy, so the handoff to the title
+   still reads as one continuous spot. */
 
 /* Sits above .hero__media in DOM and z-index (a sibling, not a child of
    the clipped box), pinned to the top of .hero__stage — .hero__stage's own
@@ -253,15 +235,25 @@
 
 /* Widened at every breakpoint (the row sizes to its own text at this
    font-size, not to a fixed box) — big enough that its lower portion, once
-   it descends onto the photo, still needs its own legibility backdrop. */
-.hero__wordmark .masked-heading {
+   it descends onto the photo, still needs its own legibility backdrop.
+   Round 11 item 5: was .masked-heading / .masked-heading__row (video-filled
+   clip-text); ShinyText is plain CSS text, so sizing is the same clamp on
+   the row instead of on the SVG-fit measure box, and the fit/getComputedTextLength
+   machinery MaskedHeading needed just isn't there to replace. */
+.hero__wordmark-row {
+  display: inline-block;
   font-size: clamp(2.6rem, 10vw, 6.5rem);
-}
-
-.hero__wordmark .masked-heading__row {
+  line-height: 1;
   padding: 0 0.2em;
   border-radius: 0.12em;
   background: radial-gradient(70% 100% at 50% 100%, rgba(3, 9, 20, 0.55) 0%, transparent 78%);
+}
+
+.hero__wordmark-shiny {
+  font-family: var(--font);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 /* the glass contact card — bottom-right corner of the photo, same spot the
