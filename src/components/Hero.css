@@ -146,9 +146,15 @@
    not partway through the intro) so there's nothing to jump between when
    the video fades in. Only applied when a video transition will actually
    happen (motionOk and no load failure) — the fallback-only photo has no
-   mismatch to hide and stays at its own full sharpness. */
+   mismatch to hide and stays at its own full sharpness.
+   Round 14: swapped to the original round-9 clip (never regenerated past
+   720p-class source, then geometrically stretched ~1.75x by the alignment
+   warp), noticeably softer than round 12's 1080p clip was. Re-measured
+   rather than reused: matched crops' Laplacian-variance (an edge-strength
+   proxy) put the video at ~20 and the untouched photo at ~354; 1.1px is
+   what brings the photo down to the same ~20, up from 0.6px. */
 .hero__poster--matched {
-  filter: blur(0.6px);
+  filter: blur(1.1px);
 }
 
 /* Round 9 regenerated this clip from the current outpainted (16:9) photo

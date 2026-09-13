@@ -216,8 +216,8 @@ const browser = await launch();
   // VIDEO_FREEZE_TIME (from hero-timing.json, not videoDuration) is the
   // frame Hero.jsx pauses real playback on — the clip's own last frame is
   // the plain photo again (it was authored to loop), so freezing there
-  // would show no blueprint at all. 3.4s is round 12's exploded-hologram
-  // regeneration's own hold timing, not any previous clip's.
+  // would show no blueprint at all. 2.2s is round 14's clip (the original
+  // round-9 source, used as-is) own hold timing, not any previous clip's.
   check(
     'blueprint clip is played to its held peak frame and paused there, not its own last frame (which is the plain photo again)',
     seqEnd.videoActive === true && Math.abs(seqEnd.videoCurrentTime - VIDEO_FREEZE_TIME) < 0.05,

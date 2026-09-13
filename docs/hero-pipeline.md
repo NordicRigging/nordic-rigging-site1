@@ -278,3 +278,52 @@ No third Higgsfield generation was spent on this — the shipped content
 was already correct; only the delivery mechanism needed the fix. If a
 hard refresh still shows the old clip or card copy after this ships,
 that's a live bug, not a caching one.
+
+## 12. Round 14 — reverted to the original round-9 clip, generation work parked
+
+Round 14 spent four more generations chasing the same mast/gauge/unit-text
+content bugs (video reference, pure text, image reference, a revised
+pure-text fan-branch composition), each checked frame-by-frame the same
+way as round 13. The 4th attempt (pure text, no visual reference, an
+explicit diagonal multi-height branch description) actually passed all
+three content checks, verified across its full hold window — but arrived
+after the owner had already decided to stop spending more generations on
+this in the session and revisit it separately later. That attempt's job
+is documented here for later reference rather than discarded: Higgsfield
+job `c89191ba-3d5e-40e9-b557-5bc8983c2138` (`seedance_2_5`, pure text
+prompt, no `omni_reference` media), relayed as `r14-blueprint-v4-raw.mp4`.
+Not wired in.
+
+Instead, the hero video was pointed back at the *original* round-9 raw
+clip (job `60d55ad8-0ee4-4c48-9f9e-cbbcdf87d9a6`, 1280×720, 4.04s — see
+item 7) as-is, its three known content bugs included (mast reads as cut,
+two gauge icons, unit-suffixed dimension text) — an explicit decision to
+ship the known-imperfect content rather than spend further credits this
+round. What *did* need redoing, because this clip had never been the
+*live* asset since round 10's regeneration superseded it:
+
+- **Alignment** (same method as item 8): ORB + RANSAC homography from
+  this clip's frame 0 to the current `hero.webp`, 1684/1759 inliers, a
+  1600-wide canvas at the photo's own aspect ratio, `k = 1.03` centred
+  zoom. Blend-compared against `hero.webp` directly — mast, crane and
+  boat lift overlap tightly. Re-encoded (`libx264 -crf 16`) as the new
+  `public/video/raw/hero.mp4`, then the normal `npm run video` pass.
+- **Freeze time**: this clip's own hold window sits at 2.0-2.4s (native
+  frame-diff scan, lowest point 0.022 at 2.125s) — `2.2` picked as the
+  clean value inside that plateau, replacing round 13's `3.4` (a
+  different clip's timing, not applicable here). `hero-timing.json`
+  `assetVersion` bumped to `r14-round9-raw-2.2s`.
+- **Poster/video sharpness match** (round 12 item 1's fix, re-measured
+  rather than reused): this clip is fundamentally softer than round 12's
+  1080p regeneration once put through the same alignment stretch — a
+  Laplacian-variance edge-strength check on matched crops put the
+  *un*blurred photo at ~354 and the video's own frame 0 at ~20, versus
+  round 12's photo-vs-video gap that only needed 0.6px. `1.1px` on
+  `.hero__poster--matched` brings the photo down to the video's own ~20.
+
+Round 12 items 1 (no crossfade pop) and 2 (fits without scroll, stays
+landscape, mast+boat visible at all viewports) were both re-checked
+against this swap specifically, since both are properties of the
+photo/video pairing rather than the blueprint content: confirmed holding
+at 1024×768 through 1920×1080 and at phone width, `npm run verify` still
+96/96.
