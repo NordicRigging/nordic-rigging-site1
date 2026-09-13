@@ -77,16 +77,28 @@ for (const font of built.filter(f => /\.woff2?$/.test(f))) {
 // reviewer actually opens this file in plays the .mp4 source directly, so
 // the <video> tag still works — it just won't fall back to webm.
 const publicFiles = walk(PUBLIC).filter(f => !f.includes(`${join('video', 'raw')}`) && extname(f) !== '.webm');
+const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 let inlined = 0;
 let bytes = 0;
 for (const file of publicFiles) {
   const path = '/' + relative(PUBLIC, file).split('\\').join('/');
-  const inJs = js.includes(path);
-  const inCss = css.includes(path);
+  // Hero.jsx (round 13) appends a `?v=...` cache-buster to its own src
+  // paths for the real deployed site — a plain split/join on the bare
+  // path would leave that query string dangling off the end of the
+  // data: URI it becomes here, corrupting it (data: URIs have no query
+  // component; anything after the payload is just more, invalid,
+  // payload). Matching an optional trailing `?...` up to the closing
+  // quote and replacing the whole span keeps this working regardless of
+  // whether a caller references the bare path or a cache-busted one. A
+  // fresh RegExp per .test()/.replace() call avoids the shared lastIndex
+  // a single `g`-flagged instance would carry between them.
+  const pattern = () => new RegExp(`${escapeRe(path)}(\\?[^"'\`]*)?`, 'g');
+  const inJs = pattern().test(js);
+  const inCss = pattern().test(css);
   if (!inJs && !inCss) continue;
   const uri = dataUri(file);
-  if (inJs) js = js.split(path).join(uri);
-  if (inCss) css = css.split(path).join(uri);
+  if (inJs) js = js.replace(pattern(), uri);
+  if (inCss) css = css.replace(pattern(), uri);
   inlined++;
   bytes += statSync(file).size;
   console.log(`  inlined ${path} (${(statSync(file).size / 1024).toFixed(0)} kB)`);

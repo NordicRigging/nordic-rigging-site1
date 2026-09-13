@@ -238,3 +238,43 @@ against the current `hero.webp`, `k = 1.03`, 2357/2451 ORB inliers — the
 tightest fit yet). `VIDEO_FREEZE_TIME` moved to `3.4` — this clip's own
 hold window sits earlier than round 10's `3.8`, found the same way
 (frame-diff scan across the clip, confirmed visually).
+
+## 11. Round 13 — the "recurring" mast/gauge bug was a stale cache, not content
+
+Round 13 opened with a report that the round-10-era bug (mast reading as
+cut in two, a duplicate gauge icon) plus the pre-round-12 dimension text
+("12 mm", "225 m", unit-suffixed) were back, a 4th time, in the shipped
+clip — with a screenshot attached as evidence. Before spending a third
+generation chasing it: extracted and inspected all 145 native frames of
+the actual shipped `hero-lg.mp4` (not a sample — every single one) for
+the mast/gauge region. Every frame shows one continuous mast and exactly
+one gauge icon; none show the old unit-suffixed dimension text (round
+12 replaced it with bare numbers). The attached screenshot itself
+settled it: it shows "MITATTU KIREYS / 6,4 kN" in the card, the text
+round 12 item 4 replaced with "Tarkat mittaukset" — proof the screenshot
+predates round 12 entirely, not evidence of a live regression.
+
+Root cause: `HERO_IMAGE`/`HERO_VIDEO` in Hero.jsx were always plain
+static paths (`/video/hero-lg.mp4` etc.) with no cache-busting — every
+regeneration since round 9 shipped new bytes under the exact same URL,
+so a browser (or anything caching in front of it) that had ever fetched
+an older version had no signal to fetch again. Fixed by appending
+`?v=<assetVersion>` (a new field in hero-timing.json, bumped alongside
+`freezeTimeSeconds` whenever the clip or poster changes) to every
+poster/video URL Hero.jsx exports — a normal cache-busting query string,
+harmless over real HTTP.
+
+That interacts with `build-preview.mjs`'s single-file inliner, which
+matches these same paths as literal substrings inside the built JS to
+replace with `data:` URIs: matching only the bare path and blindly
+`split/join`-ing would leave the new `?v=...` suffix dangling off the
+end of the resulting data URI (which has no query-string concept —
+anything past the payload is just more, invalid, payload). Fixed
+alongside: the inliner now matches the path plus an optional trailing
+`?...` up to the closing quote and replaces the whole span, so it works
+whether or not a given src is cache-busted.
+
+No third Higgsfield generation was spent on this — the shipped content
+was already correct; only the delivery mechanism needed the fix. If a
+hard refresh still shows the old clip or card copy after this ships,
+that's a live bug, not a caching one.

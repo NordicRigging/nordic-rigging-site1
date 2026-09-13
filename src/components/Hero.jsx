@@ -19,10 +19,20 @@ import './Hero.css';
  * frame. Nothing here repeats price, area, the crew or the call/message
  * pair — those already live in the nav and the Palvelut tab.
  */
-export const HERO_IMAGE = '/images/hero.webp';
+// Round 13: a user report of the blueprint clip's round-10-era bug (unit-
+// suffixed dimension text, no exploded-hologram numbers) turned out to be a
+// stale browser cache, not a regression — every regeneration since round 9
+// has shipped under this exact same URL, so nothing ever told a browser (or
+// any cache in front of it) that the file underneath had changed. `?v=` from
+// hero-timing.json's own assetVersion (bumped whenever the clip or poster is
+// regenerated, right alongside freezeTimeSeconds) forces a fresh fetch each
+// time without renaming the files themselves, which both the dev server and
+// build-preview.mjs's literal-path inliner still need to find.
+const ASSET_VERSION = heroTiming.assetVersion;
+export const HERO_IMAGE = `/images/hero.webp?v=${ASSET_VERSION}`;
 export const HERO_VIDEO = {
-  lg: { mp4: '/video/hero-lg.mp4', webm: '/video/hero-lg.webm' },
-  sm: { mp4: '/video/hero-sm.mp4', webm: '/video/hero-sm.webm' }
+  lg: { mp4: `/video/hero-lg.mp4?v=${ASSET_VERSION}`, webm: `/video/hero-lg.webm?v=${ASSET_VERSION}` },
+  sm: { mp4: `/video/hero-sm.mp4?v=${ASSET_VERSION}`, webm: `/video/hero-sm.webm?v=${ASSET_VERSION}` }
 };
 const LG_MIN_WIDTH = 900;
 
@@ -39,14 +49,14 @@ const VIDEO_GRACE_MS = 1500;
 // exactly on the reference frame", per docs/hero-pipeline.md), not to be
 // played through and held. Pausing at its literal duration would always
 // land back on the photo, which is the opposite of what the intro needs.
-// 3.8s is inside this clip's own full hold (checked directly against the
-// source footage: the full schematic — mast, dimension callouts, the one
-// gauge icon — is stable through about 4.2s, then fades out, then glides
-// back to the photo by ~5s) — round 10's 1080p regeneration's own timing,
-// unrelated to either previous clip's freeze point. Shared with
-// process-video.mjs/render_counter_frames.py via hero-timing.json: it's
-// both where the video pauses and where the counter baked into its pixels
-// stops climbing, so the two can't independently drift apart.
+// The actual value lives in hero-timing.json (freezeTimeSeconds) — this
+// clip's own full-hold window, found the same way each regeneration: extract
+// frames, find where the schematic is stable vs. still drawing in or
+// dissolving back out. It's specific to whichever clip is currently wired
+// in (docs/hero-pipeline.md has each regeneration's own figure) and shared
+// with process-video.mjs/render_counter_frames.py via that one JSON file so
+// the video's pause point and the counter baked into its pixels can't drift
+// apart from each other.
 const VIDEO_FREEZE_TIME = heroTiming.freezeTimeSeconds;
 
 /** Skip the clip for people who asked for less motion or are saving data. */

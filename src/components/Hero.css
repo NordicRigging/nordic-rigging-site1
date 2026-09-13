@@ -96,12 +96,18 @@
    viewport means width stays 100% but height (and so the effective on-screen
    ratio) adapts to how much room there really is; object-fit: cover on the
    poster and the video absorbs whatever crop results, no source
-   regeneration needed. */
+   regeneration needed.
+   Round 13 item 2: 62vh was too aggressive — measured live, it forced a
+   ~2.3-2.6:1 crop at ordinary desktop sizes (1280x720 up to 1920x1080),
+   cropping away the masthead and most of the boat, not just trimming
+   whitespace. 74vh keeps the same "fits without scrolling" property
+   (checked against 1024x768 up to 1920x1080) while landing at a much
+   milder 1.78-2.2:1, keeping the masthead and the boat both in frame. */
 .hero__media {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  max-height: 62vh;
+  max-height: 74vh;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 24px 60px rgba(3, 9, 20, 0.55);
