@@ -64,13 +64,16 @@ const prefersReduced = () =>
 export default function Hero({ dimBoxRef, launched, restartKey }) {
   const { t } = useLang();
   const h = t.hero;
-  const rs = t.rigsense;
   const { setActiveTab } = useTabs();
   const videoRef = useRef(null);
   const videoReadyRef = useRef(false);
   const borderRef = useRef(null);
   const borderLenRef = useRef(0);
   const borderHeadRef = useRef(null);
+  const mediaRef = useRef(null);
+  const gaugeRef = useRef(null);
+  const spinlockRef = useRef(null);
+  const [linkLine, setLinkLine] = useState(null);
 
   // null = not yet determined (the mount effect below hasn't run yet) —
   // kept distinct from false so the sequence effect can wait for a real
@@ -144,6 +147,69 @@ export default function Hero({ dimBoxRef, launched, restartKey }) {
     ro.observe(svg);
     return () => ro.disconnect();
   }, []);
+
+  // Round 12 item 5: the Spinlock hint sits to the left of the contact card
+  // (see Hero.css — its own `right` is the card's own `right` + the card's
+  // own width formula, so it's a fixed short gap from the card's left edge,
+  // no measurement needed for that part) and this draws the connecting line
+  // the rest of the way, from the hint's own right edge to the gauge row's
+  // left edge inside the card — not just "the card", so the line visibly
+  // points at the measurement section itself. Both boxes size themselves off
+  // translated copy (FI/EN differ) and viewport width, so this is measured,
+  // not a guessed offset like the CSS-only gap above.
+  useLayoutEffect(() => {
+    const media = mediaRef.current;
+    const gauge = gaugeRef.current;
+    const hint = spinlockRef.current;
+    const card = dimBoxRef?.current;
+    if (!media || !gauge || !hint || !card) return undefined;
+
+    const measure = () => {
+      const mediaRect = media.getBoundingClientRect();
+      const gaugeRect = gauge.getBoundingClientRect();
+      const hintRect = hint.getBoundingClientRect();
+      const startX = hintRect.right - mediaRect.left;
+      const startY = hintRect.top + hintRect.height / 2 - mediaRect.top;
+      const endX = gaugeRect.left - mediaRect.left;
+      const endY = gaugeRect.top + gaugeRect.height / 2 - mediaRect.top;
+      const width = endX - startX;
+      // The hint and the gauge row rarely land at exactly the same height
+      // (independent boxes, translated copy of different lengths), so this
+      // is drawn as a real diagonal between their two measured centres
+      // rather than assumed to be a flat horizontal line.
+      const top = Math.min(startY, endY);
+      const height = Math.abs(endY - startY) || 2;
+      // Below 640px the card drops out of the photo overlay into normal
+      // flow (.hero__dimbox's own max-width:640px override) — the gauge
+      // then sits well outside .hero__media's own box, which clips its
+      // overflow, so a line drawn there would just be cut off invisible.
+      // Only draw the connector while the gauge still measures back inside
+      // the media box's height, i.e. the two are still visually overlaid.
+      if (width > 0 && endY >= 0 && endY <= mediaRect.height) {
+        setLinkLine({ left: startX, top, width, height, y1: startY - top, y2: endY - top });
+      } else {
+        setLinkLine(null);
+      }
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(media);
+    ro.observe(gauge);
+    ro.observe(hint);
+    // The reveal transition slides the card and hint into their resting
+    // spot via `transform` (opacity/transform, 650ms — see Hero.css),
+    // which ResizeObserver won't fire for since neither box's own size
+    // changes, only its position. Without this, the very first measure()
+    // above (taken right as `revealed` flips true, before that transition
+    // has run) stays pinned to the pre-transition position for good.
+    card.addEventListener('transitionend', measure);
+    hint.addEventListener('transitionend', measure);
+    return () => {
+      ro.disconnect();
+      card.removeEventListener('transitionend', measure);
+      hint.removeEventListener('transitionend', measure);
+    };
+  }, [revealed]);
 
   // restartKey is bumped by Home.jsx once the user scrolls all the way back
   // to the top after the hero has launched (see .hero__stage--launched
@@ -334,7 +400,7 @@ export default function Hero({ dimBoxRef, launched, restartKey }) {
                   text="Nordic"
                   className="hero__wordmark-shiny"
                   disabled={!motionOk}
-                  speed={3}
+                  speed={5}
                   spread={110}
                   color="#9aa4ad"
                   shineColor="#dbe9ff"
@@ -345,7 +411,7 @@ export default function Hero({ dimBoxRef, launched, restartKey }) {
                   text="Rigging"
                   className="hero__wordmark-shiny"
                   disabled={!motionOk}
-                  speed={3}
+                  speed={5}
                   spread={110}
                   color="#9aa4ad"
                   shineColor="#dbe9ff"
@@ -354,9 +420,9 @@ export default function Hero({ dimBoxRef, launched, restartKey }) {
             </div>
           </h1>
 
-          <div className="hero__media">
+          <div className="hero__media" ref={mediaRef}>
             <img
-              className="hero__poster"
+              className={`hero__poster${motionOk && !videoFailed ? ' hero__poster--matched' : ''}`}
               src={HERO_IMAGE}
               alt=""
               fetchpriority="high"
@@ -398,7 +464,7 @@ export default function Hero({ dimBoxRef, launched, restartKey }) {
               <circle ref={borderHeadRef} className={`hero__border-head${running && !revealed ? ' is-visible' : ''}`} r="1.9" />
             </svg>
 
-            <div className={`hero__spinlock-hint${revealed ? ' is-revealed' : ''}`}>
+            <div className={`hero__spinlock-hint${revealed ? ' is-revealed' : ''}`} ref={spinlockRef}>
               <span className="hero__spinlock-beam" aria-hidden="true" />
               <span className="hero__spinlock-text">{h.spinlockHint}</span>
               <button type="button" className="hero__scroll-arrow" onClick={toRigSense} aria-label={h.scrollHint}>
@@ -407,14 +473,30 @@ export default function Hero({ dimBoxRef, launched, restartKey }) {
                 </svg>
               </button>
             </div>
+
+            {/* Round 12 item 5: draws the "this hint is about that card"
+                relationship explicitly — from the hint's own right edge to
+                the gauge row's left edge, both measured (see the effect
+                above), since the exact gap depends on translated copy
+                length and viewport width. */}
+            {linkLine && (
+              <svg
+                className={`hero__spinlock-link${revealed ? ' is-revealed' : ''}`}
+                aria-hidden="true"
+                style={{ top: linkLine.top, left: linkLine.left, width: linkLine.width, height: linkLine.height }}
+                preserveAspectRatio="none"
+              >
+                <line x1="0" y1={linkLine.y1} x2={linkLine.width} y2={linkLine.y2} />
+              </svg>
+            )}
           </div>
 
           <div className={`hero__dimbox card${revealed ? ' is-revealed' : ''}`} ref={dimBoxRef}>
             <p className="hero__dimbox-tagline">{h.eyebrow}</p>
 
-            <div className="hero__gauge">
-              <span className="hero__gauge-label">{rs.readingLabel}</span>
-              <span className="hero__gauge-value">{rs.staticReading}</span>
+            <div className="hero__gauge" ref={gaugeRef}>
+              <span className="hero__gauge-title">{h.cardTitle}</span>
+              <span className="hero__gauge-spec">{h.cardSpec}</span>
             </div>
 
             <a className="btn btn--accent hero__dimbox-cta" href="#yhteystiedot" onClick={toContact}>

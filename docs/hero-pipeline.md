@@ -195,3 +195,46 @@ this one needed less correction, `k = 1.03`, 250/250 ORB inliers).
 window (checked the same way: extract frames, find where the schematic
 is stable vs. fading), unrelated to the two previous clips' freeze
 points.
+
+## 10. Round 12 item 3 — true exploded-hologram rewrite
+
+The round-10 clip's drawing was a generic CAD-style overlay: full
+dimension lines with unit-suffixed figures ("14 mm", "16 mm", "15 m") and
+one stray line running off-frame to the right with no visible endpoint —
+neither ever asked for, and explicitly the two things to remove this
+round. Rewritten prompt (same `seedance_2_5` / `omni_reference` model,
+same start/end image, `16:9`) split the two kinds of part explicitly
+instead of one generic "explode" instruction: small parts (the
+instrument icon, small hardware fittings) fully detach with one leader
+line each and a single bare number beside them — no unit, no other text
+— while the mast's own shrouds/stays/ropes only shift slightly aside as
+a connected group, never fully separating. Also explicit: every line
+begins and ends within frame, nothing trails off-canvas.
+
+First submission defaulted to `720p` (no `resolution` param set) — job
+`bc98912d-58f0-4870-8eef-7cb9049b5d39`, 39 credits. Content was right
+(no stray line, bare numbers, no unit text) but noticeably softer than
+the photo, working against round 12 item 1's own goal of *matching*
+photo/video sharpness rather than fighting a bigger gap — re-submitted
+with `resolution: "1080p"` explicitly (matching round 10's own precedent
+for the same softness complaint), same prompt, `declined_preset_id` for
+the same "IN THE DARK" preset recommendation as before. Result job
+`04776ad6-b274-4e95-bd9c-e80078582e02`, 1920×1080 HEVC, 54 credits.
+
+Known gap, shipped anyway rather than spending a third generation: the
+prompt asks the shrouds/stays to "visibly shift a clear few centimetres"
+aside — the model rendered them glowing in their exact resting position
+instead, effectively zero offset rather than a slight one. The small
+parts and the no-stray-line/no-unit-text fixes (the two things explicitly
+flagged as bugs) held; the shroud offset is a softer, unverified nuance
+of the fuller spec. Similarly, only one of the five detached small parts
+carries a visible number in this generation, not all five — the "bare
+number, no unit" rule held for the one that's there. Worth another
+prompt pass in a future round if either matters enough to spend the
+credits on; not re-attempted a third time this round.
+
+Same media relay + alignment-warp process as item 8 (frame-matched
+against the current `hero.webp`, `k = 1.03`, 2357/2451 ORB inliers — the
+tightest fit yet). `VIDEO_FREEZE_TIME` moved to `3.4` — this clip's own
+hold window sits earlier than round 10's `3.8`, found the same way
+(frame-diff scan across the clip, confirmed visually).

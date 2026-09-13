@@ -10,7 +10,7 @@
   position: relative;
   overflow: hidden;
   background: var(--navy-900);
-  padding-top: calc(var(--header-h) + 2rem);
+  padding-top: calc(var(--header-h) + 1.25rem);
   padding-bottom: 0;
 }
 
@@ -60,7 +60,14 @@
   position: relative;
   width: 100%;
   margin-inline: auto;
-  padding-top: clamp(1.75rem, 6vw, 3.75rem);
+  /* Round 12 item 2: was clamp(1.75rem, 6vw, 3.75rem) — this box's total
+     height needed trimming to fit a typical desktop viewport without a
+     mid-section scroll, and this padding (empty space before the photo,
+     for the title's own top edge to spill into) was the cheapest place to
+     take it from: the title already spills its lower portion onto the
+     photo by design, so a shorter gap here just means slightly more of it
+     does, not a layout change. */
+  padding-top: clamp(1.5rem, 4vw, 2.75rem);
   opacity: 1;
   filter: blur(0);
   transition: opacity 900ms ease, filter 900ms ease;
@@ -80,11 +87,21 @@
 }
 
 /* the photo/clip — the intro sequence and the reveal both play out inside
-   this one box, so it needs to be the positioning context for all of it */
+   this one box, so it needs to be the positioning context for all of it.
+   Round 12 item 2: added max-height, a viewport-relative cap, rather than
+   just narrowing the fixed aspect-ratio — a flat ratio change crops the
+   same fraction away at every viewport, over-cropping on a tall 1920x1080
+   screen that had headroom to spare and under-cropping on a short
+   1280x720 laptop that didn't. Capping height directly against the actual
+   viewport means width stays 100% but height (and so the effective on-screen
+   ratio) adapts to how much room there really is; object-fit: cover on the
+   poster and the video absorbs whatever crop results, no source
+   regeneration needed. */
 .hero__media {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
+  max-height: 62vh;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 24px 60px rgba(3, 9, 20, 0.55);
@@ -112,6 +129,20 @@
   height: 100%;
   object-fit: cover;
   object-position: 50% 42%;
+}
+
+/* Round 12 item 1: round 11 already matched the photo and video's colour
+   and resolution, but the video is still measurably softer at the pixel
+   level (a generation-model trait, confirmed by comparing matched crops of
+   each) — the real remaining source of the crossfade "jump". Re-sharpening
+   baked video isn't practical, so the photo is softened down to meet it
+   instead, applied from first paint (Hero.jsx adds this class up front,
+   not partway through the intro) so there's nothing to jump between when
+   the video fades in. Only applied when a video transition will actually
+   happen (motionOk and no load failure) — the fallback-only photo has no
+   mismatch to hide and stays at its own full sharpness. */
+.hero__poster--matched {
+  filter: blur(0.6px);
 }
 
 /* Round 9 regenerated this clip from the current outpainted (16:9) photo
@@ -250,19 +281,20 @@
 }
 
 /* Widened at every breakpoint (the row sizes to its own text at this
-   font-size, not to a fixed box) — big enough that its lower portion, once
-   it descends onto the photo, still needs its own legibility backdrop.
-   Round 11 item 5: was .masked-heading / .masked-heading__row (video-filled
-   clip-text); ShinyText is plain CSS text, so sizing is the same clamp on
-   the row instead of on the SVG-fit measure box, and the fit/getComputedTextLength
-   machinery MaskedHeading needed just isn't there to replace. */
+   font-size, not to a fixed box) — big enough that its lower portion spills
+   down onto the photo. Round 11 item 5: was .masked-heading / .masked-heading__row
+   (video-filled clip-text); ShinyText is plain CSS text, so sizing is the
+   same clamp on the row instead of on the SVG-fit measure box, and the
+   fit/getComputedTextLength machinery MaskedHeading needed just isn't there
+   to replace. Round 12 item 6: this row used to carry a dark radial-gradient
+   backdrop behind the text for legibility against the photo — read back as
+   an unwanted drop-shadow-like patch behind the title, so it's gone; the
+   metallic gradient fill is high-contrast enough against the sky on its own. */
 .hero__wordmark-row {
   display: inline-block;
   font-size: clamp(2.6rem, 10vw, 6.5rem);
   line-height: 1;
   padding: 0 0.2em;
-  border-radius: 0.12em;
-  background: radial-gradient(70% 100% at 50% 100%, rgba(3, 9, 20, 0.55) 0%, transparent 78%);
 }
 
 .hero__wordmark-shiny {
@@ -303,33 +335,40 @@
   color: var(--text);
 }
 
-/* A static reading, not a control — "Mitattu kireys" is a fact of this
-   install, not something to animate or replay. */
+/* Round 12 item 4: was a one-line label+value pair ("Mitattu kireys" /
+   "6,4 kN"), a static reading, not a control. Now a heading over a longer
+   spec line, so a column, not a row — a static fact of the install either
+   way, still nothing here to animate or replay. */
 .hero__gauge {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
   width: 100%;
-  padding: 0.5em 0.7em;
+  padding: 0.6em 0.8em;
   border-radius: 12px;
   border: 1px solid var(--line);
   background: rgba(79, 163, 255, 0.1);
 }
 
-.hero__gauge-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--muted);
+.hero__gauge-title {
+  font-size: clamp(0.98rem, 0.6vw + 0.85rem, 1.1rem);
+  font-weight: 800;
+  color: var(--text);
+  text-align: left;
 }
 
-.hero__gauge-value {
-  font-size: 1.25rem;
-  font-weight: 800;
+/* Same weight/colour the old single-figure reading (.hero__gauge-value)
+   used, still reading as a gauge's own digital readout — just a full
+   spec line now instead of one number, so a size that fits a sentence in
+   the card's own width instead of one built for a short figure. */
+.hero__gauge-spec {
+  font-size: clamp(0.8rem, 0.4vw + 0.72rem, 0.88rem);
+  font-weight: 700;
+  line-height: 1.4;
   color: var(--accent-2);
   font-variant-numeric: tabular-nums;
+  text-align: left;
 }
 
 .hero__dimbox-cta {
@@ -338,13 +377,17 @@
   font-size: 0.95rem;
 }
 
-/* Bottom-left corner of the photo: a small Spinlock reference with its own
-   short beam accent (styled like the border/tracing beam system, but its
-   own independent element — not a segment of that one continuous path) and
-   an arrow inviting a scroll down to the fuller Rig-Sense section. */
+/* Round 12 item 5: was left-anchored, bottom-left corner — as far from the
+   card (bottom-right) as the photo allows, even though this hint is what
+   the card's own measurement line is about. Right-anchored now instead,
+   offset by the card's own right-inset + width (mirroring .hero__dimbox's
+   formula below) plus one small gap, so it sits just outside the card's
+   left edge at any viewport. This only needs to get the two boxes close;
+   the exact line to the card's gauge row is measured in JS (see the
+   useLayoutEffect above, .hero__spinlock-link below). */
 .hero__spinlock-hint {
   position: absolute;
-  left: clamp(0.75rem, 3vw, 1.5rem);
+  right: calc(clamp(0.75rem, 3vw, 1.5rem) + min(19rem, 47%) + clamp(0.6rem, 2vw, 1.1rem));
   bottom: clamp(0.75rem, 3vw, 1.5rem);
   z-index: 3;
   display: flex;
@@ -358,6 +401,33 @@
 .hero__spinlock-hint.is-revealed {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* The connector between the hint and the card's own measurement section —
+   endpoints measured in JS (hint's right edge to the gauge row's left
+   edge), rendered here as one line so the two visually read as related.
+   Same beam colour/glow as .hero__border and .hero__spinlock-beam, just a
+   longer, diagonal-capable stroke instead of a short fixed accent. Only
+   rendered once the JS measurement (linkLine) has a value — absent while
+   the card is in its mobile stacked layout, see the effect above. */
+.hero__spinlock-link {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  overflow: visible;
+  transition: opacity 650ms ease;
+}
+
+.hero__spinlock-link.is-revealed {
+  opacity: 1;
+}
+
+.hero__spinlock-link line {
+  stroke: #2e8bc0;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+  filter: drop-shadow(0 0 4px rgba(46, 139, 192, 0.75));
 }
 
 .hero__spinlock-beam {
@@ -437,12 +507,6 @@
 
   .hero__dimbox.is-revealed {
     transform: none;
-  }
-}
-
-@media (min-width: 900px) {
-  .hero {
-    padding-top: calc(var(--header-h) + 1.75rem);
   }
 }
 

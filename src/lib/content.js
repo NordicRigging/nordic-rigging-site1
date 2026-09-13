@@ -248,7 +248,9 @@ export const CONTENT = {
       contactCta: 'Ota yhteyttä',
       videoLabel: 'Masto ja rikki teknisenä piirroksena',
       spinlockHint: 'Spinlock Rig-Sense Pro -mittari',
-      scrollHint: 'Lue lisää'
+      scrollHint: 'Lue lisää',
+      cardTitle: 'Tarkat mittaukset',
+      cardSpec: 'Sopii Ø5–20mm vaijerille, Ø6–60 rod-rikille, enimmäisjännitys max. 8000 kg'
     },
     services: {
       eyebrow: 'Palvelut',
@@ -304,10 +306,7 @@ export const CONTENT = {
         }
       ],
       badge: 'Kuuluu jokaiseen mastonnostoon',
-      imageAlt: 'Spinlock Rig-Sense Pro -rikimittari kiinnitettynä vanttiin',
-      readingLabel: 'Mitattu kireys',
-      readingUnit: '% murtolujuudesta',
-      staticReading: '6,4 kN'
+      imageAlt: 'Spinlock Rig-Sense Pro -rikimittari kiinnitettynä vanttiin'
     },
     partners: {
       eyebrow: 'Telakoille ja satamille',
@@ -434,7 +433,9 @@ export const CONTENT = {
       contactCta: 'Get in touch',
       videoLabel: 'Mast and rigging as a technical drawing',
       spinlockHint: 'Spinlock Rig-Sense Pro gauge',
-      scrollHint: 'Read more'
+      scrollHint: 'Read more',
+      cardTitle: 'Precise measurements',
+      cardSpec: 'Fits Ø5–20mm wire, Ø6–60 rod rigging, max tension 8000 kg'
     },
     services: {
       eyebrow: 'Services',
@@ -490,10 +491,7 @@ export const CONTENT = {
         }
       ],
       badge: 'Part of every mast stepping',
-      imageAlt: 'Spinlock Rig-Sense Pro rig tension gauge clamped on a shroud',
-      readingLabel: 'Measured tension',
-      readingUnit: '% of breaking load',
-      staticReading: '6.4 kN'
+      imageAlt: 'Spinlock Rig-Sense Pro rig tension gauge clamped on a shroud'
     },
     partners: {
       eyebrow: 'For boatyards and marinas',

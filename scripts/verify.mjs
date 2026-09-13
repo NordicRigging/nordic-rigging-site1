@@ -216,8 +216,8 @@ const browser = await launch();
   // VIDEO_FREEZE_TIME (from hero-timing.json, not videoDuration) is the
   // frame Hero.jsx pauses real playback on — the clip's own last frame is
   // the plain photo again (it was authored to loop), so freezing there
-  // would show no blueprint at all. 3.8s is round 10's 1080p regeneration's
-  // own hold timing, not either previous clip's.
+  // would show no blueprint at all. 3.4s is round 12's exploded-hologram
+  // regeneration's own hold timing, not any previous clip's.
   check(
     'blueprint clip is played to its held peak frame and paused there, not its own last frame (which is the plain photo again)',
     seqEnd.videoActive === true && Math.abs(seqEnd.videoCurrentTime - VIDEO_FREEZE_TIME) < 0.05,
@@ -249,10 +249,17 @@ const browser = await launch();
   check('area+rate line removed from the dim box', (await page.locator('.hero__dimbox-facts').count()) === 0);
   const dimboxCtaButtons = await page.locator('.hero__dimbox .btn').count();
   check('hero has exactly one compact contact button, inside the dim box', dimboxCtaButtons === 1, `count=${dimboxCtaButtons}`);
+  // Round 12 item 4: was a one-line "Mitattu kireys" / "6,4 kN" label+value
+  // pair; now a heading over a longer capability spec, still a static fact
+  // of the install, not a control or an animated reading.
   check(
-    'Rig-Sense reading is a static kN figure, not an animated percentage',
-    (await page.locator('.hero__gauge-value').textContent()).includes('kN'),
-    await page.locator('.hero__gauge-value').textContent()
+    'dim box gauge is a heading over a spec line, not the old kN reading',
+    (await page.locator('.hero__gauge-title').textContent()).length > 0 &&
+      (await page.locator('.hero__gauge-spec').textContent()).includes('Ø'),
+    JSON.stringify({
+      title: await page.locator('.hero__gauge-title').textContent(),
+      spec: await page.locator('.hero__gauge-spec').textContent()
+    })
   );
 
   // item 6: the Spinlock hint in the photo's bottom-left corner, with its
@@ -261,6 +268,25 @@ const browser = await launch();
   check('Spinlock hint has its own beam accent (not the border trace)', (await page.locator('.hero__spinlock-beam').count()) === 1);
   const scrollArrowVisible = await page.locator('.hero__scroll-arrow').isVisible();
   check('Spinlock hint has a scroll-down arrow', scrollArrowVisible);
+  // Round 12 item 5: the hint used to sit in the photo's opposite corner
+  // from the card it's actually about — now positioned close to the card
+  // (Hero.css) with a JS-measured line (Hero.jsx's useLayoutEffect) drawn
+  // from the hint's own edge to the gauge row inside the card, so the
+  // relationship reads as deliberate rather than two unrelated corners.
+  const spinlockLink = await page.evaluate(() => {
+    const link = document.querySelector('.hero__spinlock-link');
+    const line = link?.querySelector('line');
+    return {
+      present: !!link,
+      revealed: link?.classList.contains('is-revealed'),
+      width: line ? parseFloat(line.getAttribute('x2')) : null
+    };
+  });
+  check(
+    'connector line links the Spinlock hint to the card gauge row',
+    spinlockLink.present === true && spinlockLink.revealed === true && spinlockLink.width > 0,
+    JSON.stringify(spinlockLink)
+  );
 
   // item 4: the wordmark now spills out above the photo into empty space
   // (a sibling of .hero__media, not clipped inside it) instead of sitting
@@ -318,9 +344,29 @@ const browser = await launch();
     return r && cs ? { w: Math.round(r.width), h: Math.round(r.height), radius: cs.borderTopLeftRadius, radiusBottom: cs.borderBottomLeftRadius } : null;
   });
   check(
-    'hero media is a wide landscape card (16:9), rounded all round',
+    // Round 12 item 2: 16/9 is the aspect-ratio, not the rendered box's own
+    // ratio any more — max-height (a viewport-relative cap so the hero fits
+    // on screen without a mid-section scroll) can render it shorter/wider
+    // than that on a short viewport, so this only checks "wide landscape",
+    // not the exact 16:9 figure.
+    'hero media is a wide landscape card, rounded all round',
     !!mediaBox && mediaBox.w / mediaBox.h > 1.3 && mediaBox.radius !== '0px' && mediaBox.radiusBottom !== '0px',
     JSON.stringify(mediaBox)
+  );
+
+  // Round 12 item 2: the actual complaint was "the whole hero doesn't fit
+  // without scrolling mid-section" — checked directly against this
+  // context's own 1440x900 viewport (the tab row's own position is what a
+  // user would hit a scrollbar to reach if it didn't) rather than asserting
+  // a specific height figure.
+  const heroFits = await page.evaluate(() => {
+    const r = document.querySelector('.hero').getBoundingClientRect();
+    return { bottom: r.bottom, viewportHeight: window.innerHeight };
+  });
+  check(
+    'whole hero section fits the viewport without a mid-section scroll',
+    heroFits.bottom <= heroFits.viewportHeight,
+    JSON.stringify(heroFits)
   );
 
   // the outpainted photo is a real landscape source, not stretched from a
@@ -330,6 +376,25 @@ const browser = await launch();
     return img ? img.naturalWidth / img.naturalHeight : null;
   });
   check('hero photo source itself is landscape (outpainted, not just cropped)', naturalRatio > 1.4, naturalRatio?.toFixed(2));
+
+  // Round 12 item 1: the video is measurably softer than the photo even at
+  // matched resolution/colour (round 11 already fixed those two) — rather
+  // than re-sharpen baked video, the poster is softened to meet it instead,
+  // applied up front so there's nothing to jump between once the video
+  // fades in (see Hero.jsx/Hero.css for why this is conditional on a video
+  // transition actually happening).
+  const posterBlur = await page.evaluate(() => {
+    const poster = document.querySelector('.hero__poster');
+    return {
+      hasClass: poster?.classList.contains('hero__poster--matched'),
+      filter: poster ? getComputedStyle(poster).filter : null
+    };
+  });
+  check(
+    'hero poster is pre-softened to match the video (no sharpness jump at crossfade)',
+    posterBlur.hasClass === true && posterBlur.filter !== 'none',
+    JSON.stringify(posterBlur)
+  );
 
   // TracingBeam: invisible while the hero's contact card is still on
   // screen, launches together with the hero itself fading out (round 11

@@ -87,8 +87,15 @@ const ShinyText = ({
     if (pauseOnHover) setIsPaused(false);
   }, [pauseOnHover]);
 
+  // Round 12 item 6: the shine band was 35/50/65 -- a thin peak that only
+  // ever hit shineColor at exactly one instant, reading as "barely there"
+  // in real use even though it was, pixel-for-pixel, the right color at
+  // that instant (confirmed directly, sampling the rendered gradient across
+  // a full sweep). Widened to 20/50/80 so a broad wash of the shine colour
+  // is on screen at once, not a thin line, closer to the requested "sunlight
+  // sweeping across metal" than a brief flash.
   const gradientStyle = {
-    backgroundImage: `linear-gradient(${spread}deg, ${color} 0%, ${color} 35%, ${shineColor} 50%, ${color} 65%, ${color} 100%)`,
+    backgroundImage: `linear-gradient(${spread}deg, ${color} 0%, ${color} 20%, ${shineColor} 50%, ${color} 80%, ${color} 100%)`,
     backgroundSize: '200% auto',
     WebkitBackgroundClip: 'text',
     backgroundClip: 'text',
