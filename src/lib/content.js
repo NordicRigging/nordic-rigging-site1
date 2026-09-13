@@ -379,6 +379,7 @@ export const CONTENT = {
       privacy: 'Tietojasi käytetään vain tähän yhteydenottoon.',
       orCall: 'Tai soita suoraan',
       required: 'Täytä nimi ja vähintään puhelin tai sähköposti.',
+      invalidEmail: 'Tarkista sähköpostiosoite, se ei näytä oikealta.',
       subjectPrivate: 'Yhteydenotto veneenomistajalta',
       subjectYard: 'Yhteistyötiedustelu telakalta tai satamalta',
       fields: {
@@ -564,6 +565,7 @@ export const CONTENT = {
       privacy: 'Your details are used only to reply to you.',
       orCall: 'Or call directly',
       required: 'Please fill in your name and at least a phone number or an email.',
+      invalidEmail: 'Check your email address, it does not look right.',
       subjectPrivate: 'Enquiry from a boat owner',
       subjectYard: 'Partnership enquiry from a yard or marina',
       fields: {

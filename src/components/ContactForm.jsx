@@ -23,8 +23,9 @@ export default function ContactForm() {
   const [who, setWho] = useState('private');
   const [needs, setNeeds] = useState(() => new Set());
   const [values, setValues] = useState({ name: '', phone: '', email: '', boat: '', message: '', website: '' });
-  const [status, setStatus] = useState('idle'); // idle | sending | sent | sentMail | error | invalid
+  const [status, setStatus] = useState('idle'); // idle | sending | sent | sentMail | error | invalid | invalidEmail
   const firstFieldRef = useRef(null);
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
     if (!prefill) return;
@@ -52,6 +53,10 @@ export default function ContactForm() {
     if (values.website) return; // honeypot: bots fill hidden fields
     if (!values.name.trim() || (!values.phone.trim() && !values.email.trim())) {
       setStatus('invalid');
+      return;
+    }
+    if (values.email.trim() && !EMAIL_RE.test(values.email.trim())) {
+      setStatus('invalidEmail');
       return;
     }
 
@@ -188,6 +193,11 @@ export default function ContactForm() {
       {status === 'invalid' && (
         <p className="cform__msg cform__msg--warn" role="alert">
           {f.required}
+        </p>
+      )}
+      {status === 'invalidEmail' && (
+        <p className="cform__msg cform__msg--warn" role="alert">
+          {f.invalidEmail}
         </p>
       )}
       {status === 'error' && (
