@@ -64,7 +64,7 @@ export default function Contact() {
     <section ref={sectionRef} id="contact" className="edge relative pt-16 pb-28 md:pt-24 md:pb-40">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 z-0 w-[150%] max-w-[64rem] -translate-x-1/2 -translate-y-1/2 opacity-60 sm:left-0 sm:w-[46rem] sm:-translate-x-[34%] sm:-translate-y-[62%] sm:opacity-80 lg:w-[54rem] lg:-translate-x-[30%]"
+        className="pointer-events-none absolute top-1/2 left-1/2 z-0 w-[170%] max-w-[76rem] -translate-x-1/2 -translate-y-1/2 opacity-60 sm:left-0 sm:w-[54rem] sm:-translate-x-[32%] sm:-translate-y-[58%] sm:opacity-80 lg:w-[64rem] lg:-translate-x-[28%]"
       >
         <Globe progress={globeProgress} />
       </div>

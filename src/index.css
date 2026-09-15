@@ -168,18 +168,21 @@
    the globe's size and position; the pins are positioned every frame from
    JS (their coordinates come out of the projection, not CSS) and only need
    their own dot/label look here. */
-/* At the zoom levels this globe reaches, the sphere is bigger than the
-   canvas box and fills every corner - so without this, what reads as "the
-   globe" is really just the box's own square edge (sharpest on the right
-   and top, the two sides that land inside the viewport). Masking both the
-   canvas and the pin layer with the same radial fade dissolves that edge
-   into the page instead of cutting it off. */
+/* The sphere itself now always stays inside the canvas box (Globe.jsx keeps
+   its scale under 1) so there's a real circular silhouette with margin to
+   spare, not a box-filling fill - this mask is just a soft anti-alias on
+   top of that, not what's doing the actual shaping. `closest-side`, not the
+   default `farthest-corner`: on a square box farthest-corner measures to
+   the CORNERS, so a plain "circle" gradient only reaches 100% well past
+   the actual edges and a strip along each edge's middle stayed visibly
+   short of fully transparent - closest-side keys 100% to the edges
+   themselves. */
 .globe-wrap {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  -webkit-mask-image: radial-gradient(circle at center, #000 62%, transparent 100%);
-  mask-image: radial-gradient(circle at center, #000 62%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle closest-side at center, #000 88%, transparent 100%);
+  mask-image: radial-gradient(circle closest-side at center, #000 88%, transparent 100%);
 }
 
 .globe-wrap canvas {
@@ -259,12 +262,15 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
+/* Positioned on its own point now (Globe.jsx offsets the whole pin, already
+   clear of Turku's), not relative to a dot sibling - small deltas here just
+   seat the pill snugly against where its leader line arrives. */
 .globe-label--small {
   font-size: 0.7rem;
   background: rgba(214, 228, 247, 0.85);
-  top: 0.35em;
+  top: -1.5em;
   right: auto;
-  left: 9px;
+  left: 4px;
 }
 
 @media (prefers-reduced-motion: reduce) {

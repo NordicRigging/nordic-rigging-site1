@@ -5,24 +5,36 @@ import { useLang } from '../lib/LanguageContext'
 
 /**
  * A canvas globe driven by an external scroll-linked progress (not its own
- * timer): it turns from the mid-Atlantic to Finland and zooms in as the
- * Contact section scrolls into view, ending tight enough that Turku and
- * Helsinki read as two distinct points rather than one blur. Map data and
- * d3-geo load lazily since this is well below the fold.
+ * timer): it turns from the mid-Atlantic to Finland as the Contact section
+ * scrolls into view. Map data and d3-geo load lazily since this is well
+ * below the fold.
+ *
+ * The sphere's own radius is always kept a little inside the canvas box
+ * (SCALE_END < 1) rather than zoomed past it - a previous version zoomed the
+ * projection to 2.6x the box to force Turku and Helsinki apart, which meant
+ * the "globe" was really just whatever arc of it happened to still be
+ * inside the box, cut off hard at the edges no matter how the fade was
+ * tuned. The full sphere is what's asked for now; the two cities are only
+ * ~75km apart (would still be under 10px apart even at this scale on a
+ * realistic box size), so PIN_OFFSET below is what actually keeps them
+ * legible - the dot stays honest at its true projected point, only the
+ * label pill is nudged clear, with a short leader back to the real spot.
  */
 const START = [-38, 10] // lon, lat the globe faces at first
 const END = [23.5, 46] // Finland high in the frame: the sphere's lower part is cropped away
 const AREA_CENTER = [23.6, 60.3] // Varsinais-Suomi + Uusimaa coast
 const AREA_RADIUS = 1.35 // degrees of arc
-const ZOOM = 2.6 // how much larger the projection scale gets by progress=1 - Turku
-// and Helsinki are only ~75km apart, so this needs to be aggressive enough
-// that they read as two separate points rather than one blur
+const SCALE_START = 0.46 // fraction of the box-fitting radius at progress=0
+const SCALE_END = 0.92 // fraction at progress=1 - stays short of 1 so the
+// sphere never touches its own canvas edge, whatever the box size
+const PIN_OFFSET = { x: 30, y: -20 } // Helsinki's label, away from Turku's
 
 export default function Globe({ progress }) {
   const wrapRef = useRef(null)
   const canvasRef = useRef(null)
   const turkuRef = useRef(null)
-  const helsinkiRef = useRef(null)
+  const helsinkiDotRef = useRef(null)
+  const helsinkiLabelRef = useRef(null)
   const drawRef = useRef(() => {})
   const { t } = useLang()
 
@@ -70,23 +82,26 @@ export default function Globe({ progress }) {
         projection.translate([size / 2, size / 2])
       }
 
-      const place = (el, coords, center, alpha) => {
-        if (!el) return
+      const place = (el, coords, center, alpha, offset = null) => {
+        if (!el) return null
         const visible = d3.geoDistance(coords, center) < Math.PI / 2 - 0.05
         const p = projection(coords)
         if (!p || !visible) {
           el.style.opacity = '0'
-          return
+          return null
         }
+        const x = p[0] + (offset?.x ?? 0)
+        const y = p[1] + (offset?.y ?? 0)
         el.style.opacity = String(alpha)
-        el.style.transform = `translate(${p[0].toFixed(1)}px, ${p[1].toFixed(1)}px)`
+        el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`
+        return p
       }
 
       const draw = (rawProgress) => {
         const progress = reduced ? 1 : Math.max(0, Math.min(1, rawProgress))
         const c = interp(progress)
         projection.rotate([-c[0], -c[1], 0])
-        projection.scale(baseScale * (1 + progress * (ZOOM - 1)))
+        projection.scale(baseScale * (SCALE_START + progress * (SCALE_END - SCALE_START)))
 
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         ctx.clearRect(0, 0, size, size)
@@ -142,7 +157,16 @@ export default function Globe({ progress }) {
         ctx.stroke()
 
         place(turkuRef.current, CONTACT.turku, c, a)
-        place(helsinkiRef.current, CONTACT.helsinki, c, a)
+        const helsinkiPoint = place(helsinkiDotRef.current, CONTACT.helsinki, c, a)
+        place(helsinkiLabelRef.current, CONTACT.helsinki, c, a, PIN_OFFSET)
+        if (helsinkiPoint && a > 0) {
+          ctx.beginPath()
+          ctx.moveTo(helsinkiPoint[0], helsinkiPoint[1])
+          ctx.lineTo(helsinkiPoint[0] + PIN_OFFSET.x, helsinkiPoint[1] + PIN_OFFSET.y)
+          ctx.strokeStyle = `rgba(230, 237, 243, ${0.6 * a})`
+          ctx.lineWidth = 1
+          ctx.stroke()
+        }
         if (a >= 1) wrap.classList.add('is-settled')
         else wrap.classList.remove('is-settled')
       }
@@ -178,8 +202,10 @@ export default function Globe({ progress }) {
         <span className="globe-dot" />
         <span className="globe-label">{t.contact.globeLabel}</span>
       </div>
-      <div className="globe-pin globe-pin--helsinki" ref={helsinkiRef} aria-hidden="true">
+      <div className="globe-pin" ref={helsinkiDotRef} aria-hidden="true">
         <span className="globe-dot globe-dot--small" />
+      </div>
+      <div className="globe-pin" ref={helsinkiLabelRef} aria-hidden="true">
         <span className="globe-label globe-label--small">{t.contact.globeSecondary}</span>
       </div>
     </div>
