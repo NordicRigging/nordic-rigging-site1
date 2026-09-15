@@ -33,6 +33,7 @@ export default function Contact() {
         value: CONTACT.phoneIntl,
         href: CONTACT.phoneHref,
         action: t.contact.channels.call.action,
+        cta: t.contact.channels.call.cta,
         external: false,
       },
       {
@@ -41,6 +42,7 @@ export default function Contact() {
         value: CONTACT.email,
         href: `mailto:${CONTACT.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
         action: t.contact.channels.email.action,
+        cta: t.contact.channels.email.cta,
         external: false,
       },
       {
@@ -49,6 +51,7 @@ export default function Contact() {
         value: CONTACT.phoneIntl,
         href: `${CONTACT.whatsapp}?text=${encodeURIComponent(who === 'yard' ? t.contact.waYard : t.contact.waPrivate)}`,
         action: t.contact.channels.whatsapp.action,
+        cta: t.contact.channels.whatsapp.cta,
         external: true,
       },
     ],
@@ -58,10 +61,10 @@ export default function Contact() {
   const channel = channels.find((item) => item.id === active) ?? channels[0]
 
   return (
-    <section ref={sectionRef} id="contact" className="edge relative overflow-hidden pt-16 pb-28 md:pt-24 md:pb-40">
+    <section ref={sectionRef} id="contact" className="edge relative pt-16 pb-28 md:pt-24 md:pb-40">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 z-0 w-[150%] max-w-[64rem] -translate-x-1/2 -translate-y-1/2 opacity-60 sm:left-0 sm:w-[42rem] sm:-translate-x-[34%] sm:translate-y-[-48%] sm:opacity-80 lg:w-[50rem] lg:-translate-x-[30%]"
+        className="pointer-events-none absolute top-1/2 left-1/2 z-0 w-[150%] max-w-[64rem] -translate-x-1/2 -translate-y-1/2 opacity-60 sm:left-0 sm:w-[46rem] sm:-translate-x-[34%] sm:-translate-y-[62%] sm:opacity-80 lg:w-[54rem] lg:-translate-x-[30%]"
       >
         <Globe progress={globeProgress} />
       </div>
@@ -156,6 +159,13 @@ export default function Contact() {
                 {channel.value}
               </a>
               <p className="tech text-fog/40 mt-5 text-[10px]">{channel.action}</p>
+              <a
+                href={channel.href}
+                {...(channel.external ? { target: '_blank', rel: 'noreferrer' } : {})}
+                className="border-cyan/50 text-ice tech hover:bg-cyan hover:text-abyss mt-7 inline-block border px-7 py-3.5 text-[10px] transition-colors duration-400 hover:border-cyan"
+              >
+                {channel.cta}
+              </a>
             </motion.div>
           </AnimatePresence>
         </div>

@@ -168,10 +168,18 @@
    the globe's size and position; the pins are positioned every frame from
    JS (their coordinates come out of the projection, not CSS) and only need
    their own dot/label look here. */
+/* At the zoom levels this globe reaches, the sphere is bigger than the
+   canvas box and fills every corner - so without this, what reads as "the
+   globe" is really just the box's own square edge (sharpest on the right
+   and top, the two sides that land inside the viewport). Masking both the
+   canvas and the pin layer with the same radial fade dissolves that edge
+   into the page instead of cutting it off. */
 .globe-wrap {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
+  -webkit-mask-image: radial-gradient(circle at center, #000 62%, transparent 100%);
+  mask-image: radial-gradient(circle at center, #000 62%, transparent 100%);
 }
 
 .globe-wrap canvas {

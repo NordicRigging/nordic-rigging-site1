@@ -67,9 +67,9 @@ export const CONTENT = {
       waPrivate: 'Hei, ottaisin mielelläni yhteyttä koskien venettäni.',
       waYard: 'Hei, ottaisin mielelläni yhteyttä yhteistyömahdollisuudesta.',
       channels: {
-        call: { label: 'Soita', action: 'Suora linja' },
-        email: { label: 'Sähköposti', action: 'Myynti ja huolto' },
-        whatsapp: { label: 'WhatsApp', action: 'Viesti' }
+        call: { label: 'Soita', action: 'Suora linja', cta: 'Soita nyt' },
+        email: { label: 'Sähköposti', action: 'Myynti ja huolto', cta: 'Lähetä sähköposti' },
+        whatsapp: { label: 'WhatsApp', action: 'Viesti', cta: 'Avaa WhatsApp' }
       },
       globeAria: 'Karttapallo joka kääntyy Suomeen ja tarkentaa Turkuun ja Helsinkiin',
       globeLabel: 'Turku',
@@ -143,9 +143,9 @@ export const CONTENT = {
       waPrivate: 'Hi, I would like to get in touch about my boat.',
       waYard: 'Hi, I would like to get in touch about a partnership.',
       channels: {
-        call: { label: 'Call', action: 'Direct line' },
-        email: { label: 'Email', action: 'Sales and service' },
-        whatsapp: { label: 'WhatsApp', action: 'Message' }
+        call: { label: 'Call', action: 'Direct line', cta: 'Call now' },
+        email: { label: 'Email', action: 'Sales and service', cta: 'Send an email' },
+        whatsapp: { label: 'WhatsApp', action: 'Message', cta: 'Open WhatsApp' }
       },
       globeAria: 'Globe turning to Finland and zooming in on Turku and Helsinki',
       globeLabel: 'Turku',
