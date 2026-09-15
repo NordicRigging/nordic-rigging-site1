@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import ScrubVideo from './ScrubVideo'
+import { useLang } from '../lib/LanguageContext'
 
 const WORDS = ['Nordic', 'Rigging']
 
@@ -51,6 +52,7 @@ function Wordmark() {
 
 export default function Hero() {
   const ref = useRef(null)
+  const { t } = useLang()
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end end'],
@@ -67,7 +69,13 @@ export default function Hero() {
   return (
     <section ref={ref} className="relative h-[320vh]" aria-label="Nordic Rigging">
       <div className="sticky top-0 h-screen overflow-hidden">
-        <ScrubVideo src="/video/hero.mp4" progress={scrollYProgress} />
+        <ScrubVideo
+          src={[
+            { src: '/video/hero.mp4', type: 'video/mp4' },
+            { src: '/video/hero.webm', type: 'video/webm' },
+          ]}
+          progress={scrollYProgress}
+        />
 
         {/* Vignette keeps the type off the brightest water. */}
         <div
@@ -84,7 +92,7 @@ export default function Hero() {
               transition={{ delay: 1.15, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
               className="text-fog mt-7 max-w-xl text-base leading-relaxed sm:text-lg"
             >
-              Your Sailboat&rsquo;s Best Crew on Land.
+              {t.hero.tagline}
             </motion.p>
           </motion.div>
         </div>
@@ -94,7 +102,7 @@ export default function Hero() {
           aria-hidden="true"
           className="edge absolute bottom-10 left-0 hidden md:block"
         >
-          <span className="tech text-fog/40 text-[10px]">Scroll</span>
+          <span className="tech text-fog/40 text-[10px]">{t.hero.scrollCue}</span>
           <span className="mt-3 block h-10 w-px bg-[linear-gradient(180deg,rgba(6,182,212,0.5),transparent)]" />
         </motion.div>
       </div>

@@ -1,9 +1,63 @@
 import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import ScrubVideo from './ScrubVideo'
+import { useLang } from '../lib/LanguageContext'
+
+/**
+ * The gauge photo (462x1600, near-white background already cut out) is much
+ * taller than the window it sits in - centered and scaled to the window's
+ * width, its top and bottom run past the window's edges and disappear behind
+ * them, rather than the whole device floating free in open space. The window
+ * itself never rotates, only the photo inside it, so the bezel reads as a
+ * fixed porthole onto a slowly turning instrument.
+ */
+function GaugeWindow() {
+  return (
+    <div className="relative mx-auto w-[min(78vw,17rem)] shrink-0 sm:w-[min(52vw,19rem)] lg:mx-0">
+      <div
+        aria-hidden="true"
+        className="absolute -inset-3 rounded-[2.25rem] bg-[linear-gradient(155deg,rgba(154,201,245,0.22),rgba(6,182,212,0.05)_40%,rgba(4,7,11,0.4)_100%)] blur-[2px]"
+      />
+      <div className="border-slate-line/80 shadow-[0_30px_70px_rgba(3,9,20,0.65)] relative aspect-[3/4] overflow-hidden rounded-[2rem] border bg-[radial-gradient(120%_120%_at_30%_10%,#12314a_0%,#0a1826_55%,#050c13_100%)]">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-20 rounded-[2rem] shadow-[inset_0_0_0_1px_rgba(230,237,243,0.14),inset_0_18px_40px_rgba(0,0,0,0.55),inset_0_-18px_40px_rgba(0,0,0,0.55)]"
+        />
+        <span
+          aria-hidden="true"
+          className="bg-cyan/50 absolute top-0 left-0 z-20 h-px w-full"
+        />
+
+        <div className="absolute inset-0 flex items-center justify-center [perspective:1400px]">
+          <motion.div
+            animate={{ rotateY: 360 }}
+            transition={{ duration: 16, ease: 'linear', repeat: Infinity }}
+            className="relative h-[142%] w-[78%] [transform-style:preserve-3d]"
+          >
+            <img
+              src="/images/rig-sense.webp"
+              alt=""
+              aria-hidden="true"
+              className="h-full w-full object-cover brightness-90 contrast-[1.08] saturate-[0.82]"
+            />
+            <div
+              aria-hidden="true"
+              className="bg-navy-900 absolute inset-0 mix-blend-color opacity-45"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[linear-gradient(100deg,rgba(255,255,255,0.16)_0%,transparent_28%,transparent_72%,rgba(255,255,255,0.08)_100%)] mix-blend-overlay"
+            />
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function Spinlock() {
   const ref = useRef(null)
+  const { t } = useLang()
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end end'],
@@ -20,41 +74,47 @@ export default function Spinlock() {
         <ScrubVideo src="/video/craft.mp4" progress={scrollYProgress} grade="heavy" />
 
         <div className="edge relative flex h-full items-center">
-          <motion.div style={{ opacity, y }} className="max-w-3xl">
-            <p className="tech text-cyan/70 text-[10px]">Measured, not estimated</p>
+          <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+            <motion.div style={{ opacity, y }} className="max-w-3xl">
+              <p className="tech text-cyan/70 text-[10px]">{t.spinlock.eyebrow}</p>
 
-            <motion.span
-              aria-hidden="true"
-              style={{ scaleX: ruleScale }}
-              className="bg-slate-line mt-8 block h-px w-24 origin-left"
-            />
+              <motion.span
+                aria-hidden="true"
+                style={{ scaleX: ruleScale }}
+                className="bg-slate-line mt-8 block h-px w-24 origin-left"
+              />
 
-            <h2 className="display text-ice mt-8 text-[clamp(2.5rem,7.2vw,6.2rem)]">
-              Spinlock Rig-Sense Pro
-            </h2>
+              <h2 className="display text-ice mt-8 text-[clamp(2.5rem,7.2vw,6.2rem)]">
+                {t.spinlock.title}
+              </h2>
 
-            <p className="text-fog mt-10 max-w-xl text-base leading-relaxed sm:text-lg">
-              We measure rig tension to the newton instead of estimating it by feel.
-            </p>
+              <p className="text-fog mt-10 max-w-xl text-base leading-relaxed sm:text-lg">
+                {t.spinlock.body}
+              </p>
 
-            <div className="mt-12 flex flex-wrap gap-3 sm:gap-4">
-              {/* Placeholder destinations — swap for the real URLs. */}
-              <a
-                href="#"
-                onClick={(event) => event.preventDefault()}
-                className="border-cyan/50 text-ice tech hover:bg-cyan hover:text-abyss border px-7 py-3.5 text-[10px] transition-colors duration-400 hover:border-cyan"
-              >
-                Read more
-              </a>
-              <a
-                href="#"
-                onClick={(event) => event.preventDefault()}
-                className="border-slate-line text-fog tech hover:border-fog/40 hover:text-ice border px-7 py-3.5 text-[10px] transition-colors duration-400"
-              >
-                Watch video
-              </a>
-            </div>
-          </motion.div>
+              <div className="mt-12 flex flex-wrap gap-3 sm:gap-4">
+                {/* Placeholder destinations — swap for the real URLs. */}
+                <a
+                  href="#"
+                  onClick={(event) => event.preventDefault()}
+                  className="border-cyan/50 text-ice tech hover:bg-cyan hover:text-abyss border px-7 py-3.5 text-[10px] transition-colors duration-400 hover:border-cyan"
+                >
+                  {t.spinlock.readMore}
+                </a>
+                <a
+                  href="#"
+                  onClick={(event) => event.preventDefault()}
+                  className="border-slate-line text-fog tech hover:border-fog/40 hover:text-ice border px-7 py-3.5 text-[10px] transition-colors duration-400"
+                >
+                  {t.spinlock.watchVideo}
+                </a>
+              </div>
+            </motion.div>
+
+            <motion.div style={{ opacity }}>
+              <GaugeWindow />
+            </motion.div>
+          </div>
         </div>
       </div>
     </section>

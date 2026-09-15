@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useLang } from '../lib/LanguageContext'
 
 const reveal = {
   hidden: { opacity: 0, y: 24 },
@@ -9,14 +10,9 @@ const reveal = {
   }),
 }
 
-// Placeholder copy — to be replaced.
-const SENTENCES = [
-  'Nordic Rigging is a father and a son.',
-  'We work rigs out of Turku, on boats that sail the Finnish archipelago.',
-  'Two people, one standard.',
-]
-
 export default function Story() {
+  const { t } = useLang()
+
   return (
     <section className="edge relative py-40 md:py-64">
       <div className="mx-auto max-w-4xl">
@@ -27,11 +23,11 @@ export default function Story() {
           transition={{ duration: 0.8 }}
           className="tech text-fog/40 mb-16 text-[10px] md:mb-24"
         >
-          Turku, Finland
+          {t.story.eyebrow}
         </motion.p>
 
         <div className="space-y-8 md:space-y-12">
-          {SENTENCES.map((sentence, i) => (
+          {t.story.sentences.map((sentence, i) => (
             <motion.p
               key={sentence}
               custom={i}

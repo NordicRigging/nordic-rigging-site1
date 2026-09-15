@@ -6,14 +6,27 @@ import { useCoarsePointer, clamp } from '../lib/hooks'
 // heavier — the boat carries some way, like a hull that does not stop dead.
 const SMOOTHING = 0.12
 
+/** Shared <source> children plus the "really failed" check: a <source>
+ * firing its own error is normal browser fallback-hunting (e.g. this
+ * environment's Chromium has no H.264 decoder, only VP9 - the mp4 source
+ * always errors and the webm one is what actually plays), not a real
+ * failure. Only NETWORK_NO_SOURCE means every candidate was tried. */
+function Sources({ sources }) {
+  return sources.map((s) => <source key={s.src} src={s.src} type={s.type} />)
+}
+
+function reallyFailed(video) {
+  return video?.networkState === HTMLMediaElement.NETWORK_NO_SOURCE
+}
+
 /**
  * Scroll-scrubbed video painted to a canvas.
  *
  * Nothing about the clip is assumed. Duration and intrinsic width/height are
- * read from the file's own metadata at runtime, so replacing the mp4 with a
- * longer, shorter, or differently-shaped one needs no code change.
+ * read from the file's own metadata at runtime, so replacing the source with
+ * a longer, shorter, or differently-shaped one needs no code change.
  */
-function CanvasScrub({ src, progress, onStatus }) {
+function CanvasScrub({ sources, progress, onStatus }) {
   const canvasRef = useRef(null)
   const videoRef = useRef(null)
 
@@ -93,6 +106,7 @@ function CanvasScrub({ src, progress, onStatus }) {
     }
 
     const fail = () => {
+      if (!reallyFailed(video)) return
       ready = false
       onStatus('error')
     }
@@ -125,7 +139,7 @@ function CanvasScrub({ src, progress, onStatus }) {
       video.removeEventListener('seeked', paint)
       video.removeEventListener('error', fail)
     }
-  }, [src, progress, onStatus])
+  }, [sources, progress, onStatus])
 
   return (
     <>
@@ -133,28 +147,29 @@ function CanvasScrub({ src, progress, onStatus }) {
           not decode a detached or hidden video. */}
       <video
         ref={videoRef}
-        src={src}
         muted
         playsInline
         preload="auto"
         aria-hidden="true"
         tabIndex={-1}
         className="pointer-events-none absolute h-px w-px opacity-0"
-      />
+      >
+        <Sources sources={sources} />
+      </video>
       <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
     </>
   )
 }
 
 /** Phones, touch devices and reduced-motion: plain autoplay loop, no scrub. */
-function LoopVideo({ src, onStatus }) {
+function LoopVideo({ sources, onStatus }) {
   const ref = useRef(null)
 
   useEffect(() => {
     const video = ref.current
     if (!video) return
     const ok = () => onStatus('ready')
-    const bad = () => onStatus('error')
+    const bad = () => reallyFailed(video) && onStatus('error')
     video.addEventListener('loadeddata', ok)
     video.addEventListener('error', bad)
     const played = video.play?.()
@@ -163,12 +178,11 @@ function LoopVideo({ src, onStatus }) {
       video.removeEventListener('loadeddata', ok)
       video.removeEventListener('error', bad)
     }
-  }, [src, onStatus])
+  }, [sources, onStatus])
 
   return (
     <video
       ref={ref}
-      src={src}
       muted
       loop
       autoPlay
@@ -176,7 +190,9 @@ function LoopVideo({ src, onStatus }) {
       preload="auto"
       aria-hidden="true"
       className="absolute inset-0 h-full w-full object-cover"
-    />
+    >
+      <Sources sources={sources} />
+    </video>
   )
 }
 
@@ -195,9 +211,14 @@ function SeaGround() {
   )
 }
 
+/** src accepts either one path (assumed .mp4, matching the existing archipelago/craft
+ * clips) or an explicit [{src, type}] list, mp4 first, for a clip like hero.mp4 that
+ * also ships a .webm encode. */
 export default function ScrubVideo({ src, progress, grade = 'default' }) {
   const [status, setStatus] = useState('loading')
   const onStatus = useCallback((next) => setStatus(next), [])
+
+  const sources = Array.isArray(src) ? src : [{ src, type: 'video/mp4' }]
 
   const reduced = useReducedMotion()
   const coarse = useCoarsePointer()
@@ -219,9 +240,9 @@ export default function ScrubVideo({ src, progress, grade = 'default' }) {
         }`}
       >
         {scrubbable ? (
-          <CanvasScrub key="scrub" src={src} progress={progress} onStatus={onStatus} />
+          <CanvasScrub key="scrub" sources={sources} progress={progress} onStatus={onStatus} />
         ) : (
-          <LoopVideo key="loop" src={src} onStatus={onStatus} />
+          <LoopVideo key="loop" sources={sources} onStatus={onStatus} />
         )}
       </div>
       <div aria-hidden="true" className={`absolute inset-0 ${grades[grade] ?? grades.default}`} />

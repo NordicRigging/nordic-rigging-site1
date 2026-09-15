@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useScroll, useMotionValueEvent } from 'framer-motion'
+import { useLang } from '../lib/LanguageContext'
 
 // Itäinen Rantakatu 74, Turku. The readout drifts from here as the page runs,
 // as though the boat were working its way out through the archipelago.
@@ -22,6 +23,7 @@ const format = (progress) => {
  * MotionValue so a 60fps readout never re-renders the React tree.
  */
 export default function HUD() {
+  const { t } = useLang()
   const { scrollYProgress } = useScroll()
   const hdgRef = useRef(null)
   const latRef = useRef(null)
@@ -55,7 +57,7 @@ export default function HUD() {
         </span>
 
         <span className="tech text-[10px] text-fog/55">
-          <span className="text-fog/35">HDG </span>
+          <span className="text-fog/35">{t.hud.headingLabel} </span>
           <span ref={hdgRef}>198°</span>
         </span>
         <span className="hidden h-px w-4 bg-slate-line md:hidden" />

@@ -2,29 +2,14 @@ import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import ScrubVideo from './ScrubVideo'
+import { useLang } from '../lib/LanguageContext'
 
-const WORDS = [
-  { text: 'Measured', from: 0.04, to: 0.34 },
-  { text: 'Tuned', from: 0.36, to: 0.65 },
-  { text: 'Trusted', from: 0.67, to: 0.97 },
-]
-
-const CARDS = [
-  {
-    title: 'Mast Work',
-    copy: 'Professional rigging and mast services',
-    to: '/services/mast-work',
-  },
-  {
-    title: 'Rope Stock',
-    copy: 'High-quality rope and splicing',
-    to: '/services/rope-stock',
-  },
-  {
-    title: 'Maintenance',
-    copy: 'Seasonal service and docking',
-    to: '/services/maintenance',
-  },
+// Each kinetic word's own scroll window within the pinned section - paired
+// positionally with content.js's services.kinetic (language-independent).
+const WINDOWS = [
+  { from: 0.04, to: 0.34 },
+  { from: 0.36, to: 0.65 },
+  { from: 0.67, to: 0.97 },
 ]
 
 /** One word, slammed on and taken off again inside its own scroll window. */
@@ -48,7 +33,7 @@ function KineticWord({ progress, from, to, children }) {
   )
 }
 
-function Card({ title, copy, to }) {
+function Card({ title, copy, to, view }) {
   return (
     <Link
       to={to}
@@ -61,7 +46,7 @@ function Card({ title, copy, to }) {
       <h3 className="display-md text-ice text-[clamp(1.5rem,2.6vw,2.1rem)]">{title}</h3>
       <p className="text-fog/80 mt-14 text-sm leading-relaxed md:mt-20">{copy}</p>
       <span className="tech text-fog/35 group-hover:text-cyan mt-7 text-[10px] transition-colors duration-500">
-        View
+        {view}
       </span>
     </Link>
   )
@@ -69,6 +54,7 @@ function Card({ title, copy, to }) {
 
 export default function Services() {
   const kineticRef = useRef(null)
+  const { t } = useLang()
   const { scrollYProgress } = useScroll({
     target: kineticRef,
     offset: ['start start', 'end end'],
@@ -80,14 +66,14 @@ export default function Services() {
         <div className="sticky top-0 h-screen overflow-hidden">
           <ScrubVideo src="/video/archipelago.mp4" progress={scrollYProgress} />
           <div className="edge relative flex h-full items-center justify-center">
-            {WORDS.map((word) => (
+            {t.services.kinetic.map((word, i) => (
               <KineticWord
-                key={word.text}
+                key={word}
                 progress={scrollYProgress}
-                from={word.from}
-                to={word.to}
+                from={WINDOWS[i].from}
+                to={WINDOWS[i].to}
               >
-                {word.text}
+                {word}
               </KineticWord>
             ))}
           </div>
@@ -96,10 +82,10 @@ export default function Services() {
 
       <div className="edge relative py-24 md:py-36">
         <div className="mx-auto max-w-6xl">
-          <p className="tech text-fog/40 mb-12 text-[10px] md:mb-16">Services</p>
+          <p className="tech text-fog/40 mb-12 text-[10px] md:mb-16">{t.services.eyebrow}</p>
           {/* Swipeable on phones, a fixed grid from md up. */}
           <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pb-0">
-            {CARDS.map((card) => (
+            {t.services.cards.map((card) => (
               <Card key={card.title} {...card} />
             ))}
           </div>
