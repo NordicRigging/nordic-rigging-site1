@@ -16,9 +16,12 @@ export default function Contact() {
   const [active, setActive] = useState('call')
   const sectionRef = useRef(null)
 
+  // Was ['start end', 'start 0.4'] - only ~0.6 of a viewport height of
+  // scroll, over almost instantly at normal scroll speed. Stretched to
+  // ~0.95 of a viewport height so the zoom actually reads as motion.
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ['start end', 'start 0.4'],
+    offset: ['start end', 'start 0.05'],
   })
   const globeProgress = useTransform(scrollYProgress, [0, 1], [0, 1])
 
@@ -64,7 +67,7 @@ export default function Contact() {
     <section ref={sectionRef} id="contact" className="edge relative pt-16 pb-28 md:pt-24 md:pb-40">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 z-0 w-[170%] max-w-[76rem] -translate-x-1/2 -translate-y-1/2 opacity-60 sm:left-0 sm:w-[68rem] sm:-translate-x-[30%] sm:-translate-y-[56%] sm:opacity-80 lg:w-[84rem] lg:-translate-x-[26%]"
+        className="pointer-events-none absolute top-1/2 left-1/2 z-0 w-[170%] max-w-[76rem] -translate-x-1/2 -translate-y-1/2 opacity-60 sm:left-0 sm:w-[80rem] sm:-translate-x-[28%] sm:-translate-y-[54%] sm:opacity-80 lg:w-[104rem] lg:-translate-x-[24%]"
       >
         <Globe progress={globeProgress} />
       </div>
