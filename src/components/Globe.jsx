@@ -25,9 +25,12 @@ const END = [23.5, 46] // Finland high in the frame: the sphere's lower part is 
 const AREA_CENTER = [23.6, 60.3] // Varsinais-Suomi + Uusimaa coast
 const AREA_RADIUS = 1.35 // degrees of arc
 const SCALE_START = 0.46 // fraction of the box-fitting radius at progress=0
-const SCALE_END = 0.92 // fraction at progress=1 - stays short of 1 so the
-// sphere never touches its own canvas edge, whatever the box size
-const PIN_OFFSET = { x: 30, y: -20 } // Helsinki's label, away from Turku's
+const SCALE_END = 0.96 // fraction at progress=1 - stays short of 1 so the
+// sphere never touches its own canvas edge, whatever the box size. Pushing
+// this alone only buys a few more percent of scale before the "never
+// crops" rule stops it - Contact.jsx's own box size is the real lever for
+// how many actual pixels sit between Turku and Helsinki at rest.
+const PIN_OFFSET = { x: 38, y: -26 } // Helsinki's label, away from Turku's
 
 export default function Globe({ progress }) {
   const wrapRef = useRef(null)
