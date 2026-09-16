@@ -31,11 +31,6 @@ export const CONTENT = {
     },
     services: {
       eyebrow: 'Palvelut',
-      cards: [
-        { title: 'Mastotyöt', copy: 'Ammattitason takilointi ja mastopalvelut.', to: '/services/mast-work', view: 'Katso' },
-        { title: 'Köysivarasto', copy: 'Korkealaatuiset köydet ja pletointi.', to: '/services/rope-stock', view: 'Katso' },
-        { title: 'Huolto', copy: 'Kausihuolto ja telakointi.', to: '/services/maintenance', view: 'Katso' }
-      ],
       kinetic: ['Mitattu', 'Viritetty', 'Luotettu']
     },
     spinlock: {
@@ -172,11 +167,6 @@ export const CONTENT = {
     },
     services: {
       eyebrow: 'Services',
-      cards: [
-        { title: 'Mast Work', copy: 'Professional rigging and mast services.', to: '/services/mast-work', view: 'View' },
-        { title: 'Rope Stock', copy: 'High-quality rope and splicing.', to: '/services/rope-stock', view: 'View' },
-        { title: 'Maintenance', copy: 'Seasonal service and docking.', to: '/services/maintenance', view: 'View' }
-      ],
       kinetic: ['Measured', 'Tuned', 'Trusted']
     },
     spinlock: {

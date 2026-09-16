@@ -1,7 +1,7 @@
 import { useRef } from 'react'
-import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import ScrubVideo from './ScrubVideo'
+import AccordionGallery from './AccordionGallery'
 import { useLang } from '../lib/LanguageContext'
 
 // Each kinetic word's own scroll window within the pinned section - paired
@@ -11,6 +11,13 @@ const WINDOWS = [
   { from: 0.36, to: 0.65 },
   { from: 0.67, to: 0.97 },
 ]
+
+// Paired positionally with content.js's servicePage.items (language-independent).
+const SERVICE_IMAGES = {
+  'mast-work': '/images/services/mast-work.jpg',
+  'rope-stock': '/images/services/rope-stock.jpg',
+  maintenance: '/images/services/maintenance.jpg',
+}
 
 /** One word, slammed on and taken off again inside its own scroll window. */
 function KineticWord({ progress, from, to, children }) {
@@ -33,25 +40,6 @@ function KineticWord({ progress, from, to, children }) {
   )
 }
 
-function Card({ title, copy, to, view }) {
-  return (
-    <Link
-      to={to}
-      className="group border-slate-line relative flex min-w-[80%] snap-start flex-col justify-between border bg-[rgba(10,24,38,0.32)] p-7 transition-[transform,border-color,background-color] duration-500 ease-out hover:-translate-y-1.5 hover:border-cyan/40 hover:bg-[rgba(10,24,38,0.55)] md:min-w-0 md:p-9"
-    >
-      <span
-        aria-hidden="true"
-        className="bg-cyan absolute top-0 left-0 h-px w-0 transition-[width] duration-500 ease-out group-hover:w-full"
-      />
-      <h3 className="display-md text-ice text-[clamp(1.5rem,2.6vw,2.1rem)]">{title}</h3>
-      <p className="text-fog/80 mt-14 text-sm leading-relaxed md:mt-20">{copy}</p>
-      <span className="tech text-fog/35 group-hover:text-cyan mt-7 text-[10px] transition-colors duration-500">
-        {view}
-      </span>
-    </Link>
-  )
-}
-
 export default function Services() {
   const kineticRef = useRef(null)
   const { t } = useLang()
@@ -59,6 +47,12 @@ export default function Services() {
     target: kineticRef,
     offset: ['start start', 'end end'],
   })
+
+  const galleryItems = Object.entries(t.servicePage.items).map(([slug, item]) => ({
+    image: SERVICE_IMAGES[slug],
+    label: item.name,
+    link: `/services/${slug}`,
+  }))
 
   return (
     <section id="services" className="relative">
@@ -83,12 +77,15 @@ export default function Services() {
       <div className="edge relative py-24 md:py-36">
         <div className="mx-auto max-w-6xl">
           <p className="tech text-fog/40 mb-12 text-[10px] md:mb-16">{t.services.eyebrow}</p>
-          {/* Swipeable on phones, a fixed grid from md up. */}
-          <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pb-0">
-            {t.services.cards.map((card) => (
-              <Card key={card.title} {...card} />
-            ))}
-          </div>
+          <AccordionGallery
+            items={galleryItems}
+            defaultIndex={0}
+            accentColor="#06b6d4"
+            overlayColor="#04070b"
+            textColor="#e6edf3"
+            height={520}
+            radius={20}
+          />
         </div>
       </div>
     </section>
