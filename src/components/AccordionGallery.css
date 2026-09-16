@@ -1,0 +1,123 @@
+.accordion-gallery {
+  display: flex;
+  width: 100%;
+  gap: var(--ag-gap, 10px);
+  box-sizing: border-box;
+}
+
+.accordion-gallery--vertical {
+  flex-direction: column;
+}
+
+.ag-panel {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  cursor: pointer;
+  display: block;
+  text-decoration: none;
+  outline: none;
+  transform-style: preserve-3d;
+  will-change: flex-grow, transform;
+}
+
+.ag-panel:focus-visible {
+  outline: 2px solid var(--ag-accent, #ffffff);
+  outline-offset: 2px;
+}
+
+.ag-panel__frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--ag-overlay, #060010);
+}
+
+.ag-panel__media {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--ag-media-size, 320px);
+  height: var(--ag-media-size, 320px);
+  transform: translate(-50%, -50%);
+}
+
+.ag-panel__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+  filter: grayscale(var(--ag-gray, 0)) brightness(calc(1 - var(--ag-dim, 0) * 0.5));
+  transition: filter 0.3s ease;
+}
+
+.ag-panel__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--ag-overlay, #060010) 85%, transparent) 0%,
+    transparent 55%
+  );
+  pointer-events: none;
+}
+
+.ag-panel__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  z-index: 2;
+}
+
+.ag-panel__bar {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background: var(--ag-accent, #ffffff);
+  border-radius: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
+.ag-panel__text {
+  display: block;
+  color: var(--ag-text, #ffffff);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
+.accordion-gallery--vertical .ag-panel__label {
+  padding: 14px;
+}
+
+@media (max-width: 640px) {
+  .accordion-gallery:not(.accordion-gallery--vertical) {
+    flex-direction: column;
+    height: auto !important;
+  }
+
+  .accordion-gallery:not(.accordion-gallery--vertical) .ag-panel {
+    height: 90px;
+    flex: none;
+    width: 100% !important;
+  }
+
+  .accordion-gallery:not(.accordion-gallery--vertical) .ag-panel--active {
+    height: 260px;
+  }
+}
