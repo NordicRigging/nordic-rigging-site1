@@ -14,9 +14,9 @@ export default function Landing() {
         <Hero />
         <TrustStrip />
         <Services />
-        <Spinlock />
-        <Story />
         <Contact />
+        <Story />
+        <Spinlock />
       </main>
     </>
   )

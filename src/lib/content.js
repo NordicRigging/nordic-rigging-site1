@@ -76,13 +76,78 @@ export const CONTENT = {
       globeSecondary: 'Helsinki'
     },
     servicePage: {
-      titles: { 'mast-work': 'Mastotyöt', 'rope-stock': 'Köysivarasto', maintenance: 'Huolto' },
       eyebrow: 'Palvelut',
+      includesTitle: 'Mitä tähän kuuluu',
+      outcomeTitle: 'Lopputulos',
+      processTitle: 'Näin työ etenee',
+      pricingTitle: 'Hinta',
+      askCta: 'Kysy tästä palvelusta',
+      callCta: 'Soita',
+      back: 'Takaisin etusivulle',
+      otherServices: 'Muut palvelut',
       notFoundEyebrow: 'Ei löytynyt',
       notFoundTitle: 'Ulkona kartalta',
-      placeholder: 'Sivu on vielä paikkamerkki.',
       notFoundBody: 'Tässä osoitteessa ei ole sivua.',
-      back: 'Takaisin'
+      items: {
+        'mast-work': {
+          name: 'Mastotyöt',
+          short: 'Maston nosto ja lasku, vanttien ja köysien vaihto, rikin tarkastus.',
+          lead: 'Masto ylös keväällä ja alas syksyllä ilman säätöä. Vantit vaihdetaan ajoissa ja kiristetään mittarilla oikeaan kireyteen, ei tuntumalla.',
+          includes: [
+            'Maston nosto ja lasku',
+            'Vanttien ja staagien vaihto',
+            'Köysien eli juoksevan rikin vaihto',
+            'Rikin tarkastus ja kireyden mittaus',
+            'Huolto- ja korjaustyöt mastoon ja puomiin'
+          ],
+          outcome: 'Masto suorassa, vantit oikeassa kireydessä ja lukemat kirjattuna seuraavaa kevättä varten.',
+          process: [
+            { title: 'Tarkastus', text: 'Käymme maston, vantit ja helat läpi ja kerromme, mitä kannattaa vaihtaa.' },
+            { title: 'Nosto ja trimmaus', text: 'Masto nostetaan, vantit kiristetään Spinlock Rig-Sense Pro -mittarilla ja lukemat kirjataan.' },
+            { title: 'Yhteenveto', text: 'Saat havainnot ja lukemat veneesi huoltokirjaan.' }
+          ],
+          pricing: '100 € / h sis. alv. Suuremmat rikaustyöt myös urakkahintaan, sovitaan etukäteen.'
+        },
+        'rope-stock': {
+          name: 'Köysivarasto',
+          short: 'Pleissaukset, mittatilausköydet sekä köysien ja rikitarvikkeiden myynti.',
+          lead: 'Oikea köysi oikeaan paikkaan, valmiiksi pleissattuna ja mitoitettuna veneesi mukaan. Varastosta löytyvät laadukkaat köydet ja rikitarvikkeet.',
+          includes: [
+            'Pleissaustyöt: silmukat, jatkokset ja ohennetut köydet',
+            'Köysien mittatilaustyöt veneesi mittojen mukaan',
+            'Fallit, jalukset ja muut juoksevan rikin köydet',
+            'Köysien ja rikitarvikkeiden myynti',
+            'Asennus suoraan veneeseen tarvittaessa'
+          ],
+          outcome: 'Köydet, jotka istuvat helaan, kestävät kauden ja on mitoitettu juuri sinun veneellesi.',
+          process: [
+            { title: 'Mitoitus', text: 'Käydään läpi tarvittavat köydet: pituudet, paksuudet ja venymä.' },
+            { title: 'Valmistus', text: 'Pleissaukset tehdään käsityönä varastollamme.' },
+            { title: 'Toimitus tai asennus', text: 'Noudat valmiit köydet tai asennamme ne veneeseesi.' }
+          ],
+          pricing: '100 € / h sis. alv työstä. Köydet ja tarvikkeet hinnoitellaan erikseen, pyydä tarjous.'
+        },
+        maintenance: {
+          name: 'Huolto',
+          short: 'Kausitelakointi, pesu, vahaus, maalaus ja muut kausihuollot.',
+          lead: 'Vene talveksi turvaan ja keväällä vesille ajallaan. Hoidamme kausihuollot sekä nostot ja siirrot yhteistyössä telakoiden kanssa.',
+          includes: [
+            'Kausitelakointi ja talvisäilytyksen valmistelu',
+            'Pohjan ja kansien pesu',
+            'Vahaus ja kiillotus',
+            'Pohjamaalaus ja muut maalaustyöt',
+            'Muut kausihuollot',
+            'Nostot ja siirrot yhteistyössä telakoiden kanssa'
+          ],
+          outcome: 'Vene säilyttää arvonsa ja on valmis, kun purjehduskausi alkaa.',
+          process: [
+            { title: 'Syksy', text: 'Nosto, pesu ja talvisäilytyksen valmistelu.' },
+            { title: 'Talvi', text: 'Sovitut huollot ja korjaukset säilytyksen aikana.' },
+            { title: 'Kevät', text: 'Vahaus, pohjamaalaus, mastonnosto ja vesillelasku.' }
+          ],
+          pricing: '100 € / h sis. alv. Materiaalit ja telakkamaksut erikseen.'
+        }
+      }
     },
     langToggle: { fi: 'FI', en: 'EN' }
   },
@@ -152,13 +217,78 @@ export const CONTENT = {
       globeSecondary: 'Helsinki'
     },
     servicePage: {
-      titles: { 'mast-work': 'Mast Work', 'rope-stock': 'Rope Stock', maintenance: 'Maintenance' },
       eyebrow: 'Services',
+      includesTitle: "What's included",
+      outcomeTitle: 'Outcome',
+      processTitle: 'How the work goes',
+      pricingTitle: 'Price',
+      askCta: 'Ask about this service',
+      callCta: 'Call',
+      back: 'Back to home',
+      otherServices: 'Other services',
       notFoundEyebrow: 'Not found',
       notFoundTitle: 'Off chart',
-      placeholder: 'Placeholder page.',
       notFoundBody: 'No page at this address.',
-      back: 'Back'
+      items: {
+        'mast-work': {
+          name: 'Mast work',
+          short: 'Stepping and unstepping, shroud and rope replacement, rig inspection.',
+          lead: 'Mast up in spring and down in autumn without fuss. Shrouds are replaced in time and tensioned with a gauge, not by feel.',
+          includes: [
+            'Stepping and unstepping the mast',
+            'Shroud and stay replacement',
+            'Running rigging replacement',
+            'Rig inspection and tension measurement',
+            'Repairs and service on mast and boom'
+          ],
+          outcome: 'Mast straight, shrouds at the right tension, readings logged for next spring.',
+          process: [
+            { title: 'Inspection', text: 'We go through the mast, shrouds and fittings and tell you what is worth replacing.' },
+            { title: 'Step and tune', text: 'The mast goes up, shrouds are tensioned with the Spinlock Rig-Sense Pro and readings are logged.' },
+            { title: 'Summary', text: 'You get the findings and readings for your boat’s maintenance log.' }
+          ],
+          pricing: '€100 / h incl. VAT. Larger rigging jobs also at a fixed price, agreed in advance.'
+        },
+        'rope-stock': {
+          name: 'Rope stock',
+          short: 'Splicing, made-to-measure ropes, rope and rigging hardware sales.',
+          lead: 'The right rope in the right place, spliced and measured for your boat. Quality ropes and rigging hardware in stock.',
+          includes: [
+            'Splicing: eyes, joins and tapered ropes',
+            'Made-to-measure ropes for your boat',
+            'Halyards, sheets and other running rigging',
+            'Rope and rigging hardware sales',
+            'Fitted directly on the boat when needed'
+          ],
+          outcome: 'Ropes that fit the hardware, last the season and are sized for your boat.',
+          process: [
+            { title: 'Sizing', text: 'We go through what is needed: lengths, diameters and stretch.' },
+            { title: 'Making', text: 'Splices are made by hand at our stock.' },
+            { title: 'Pick-up or fitting', text: 'Collect the finished ropes or have us fit them on the boat.' }
+          ],
+          pricing: '€100 / h incl. VAT for the work. Ropes and hardware priced separately, ask for a quote.'
+        },
+        maintenance: {
+          name: 'Maintenance',
+          short: 'Seasonal haul-out, washing, waxing, painting and other seasonal service.',
+          lead: 'Boat safely ashore for winter and back on the water on time. Seasonal service, lifts and moves together with the yards.',
+          includes: [
+            'Seasonal haul-out and winter storage preparation',
+            'Hull and deck washing',
+            'Waxing and polishing',
+            'Antifouling and other painting',
+            'Other seasonal service',
+            'Lifts and moves together with partner yards'
+          ],
+          outcome: 'The boat keeps its value and is ready when the season starts.',
+          process: [
+            { title: 'Autumn', text: 'Haul-out, wash and winter storage preparation.' },
+            { title: 'Winter', text: 'Agreed service and repairs during storage.' },
+            { title: 'Spring', text: 'Waxing, antifouling, mast stepping and launch.' }
+          ],
+          pricing: '€100 / h incl. VAT. Materials and yard fees separately.'
+        }
+      }
     },
     langToggle: { fi: 'FI', en: 'EN' }
   }
