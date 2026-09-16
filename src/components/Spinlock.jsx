@@ -1,6 +1,6 @@
 import { useRef } from 'react'
-import { motion, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion'
-import ScrubVideo from './ScrubVideo'
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { ContainerScroll } from './ContainerScroll'
 import { useLang } from '../lib/LanguageContext'
 
 const TILT_RANGE = 22 // degrees at the window's own edge
@@ -36,7 +36,7 @@ function GaugeWindow() {
   }
 
   return (
-    <div className="relative mx-auto w-[min(78vw,17rem)] shrink-0 sm:w-[min(52vw,19rem)] lg:mx-0">
+    <div className="relative mx-auto w-[min(78vw,17rem)] shrink-0 sm:w-[min(52vw,19rem)] lg:w-[min(34vw,24rem)]">
       <div
         aria-hidden="true"
         className="absolute -inset-3 rounded-[2.25rem] bg-[linear-gradient(155deg,rgba(154,201,245,0.22),rgba(6,182,212,0.05)_40%,rgba(4,7,11,0.4)_100%)] blur-[2px]"
@@ -83,67 +83,52 @@ function GaugeWindow() {
 }
 
 export default function Spinlock() {
-  const ref = useRef(null)
   const { t } = useLang()
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start start', 'end end'],
-  })
-
-  // Ranges span the full timeline — see the note in Hero.jsx.
-  const opacity = useTransform(scrollYProgress, [0, 0.04, 0.2, 0.82, 0.96, 1], [0, 0, 1, 1, 0, 0])
-  const y = useTransform(scrollYProgress, [0, 0.04, 0.2, 1], [40, 40, 0, 0])
-  const ruleScale = useTransform(scrollYProgress, [0, 0.12, 0.4, 1], [0, 0, 1, 1])
 
   return (
-    <section ref={ref} className="relative h-[300vh]" aria-label="Spinlock Rig-Sense Pro">
-      <div className="sticky top-0 h-screen overflow-hidden">
-        <ScrubVideo src="/video/craft.mp4" progress={scrollYProgress} grade="heavy" />
+    <section className="relative" aria-label="Spinlock Rig-Sense Pro">
+      <ContainerScroll
+        titleComponent={
+          <div className="mx-auto max-w-3xl">
+            <p className="tech text-cyan/70 text-[10px]">{t.spinlock.eyebrow}</p>
 
-        <div className="edge relative flex h-full items-center">
-          <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
-            <motion.div style={{ opacity, y }} className="max-w-3xl">
-              <p className="tech text-cyan/70 text-[10px]">{t.spinlock.eyebrow}</p>
+            <span
+              aria-hidden="true"
+              className="bg-slate-line mx-auto mt-8 block h-px w-24"
+            />
 
-              <motion.span
-                aria-hidden="true"
-                style={{ scaleX: ruleScale }}
-                className="bg-slate-line mt-8 block h-px w-24 origin-left"
-              />
+            <h2 className="display text-ice mt-8 text-[clamp(2.5rem,7.2vw,6.2rem)]">
+              {t.spinlock.title}
+            </h2>
 
-              <h2 className="display text-ice mt-8 text-[clamp(2.5rem,7.2vw,6.2rem)]">
-                {t.spinlock.title}
-              </h2>
+            <p className="text-fog mx-auto mt-10 max-w-xl text-base leading-relaxed sm:text-lg">
+              {t.spinlock.body}
+            </p>
 
-              <p className="text-fog mt-10 max-w-xl text-base leading-relaxed sm:text-lg">
-                {t.spinlock.body}
-              </p>
-
-              <div className="mt-12 flex flex-wrap gap-3 sm:gap-4">
-                {/* Placeholder destinations — swap for the real URLs. */}
-                <a
-                  href="#"
-                  onClick={(event) => event.preventDefault()}
-                  className="border-cyan/50 text-ice tech hover:bg-cyan hover:text-abyss border px-7 py-3.5 text-[10px] transition-colors duration-400 hover:border-cyan"
-                >
-                  {t.spinlock.readMore}
-                </a>
-                <a
-                  href="#"
-                  onClick={(event) => event.preventDefault()}
-                  className="border-slate-line text-fog tech hover:border-fog/40 hover:text-ice border px-7 py-3.5 text-[10px] transition-colors duration-400"
-                >
-                  {t.spinlock.watchVideo}
-                </a>
-              </div>
-            </motion.div>
-
-            <motion.div style={{ opacity }}>
-              <GaugeWindow />
-            </motion.div>
+            <div className="mt-12 flex flex-wrap justify-center gap-3 sm:gap-4">
+              {/* Placeholder destinations — swap for the real URLs. */}
+              <a
+                href="#"
+                onClick={(event) => event.preventDefault()}
+                className="border-cyan/50 text-ice tech hover:bg-cyan hover:text-abyss border px-7 py-3.5 text-[10px] transition-colors duration-400 hover:border-cyan"
+              >
+                {t.spinlock.readMore}
+              </a>
+              <a
+                href="#"
+                onClick={(event) => event.preventDefault()}
+                className="border-slate-line text-fog tech hover:border-fog/40 hover:text-ice border px-7 py-3.5 text-[10px] transition-colors duration-400"
+              >
+                {t.spinlock.watchVideo}
+              </a>
+            </div>
           </div>
+        }
+      >
+        <div className="flex h-full w-full items-center justify-center">
+          <GaugeWindow />
         </div>
-      </div>
+      </ContainerScroll>
     </section>
   )
 }
