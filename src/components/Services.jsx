@@ -23,8 +23,12 @@ const WORD_IMAGES = ['/images/services/kinetic-1.jpg', '/images/services/kinetic
  * independently-tuned timings drifting apart.
  */
 function WordBackground({ progress, from, to, src }) {
-  const hit = from + 0.03
-  const release = to - 0.07
+  // Deliberately slower than KineticWord's own snap-into-focus timing (a
+  // third of the window each way) so the reveal itself reads clearly while
+  // scrolling, instead of flashing open before anyone can see it happen.
+  const span = to - from
+  const hit = from + span / 3
+  const release = to - span / 3
 
   // Ranges span the full timeline — see the note in Hero.jsx.
   const expand = useTransform(progress, [0, from, hit, release, to, 1], [0, 0, 1, 1, 0, 0])
