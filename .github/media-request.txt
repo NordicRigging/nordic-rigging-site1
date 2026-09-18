@@ -36,3 +36,4 @@ r14-blueprint-raw.mp4 https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxyw
 r14-blueprint-v2-raw.mp4 https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3PEoaAA/hf_20260913_162118_c49062e6-ee55-42b2-b93a-a87e50f16343.mp4
 r14-blueprint-v3-raw.mp4 https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3PEoaAA/hf_20260913_163508_ce60a877-d6eb-4fa5-939b-28f8e5c4dda3.mp4
 r14-blueprint-v4-raw.mp4 https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3PEoaAA/hf_20260913_164329_c89191ba-3d5e-40e9-b557-5bc8983c2138.mp4
+kinetic-3-outpaint-16x9.png https://d8j0ntlcm91z4.cloudfront.net/user_39bqYLXNd4dWWxywCCyr3PEoaAA/hf_20260918_215051_2741b767-e98c-4294-b032-205c805dcf4f.png
