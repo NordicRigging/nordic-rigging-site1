@@ -76,10 +76,15 @@ export default function Contact() {
           the text sitting over it (headings, legend, tab labels) has no
           background of its own to mask pin labels/graticule lines showing
           through - fades in from the left, where the globe should stay
-          clearest, to fully opaque under the text column. */}
+          clearest, to fully opaque under the text column. Stretched past the
+          section's own top/bottom at sm+ to match how far the globe itself
+          bleeds there (up to ~320px/~223px, see Globe's aspect-square box) -
+          otherwise the globe reads unscrimmed above the section edge and
+          scrimmed below it, a hard seam right at the boundary. No bleed
+          below sm, so no stretch there either. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[5] bg-[linear-gradient(90deg,transparent_0%,rgba(4,7,11,0.55)_38%,rgba(4,7,11,0.86)_60%,rgba(4,7,11,0.86)_100%)] sm:bg-[linear-gradient(90deg,transparent_0%,rgba(4,7,11,0.15)_22%,rgba(4,7,11,0.82)_46%,rgba(4,7,11,0.9)_100%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 bottom-0 z-[5] bg-[linear-gradient(90deg,transparent_0%,rgba(4,7,11,0.55)_38%,rgba(4,7,11,0.86)_60%,rgba(4,7,11,0.86)_100%)] sm:-top-[24rem] sm:-bottom-[18rem] sm:bg-[linear-gradient(90deg,transparent_0%,rgba(4,7,11,0.15)_22%,rgba(4,7,11,0.82)_46%,rgba(4,7,11,0.9)_100%)]"
       />
 
       <div className="relative z-10 mx-auto max-w-4xl">
