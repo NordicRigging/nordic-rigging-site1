@@ -13,8 +13,7 @@ const WINDOWS = [
   { from: 0.67, to: 0.97 },
 ]
 
-// Placeholder only - ask the owner for a real photo per word (mitattu /
-// viritetty / luotettu) before this ships.
+// Positionally paired with t.services.kinetic (language-independent).
 const WORD_IMAGES = ['/images/services/kinetic-1.jpg', '/images/services/kinetic-2.jpg', '/images/services/kinetic-3.jpg']
 
 /**
