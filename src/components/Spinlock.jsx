@@ -1,6 +1,6 @@
 import { useRef } from 'react'
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { ContainerScroll } from './ContainerScroll'
+import { motion, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion'
+import { Card } from './ContainerScroll'
 import { useLang } from '../lib/LanguageContext'
 
 const TILT_RANGE = 22 // degrees at the window's own edge
@@ -36,7 +36,7 @@ function GaugeWindow() {
   }
 
   return (
-    <div className="relative mx-auto w-[min(78vw,17rem)] shrink-0 sm:w-[min(52vw,19rem)] lg:w-[min(34vw,24rem)]">
+    <div className="relative w-[min(68vw,15rem)] shrink-0 sm:w-[min(34vw,17rem)] lg:w-[min(20vw,19rem)]">
       <div
         aria-hidden="true"
         className="absolute -inset-3 rounded-[2.25rem] bg-[linear-gradient(155deg,rgba(154,201,245,0.22),rgba(6,182,212,0.05)_40%,rgba(4,7,11,0.4)_100%)] blur-[2px]"
@@ -83,29 +83,69 @@ function GaugeWindow() {
 }
 
 export default function Spinlock() {
+  const ref = useRef(null)
   const { t } = useLang()
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start start', 'end end'],
+  })
+
+  // Entry = tilted/closed, fully scrolled through = flat/open - the device
+  // is a receded background element, not the focal point, so it settles
+  // rather than dominating.
+  const rotate = useTransform(scrollYProgress, [0, 1], [20, 0])
+  const scale = useTransform(scrollYProgress, [0, 1], [1.05, 1])
+
+  // Ranges span the full timeline — see the note in Hero.jsx.
+  const opacity = useTransform(scrollYProgress, [0, 0.06, 0.22, 0.82, 0.96, 1], [0, 0, 1, 1, 0, 0])
+  const y = useTransform(scrollYProgress, [0, 0.06, 0.22, 1], [40, 40, 0, 0])
+  const ruleScale = useTransform(scrollYProgress, [0, 0.14, 0.4, 1], [0, 0, 1, 1])
 
   return (
-    <section className="relative" aria-label="Spinlock Rig-Sense Pro">
-      <ContainerScroll
-        titleComponent={
-          <div className="mx-auto max-w-3xl">
+    <section ref={ref} className="relative h-[230vh]" aria-label="Spinlock Rig-Sense Pro">
+      <div className="sticky top-0 h-screen overflow-hidden">
+        {/* iPad: a receded background element, left of center, behind
+            everything else - not the focal point, just a moody 3D presence.
+            Sits off-center within a full-width perspective context so it
+            reads as angled toward the middle rather than front-on. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-0 hidden sm:block [perspective:1600px]"
+        >
+          <div
+            style={{ transformStyle: 'preserve-3d' }}
+            className="absolute top-0 left-0 h-full w-[58%] opacity-30"
+          >
+            <div className="flex h-full items-center justify-center">
+              <Card rotate={rotate} scale={scale}>
+                {null}
+              </Card>
+            </div>
+          </div>
+        </div>
+
+        <div className="edge relative z-10 flex h-full items-center">
+          <motion.div style={{ opacity, y }} className="mx-auto max-w-4xl">
             <p className="tech text-cyan/70 text-[10px]">{t.spinlock.eyebrow}</p>
 
-            <span
+            <motion.span
               aria-hidden="true"
-              className="bg-slate-line mx-auto mt-8 block h-px w-24"
+              style={{ scaleX: ruleScale }}
+              className="bg-slate-line mt-8 block h-px w-24 origin-left"
             />
 
             <h2 className="display text-ice mt-8 text-[clamp(2.5rem,7.2vw,6.2rem)]">
               {t.spinlock.title}
             </h2>
 
-            <p className="text-fog mx-auto mt-10 max-w-xl text-base leading-relaxed sm:text-lg">
-              {t.spinlock.body}
-            </p>
+            <div className="mt-12 flex flex-wrap items-center gap-8 sm:gap-10">
+              <p className="text-fog max-w-xs text-base leading-relaxed sm:text-lg">
+                {t.spinlock.body}
+              </p>
+              <GaugeWindow />
+            </div>
 
-            <div className="mt-12 flex flex-wrap justify-center gap-3 sm:gap-4">
+            <div className="mt-12 flex flex-wrap gap-3 sm:gap-4">
               {/* Placeholder destinations — swap for the real URLs. */}
               <a
                 href="#"
@@ -122,13 +162,9 @@ export default function Spinlock() {
                 {t.spinlock.watchVideo}
               </a>
             </div>
-          </div>
-        }
-      >
-        <div className="flex h-full w-full items-center justify-center">
-          <GaugeWindow />
+          </motion.div>
         </div>
-      </ContainerScroll>
+      </div>
     </section>
   )
 }

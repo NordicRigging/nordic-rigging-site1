@@ -15,8 +15,8 @@ export default function Landing() {
         <TrustStrip />
         <Services />
         <Contact />
-        <Story />
         <Spinlock />
+        <Story />
       </main>
     </>
   )
