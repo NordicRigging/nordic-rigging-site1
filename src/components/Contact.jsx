@@ -87,7 +87,7 @@ export default function Contact() {
         className="pointer-events-none absolute inset-x-0 top-0 bottom-0 z-[5] bg-[linear-gradient(90deg,transparent_0%,rgba(4,7,11,0.55)_38%,rgba(4,7,11,0.86)_60%,rgba(4,7,11,0.86)_100%)] sm:-top-[24rem] sm:-bottom-[18rem] sm:bg-[linear-gradient(90deg,transparent_0%,rgba(4,7,11,0.15)_22%,rgba(4,7,11,0.82)_46%,rgba(4,7,11,0.9)_100%)]"
       />
 
-      <div className="relative z-10 mx-auto max-w-4xl">
+      <div className="relative z-10 mx-auto max-w-4xl md:ml-[8%] md:mr-auto">
         <h2 className="display text-ice text-[clamp(2.2rem,6vw,4.4rem)]">{t.contact.title}</h2>
 
         <fieldset className="mt-10 md:mt-14">

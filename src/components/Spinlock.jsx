@@ -15,7 +15,7 @@ const TILT_RANGE = 22 // degrees at the window's own edge
  * cursor rather than spinning on its own - springs back to resting flat once
  * the pointer leaves.
  */
-function GaugeWindow() {
+function GaugeWindow({ className = '' }) {
   const boxRef = useRef(null)
   const px = useMotionValue(0)
   const py = useMotionValue(0)
@@ -36,7 +36,9 @@ function GaugeWindow() {
   }
 
   return (
-    <div className="relative w-[min(68vw,15rem)] shrink-0 sm:w-[min(34vw,17rem)] lg:w-[min(20vw,19rem)]">
+    <div
+      className={`relative w-[min(68vw,15rem)] shrink-0 sm:w-[min(34vw,17rem)] lg:w-[min(20vw,19rem)] ${className}`}
+    >
       <div
         aria-hidden="true"
         className="absolute -inset-3 rounded-[2.25rem] bg-[linear-gradient(155deg,rgba(154,201,245,0.22),rgba(6,182,212,0.05)_40%,rgba(4,7,11,0.4)_100%)] blur-[2px]"
@@ -94,7 +96,9 @@ export default function Spinlock() {
   // is a receded background element, not the focal point, so it settles
   // rather than dominating.
   const rotate = useTransform(scrollYProgress, [0, 1], [20, 0])
-  const scale = useTransform(scrollYProgress, [0, 1], [1.05, 1])
+  // Card itself is sized for a foreground hero (max-w-5xl, h-40rem) - scaled
+  // way down since here it's a receded backdrop, not the focal point.
+  const scale = useTransform(scrollYProgress, [0, 1], [0.58, 0.55])
 
   // Ranges span the full timeline — see the note in Hero.jsx.
   const opacity = useTransform(scrollYProgress, [0, 0.06, 0.22, 0.82, 0.96, 1], [0, 0, 1, 1, 0, 0])
@@ -112,15 +116,17 @@ export default function Spinlock() {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-0 hidden sm:block [perspective:1600px]"
         >
+          {/* preserve-3d has to carry all the way from the perspective div to
+              Card's own rotateX - an extra plain (flat) wrapper in between
+              flattens the 3D context, which is what was collapsing the tilt
+              to a flat rotation and letting the layer's clip go wrong. */}
           <div
             style={{ transformStyle: 'preserve-3d' }}
-            className="absolute top-0 left-0 h-full w-[58%] opacity-30"
+            className="absolute top-0 left-0 flex h-full w-[58%] items-center justify-center opacity-30"
           >
-            <div className="flex h-full items-center justify-center">
-              <Card rotate={rotate} scale={scale}>
-                {null}
-              </Card>
-            </div>
+            <Card rotate={rotate} scale={scale}>
+              {null}
+            </Card>
           </div>
         </div>
 
@@ -134,18 +140,18 @@ export default function Spinlock() {
               className="bg-slate-line mt-8 block h-px w-24 origin-left"
             />
 
-            <h2 className="display text-ice mt-8 text-[clamp(2.5rem,7.2vw,6.2rem)]">
+            <h2 className="display text-ice mt-6 text-[clamp(2.2rem,5.6vw,4.6rem)]">
               {t.spinlock.title}
             </h2>
 
-            <div className="mt-12 flex flex-wrap items-center gap-8 sm:gap-10">
+            <div className="mt-8 flex flex-wrap items-center gap-8 sm:gap-10">
               <p className="text-fog max-w-xs text-base leading-relaxed sm:text-lg">
                 {t.spinlock.body}
               </p>
-              <GaugeWindow />
+              <GaugeWindow className="ml-auto" />
             </div>
 
-            <div className="mt-12 flex flex-wrap gap-3 sm:gap-4">
+            <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
               {/* Placeholder destinations — swap for the real URLs. */}
               <a
                 href="#"
