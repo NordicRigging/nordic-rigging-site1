@@ -59,10 +59,14 @@
 .ag-panel__overlay {
   position: absolute;
   inset: 0;
+  /* Flat (not fading) from the bottom up to 60% - a deliberate scrim band
+     for the label, not just a fade - then releases to clear over the next
+     26%, so the transition itself reads as designed rather than abrupt. */
   background: linear-gradient(
     to top,
-    color-mix(in srgb, var(--ag-overlay, #060010) 85%, transparent) 0%,
-    transparent 55%
+    color-mix(in srgb, var(--ag-overlay, #060010) 92%, transparent) 0%,
+    color-mix(in srgb, var(--ag-overlay, #060010) 90%, transparent) 60%,
+    transparent 86%
   );
   pointer-events: none;
 }
