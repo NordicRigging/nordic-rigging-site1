@@ -37,6 +37,7 @@ const AccordionGallery = ({
   const mediaRefs = useRef([]);
   const barRefs = useRef([]);
   const textRefs = useRef([]);
+  const descRefs = useRef([]);
   const tlRef = useRef(null);
   const firstRunRef = useRef(true);
   const mediaSizeRef = useRef(320);
@@ -69,6 +70,7 @@ const AccordionGallery = ({
         const media = mediaRefs.current[i];
         const bar = barRefs.current[i];
         const text = textRefs.current[i];
+        const desc = descRefs.current[i];
 
         const rot = isActive ? 0 : i < active ? tilt : -tilt;
         const rotProp = vertical ? { rotateX: -rot } : { rotateY: rot };
@@ -96,10 +98,11 @@ const AccordionGallery = ({
         }
 
         if (showLabels && bar && text) {
+          const targets = [bar, text, desc].filter(Boolean);
           if (isActive) {
-            tl.to([bar, text], { opacity: 1, x: 0, duration: dur, ease, stagger: prefersReduced ? 0 : stagger }, 0);
+            tl.to(targets, { opacity: 1, x: 0, duration: dur, ease, stagger: prefersReduced ? 0 : stagger }, 0);
           } else {
-            tl.to([bar, text], { opacity: 0, x: -14, duration: dur * 0.6, ease }, 0);
+            tl.to(targets, { opacity: 0, x: -14, duration: dur * 0.6, ease }, 0);
           }
         }
       });
@@ -218,10 +221,17 @@ const AccordionGallery = ({
             </span>
             {showLabels && (
               <span className="ag-panel__label" aria-hidden="true">
-                <span className="ag-panel__bar" ref={el => (barRefs.current[i] = el)} />
-                <span className="ag-panel__text" ref={el => (textRefs.current[i] = el)}>
-                  {item.label}
+                <span className="ag-panel__heading">
+                  <span className="ag-panel__bar" ref={el => (barRefs.current[i] = el)} />
+                  <span className="ag-panel__text" ref={el => (textRefs.current[i] = el)}>
+                    {item.label}
+                  </span>
                 </span>
+                {item.description && (
+                  <span className="ag-panel__desc" ref={el => (descRefs.current[i] = el)}>
+                    {item.description}
+                  </span>
+                )}
               </span>
             )}
           </Tag>

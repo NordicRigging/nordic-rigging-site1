@@ -97,6 +97,7 @@ export default function Services() {
   const galleryItems = Object.entries(t.servicePage.items).map(([slug, item]) => ({
     image: SERVICE_IMAGES[slug],
     label: item.name,
+    description: item.short,
     link: `/services/${slug}`,
   }))
 

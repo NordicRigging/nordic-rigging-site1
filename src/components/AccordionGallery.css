@@ -70,21 +70,36 @@
 }
 
 /* Covers a ~1px hard compositing seam this browser renders at a fixed
-   height across every panel, unrelated to this component's own markup -
-   not a real design element. It's a hard step (brighter above, darker
-   below), not a soft edge, so a symmetric blur wouldn't cancel it - only
-   the brighter side needs darkening, down to meet the darker side. The
-   band's own bottom edge sits exactly on the seam (measured at 53.8% down
-   the panel) and only extends upward. */
+   height across every panel (measured at 53.8% down), unrelated to this
+   component's own markup - not a real design element. Its raw size varies
+   a lot - measured 9 to 56 units depending on active state and which way
+   the panel is tilted - so a mask tuned to cancel one exactly overshoots
+   or undershoots the others; a backdrop-filter blur strip tried here to
+   actually blend the two sides together (rather than just darken them)
+   had no effect at all, even at a wide radius, so the seam is introduced
+   after whatever stage that samples from. Anchoring peak opacity flush
+   with a box edge was the earlier mistake: that edge is itself a 0-to-peak
+   jump in zero pixels, so on a small seam it became a bigger fake one.
+   Fading in below the seam too, not just above, means peak strength is
+   always reached gradually, proportionally dampening whatever step is
+   actually there instead of trying to match one exact size. The 65% peak
+   is a deliberate compromise, not a full fix: strong enough to keep the
+   mild/common cases clean, but the rare worst case (inactive + one
+   specific tilt direction) still shows a soft, much-reduced version of
+   the seam rather than none at all - going stronger closes that gap but
+   reads as an obvious dark band on brighter, flatter photos, which is
+   worse. */
 .ag-panel__seam-mask {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 46.2%;
-  height: 40px;
+  bottom: calc(46.2% - 16px);
+  height: 56px;
   background: linear-gradient(
     to top,
-    color-mix(in srgb, var(--ag-overlay, #060010) 45%, transparent) 0%,
+    transparent 0%,
+    color-mix(in srgb, var(--ag-overlay, #060010) 65%, transparent) 22%,
+    color-mix(in srgb, var(--ag-overlay, #060010) 65%, transparent) 36%,
     transparent 100%
   );
   pointer-events: none;
@@ -96,10 +111,18 @@
   right: 0;
   bottom: 0;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
   padding: 18px;
   z-index: 2;
+}
+
+.ag-panel__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
 }
 
 .ag-panel__bar {
@@ -124,6 +147,22 @@
   transform: translateX(-14px);
 }
 
+.ag-panel__desc {
+  display: -webkit-box;
+  max-width: 34ch;
+  /* Dimmer than the bold name, but via color (not opacity) - opacity is
+     already driven by GSAP for the show/hide fade. */
+  color: color-mix(in srgb, var(--ag-text, #ffffff) 75%, transparent);
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateX(-14px);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
 .accordion-gallery--vertical .ag-panel__label {
   padding: 14px;
 }
@@ -142,5 +181,23 @@
 
   .accordion-gallery:not(.accordion-gallery--vertical) .ag-panel--active {
     height: 260px;
+  }
+
+  /* Measured directly at this breakpoint's own panel heights (90px/260px,
+     vs. 520px on desktop): the seam is gone, at both. It's tied to a fixed
+     pixel height in the page's own compositing, not a percentage of the
+     panel, so it doesn't land inside these much shorter panels at all.
+     The mask has nothing to cover here, and at 90px it would swallow most
+     of the card, so it's turned off rather than rescaled. */
+  .ag-panel__seam-mask {
+    display: none;
+  }
+
+  /* At 90px, the inactive card is barely tall enough for the name alone -
+     the description would either get clipped or (reserved at opacity:0 for
+     the GSAP fade) push the name row off its usual spot. It only shows once
+     the card expands to 260px on activation. */
+  .accordion-gallery:not(.accordion-gallery--vertical) .ag-panel:not(.ag-panel--active) .ag-panel__desc {
+    display: none;
   }
 }
