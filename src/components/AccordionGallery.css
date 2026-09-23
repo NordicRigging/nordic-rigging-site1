@@ -120,6 +120,26 @@
   pointer-events: none;
 }
 
+/* The seam-mask above softens the compositing seam but, confirmed against
+   the real browser it originally came from, doesn't make it disappear -
+   four attempts at hiding it have not held up outside this component's own
+   test environment. This owns the spot instead of fighting it: a real
+   accent line, exactly on the seam's own measured position, reframes it as
+   the deliberate boundary between the photo and the text area below. */
+.ag-panel__divider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 46.15%;
+  height: 2px;
+  background: var(--ag-accent, #ffffff);
+  box-shadow:
+    0 0 14px 1px color-mix(in srgb, var(--ag-accent, #ffffff) 75%, transparent),
+    0 0 4px color-mix(in srgb, var(--ag-accent, #ffffff) 95%, transparent);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
 .ag-panel__label {
   position: absolute;
   left: 0;

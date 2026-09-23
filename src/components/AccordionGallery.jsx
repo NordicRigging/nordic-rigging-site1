@@ -227,6 +227,7 @@ const AccordionGallery = ({
               </span>
               <span className="ag-panel__overlay" aria-hidden="true" />
               <span className="ag-panel__seam-mask" aria-hidden="true" />
+              <span className="ag-panel__divider" aria-hidden="true" />
             </span>
             {showLabels && (
               <span className="ag-panel__label" aria-hidden="true">
