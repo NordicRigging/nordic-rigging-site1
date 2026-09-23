@@ -14,7 +14,7 @@ export default function Story() {
   const { t } = useLang()
 
   return (
-    <section className="edge relative py-40 md:py-64">
+    <section id="story" className="edge relative py-40 md:py-64">
       <div className="mx-auto max-w-4xl">
         <motion.p
           initial={{ opacity: 0 }}

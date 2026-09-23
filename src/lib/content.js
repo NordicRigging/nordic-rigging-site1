@@ -17,6 +17,15 @@ export const CONTENT = {
       description: 'Purjeveneesi paras miehistö maalla. Mastotyöt, köysivarasto ja huolto Turusta käsin, koko Saaristomerellä.'
     },
     hud: { headingLabel: 'SUUNTA' },
+    nav: {
+      home: 'Etusivu',
+      services: 'Palvelut',
+      contact: 'Ota yhteyttä',
+      about: 'Meistä',
+      menu: 'Valikko',
+      close: 'Sulje',
+      language: 'Kieli'
+    },
     hero: {
       wordmarkSr: 'Nordic Rigging',
       tagline: 'Purjeveneesi paras miehistö maalla.',
@@ -154,6 +163,15 @@ export const CONTENT = {
       description: "Your sailboat's best crew on land. Mast work, rope stock and maintenance out of Turku, across the archipelago."
     },
     hud: { headingLabel: 'HDG' },
+    nav: {
+      home: 'Home',
+      services: 'Services',
+      contact: 'Contact',
+      about: 'About',
+      menu: 'Menu',
+      close: 'Close',
+      language: 'Language'
+    },
     hero: {
       wordmarkSr: 'Nordic Rigging',
       tagline: "Your Sailboat's Best Crew on Land.",
