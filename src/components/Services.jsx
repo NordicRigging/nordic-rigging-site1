@@ -13,6 +13,14 @@ const WINDOWS = [
   { from: 0.67, to: 0.97 },
 ]
 
+// Same windows, but the last one's `to` reaches the end of the pinned
+// range - used only to decide how long WordBackground stays mounted, so
+// the last word's image is still there (held open, see isLast below)
+// right up to where the section itself un-pins, instead of unmounting at
+// the same 0.97 mark KineticWord uses for the text. KineticWord keeps
+// using WINDOWS unchanged - this only affects the background.
+const BG_WINDOWS = [WINDOWS[0], WINDOWS[1], { from: WINDOWS[2].from, to: 1 }]
+
 // Positionally paired with t.services.kinetic (language-independent).
 const WORD_IMAGES = ['/images/services/kinetic-1.jpg', '/images/services/kinetic-2.jpg', '/images/services/kinetic-3.jpg']
 
@@ -22,7 +30,7 @@ const WORD_IMAGES = ['/images/services/kinetic-1.jpg', '/images/services/kinetic
  * for its text, so the two are synced by construction rather than by two
  * independently-tuned timings drifting apart.
  */
-function WordBackground({ progress, from, to, src }) {
+function WordBackground({ progress, from, to, src, isLast = false }) {
   // Deliberately slower than KineticWord's own snap-into-focus timing (a
   // third of the window each way) so the reveal itself reads clearly while
   // scrolling, instead of flashing open before anyone can see it happen.
@@ -30,8 +38,15 @@ function WordBackground({ progress, from, to, src }) {
   const hit = from + span / 3
   const release = to - span / 3
 
+  // The last word has nothing after it to hand off to - closing it back
+  // down just to reopen the next thing was only ever needed to clear the
+  // stage for word N+1. Here it holds at full expansion once reached; the
+  // section un-pinning and scrolling away is what takes it off screen.
+  const points = isLast ? [0, from, hit, 1] : [0, from, hit, release, to, 1]
+  const values = isLast ? [0, 0, 1, 1] : [0, 0, 1, 1, 0, 0]
+
   // Ranges span the full timeline — see the note in Hero.jsx.
-  const expand = useTransform(progress, [0, from, hit, release, to, 1], [0, 0, 1, 1, 0, 0])
+  const expand = useTransform(progress, points, values)
 
   return (
     <ScrollExpand
@@ -90,7 +105,7 @@ export default function Services() {
   // one whose window we're actually in.
   const [activeWord, setActiveWord] = useState(-1)
   useMotionValueEvent(scrollYProgress, 'change', (v) => {
-    const i = WINDOWS.findIndex((w) => v >= w.from && v <= w.to)
+    const i = BG_WINDOWS.findIndex((w) => v >= w.from && v <= w.to)
     setActiveWord(i)
   })
 
@@ -111,9 +126,10 @@ export default function Services() {
             <WordBackground
               key={activeWord}
               progress={scrollYProgress}
-              from={WINDOWS[activeWord].from}
-              to={WINDOWS[activeWord].to}
+              from={BG_WINDOWS[activeWord].from}
+              to={BG_WINDOWS[activeWord].to}
               src={WORD_IMAGES[activeWord]}
+              isLast={activeWord === BG_WINDOWS.length - 1}
             />
           )}
           <div className="edge relative flex h-full items-center justify-center">
