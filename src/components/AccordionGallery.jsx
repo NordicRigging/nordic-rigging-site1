@@ -30,6 +30,9 @@ const AccordionGallery = ({
   trigger = 'hover',
   showLabels = true,
   grayscale = true,
+  eyebrowLabel = '',
+  outcomeLabel = '',
+  ctaLabel = '',
   className = ''
 }) => {
   const rootRef = useRef(null);
@@ -38,6 +41,9 @@ const AccordionGallery = ({
   const barRefs = useRef([]);
   const textRefs = useRef([]);
   const descRefs = useRef([]);
+  const eyebrowRefs = useRef([]);
+  const outcomeRefs = useRef([]);
+  const ctaRefs = useRef([]);
   const tlRef = useRef(null);
   const firstRunRef = useRef(true);
   const mediaSizeRef = useRef(320);
@@ -71,6 +77,9 @@ const AccordionGallery = ({
         const bar = barRefs.current[i];
         const text = textRefs.current[i];
         const desc = descRefs.current[i];
+        const eyebrow = eyebrowRefs.current[i];
+        const outcome = outcomeRefs.current[i];
+        const cta = ctaRefs.current[i];
 
         const rot = isActive ? 0 : i < active ? tilt : -tilt;
         const rotProp = vertical ? { rotateX: -rot } : { rotateY: rot };
@@ -98,7 +107,7 @@ const AccordionGallery = ({
         }
 
         if (showLabels && bar && text) {
-          const targets = [bar, text, desc].filter(Boolean);
+          const targets = [eyebrow, bar, text, desc, outcome, cta].filter(Boolean);
           if (isActive) {
             tl.to(targets, { opacity: 1, x: 0, duration: dur, ease, stagger: prefersReduced ? 0 : stagger }, 0);
           } else {
@@ -221,6 +230,11 @@ const AccordionGallery = ({
             </span>
             {showLabels && (
               <span className="ag-panel__label" aria-hidden="true">
+                {eyebrowLabel && (
+                  <span className="ag-panel__eyebrow" ref={el => (eyebrowRefs.current[i] = el)}>
+                    {String(i + 1).padStart(2, '0')} · {eyebrowLabel}
+                  </span>
+                )}
                 <span className="ag-panel__heading">
                   <span className="ag-panel__bar" ref={el => (barRefs.current[i] = el)} />
                   <span className="ag-panel__text" ref={el => (textRefs.current[i] = el)}>
@@ -230,6 +244,16 @@ const AccordionGallery = ({
                 {item.description && (
                   <span className="ag-panel__desc" ref={el => (descRefs.current[i] = el)}>
                     {item.description}
+                  </span>
+                )}
+                {item.outcome && outcomeLabel && (
+                  <span className="ag-panel__outcome" ref={el => (outcomeRefs.current[i] = el)}>
+                    <strong>{outcomeLabel}:</strong> {item.outcome}
+                  </span>
+                )}
+                {ctaLabel && (
+                  <span className="ag-panel__cta" ref={el => (ctaRefs.current[i] = el)}>
+                    {ctaLabel}
                   </span>
                 )}
               </span>

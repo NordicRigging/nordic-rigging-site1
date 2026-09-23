@@ -67,6 +67,21 @@
     transparent 16%
   );
   pointer-events: none;
+  transition: background 0.3s ease;
+}
+
+/* Active panels carry a lot more copy (eyebrow, outcome box, CTA), not just
+   the name - the scrim has to reach much further up to keep all of it
+   readable over the photo. Inactive panels keep the minimal version above
+   since they only ever show the name. */
+.ag-panel--active .ag-panel__overlay {
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--ag-overlay, #060010) 96%, transparent) 0%,
+    color-mix(in srgb, var(--ag-overlay, #060010) 80%, transparent) 42%,
+    color-mix(in srgb, var(--ag-overlay, #060010) 20%, transparent) 68%,
+    transparent 88%
+  );
 }
 
 /* Covers a ~1px hard compositing seam this browser renders at a fixed
@@ -113,9 +128,21 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 10px;
   padding: 18px;
   z-index: 2;
+}
+
+.ag-panel__eyebrow {
+  display: block;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ag-accent, #ffffff);
+  opacity: 0;
+  transform: translateX(-14px);
 }
 
 .ag-panel__heading {
@@ -163,6 +190,42 @@
   overflow: hidden;
 }
 
+.ag-panel__outcome {
+  display: -webkit-box;
+  max-width: 42ch;
+  padding: 10px 14px;
+  border-left: 3px solid var(--ag-accent, #ffffff);
+  background: color-mix(in srgb, var(--ag-accent, #ffffff) 12%, transparent);
+  border-radius: 0 8px 8px 0;
+  color: var(--ag-text, #ffffff);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  opacity: 0;
+  transform: translateX(-14px);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.ag-panel__outcome strong {
+  font-weight: 700;
+}
+
+.ag-panel__cta {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 2px;
+  padding: 11px 22px;
+  border-radius: 999px;
+  background: var(--ag-accent, #ffffff);
+  color: var(--ag-overlay, #060010);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
 .accordion-gallery--vertical .ag-panel__label {
   padding: 14px;
 }
@@ -179,8 +242,11 @@
     width: 100% !important;
   }
 
+  /* Taller than before (260px) - the active card now carries an eyebrow,
+     outcome box and CTA button on top of the name and description, and
+     260px isn't enough room for all of it without clipping. */
   .accordion-gallery:not(.accordion-gallery--vertical) .ag-panel--active {
-    height: 260px;
+    height: 440px;
   }
 
   /* Measured directly at this breakpoint's own panel heights (90px/260px,

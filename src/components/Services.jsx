@@ -98,6 +98,7 @@ export default function Services() {
     image: SERVICE_IMAGES[slug],
     label: item.name,
     description: item.short,
+    outcome: item.outcome,
     link: `/services/${slug}`,
   }))
 
@@ -141,6 +142,9 @@ export default function Services() {
             textColor="#e6edf3"
             height={520}
             radius={20}
+            eyebrowLabel={t.services.eyebrow}
+            outcomeLabel={t.servicePage.outcomeTitle}
+            ctaLabel={t.servicePage.readMore}
           />
         </div>
       </div>
