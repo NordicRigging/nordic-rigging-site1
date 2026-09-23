@@ -104,17 +104,26 @@
    the seam rather than none at all - going stronger closes that gap but
    reads as an obvious dark band on brighter, flatter photos, which is
    worse. */
+/* The bar sitting on top of this is fully opaque, so its own color is
+   identical everywhere - confirmed by reading the computed style on all
+   three cards. What varies is what's immediately above it: Huolto's photo
+   has a bright, near-white hull right at this row, so the same 65% peak
+   reached in 40px there is a much bigger per-pixel jump than on the two
+   darker/busier photos, reading as harsher even though nothing about the
+   mask itself differs. Stretching the taper above the seam to 90px keeps
+   the same peak strength but roughly halves that jump per row, without
+   touching the below-seam reach that was already tuned separately. */
 .ag-panel__seam-mask {
   position: absolute;
   left: 0;
   right: 0;
   bottom: calc(46.2% - 16px);
-  height: 56px;
+  height: 106px;
   background: linear-gradient(
     to top,
     transparent 0%,
-    color-mix(in srgb, var(--ag-overlay, #060010) 65%, transparent) 22%,
-    color-mix(in srgb, var(--ag-overlay, #060010) 65%, transparent) 36%,
+    color-mix(in srgb, var(--ag-overlay, #060010) 65%, transparent) 11%,
+    color-mix(in srgb, var(--ag-overlay, #060010) 65%, transparent) 19%,
     transparent 100%
   );
   pointer-events: none;
@@ -212,6 +221,14 @@
 .ag-panel__outcome {
   display: -webkit-box;
   max-width: 42ch;
+  /* Fixed, not content-driven - the outcome text runs 2 lines on some
+     services and 3 on others, and since this whole label block is
+     bottom-anchored, a shorter box here just meant more of the eyebrow
+     and name sat lower on that card than on the others. Height is sized
+     for the 3-line case (line-clamp is the safety net if it's ever
+     longer still), so every card reserves the same space regardless of
+     its own outcome text length. */
+  height: 76px;
   padding: 10px 14px;
   border-left: 3px solid var(--ag-accent, #ffffff);
   background: color-mix(in srgb, var(--ag-accent, #ffffff) 12%, transparent);
