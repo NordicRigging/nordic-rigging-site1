@@ -4,6 +4,7 @@ import SmoothScroll from './components/SmoothScroll'
 import Cursor from './components/Cursor'
 import Grain from './components/Grain'
 import Nav from './components/Nav'
+import Footer from './components/Footer'
 import Landing from './routes/Landing'
 import ServicePlaceholder from './routes/ServicePlaceholder'
 import { LanguageProvider } from './lib/LanguageContext'
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="/services/:slug" element={<ServicePlaceholder />} />
             <Route path="*" element={<ServicePlaceholder />} />
           </Routes>
+          <Footer />
         </div>
       </SmoothScroll>
     </LanguageProvider>

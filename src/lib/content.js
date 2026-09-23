@@ -1,4 +1,6 @@
 export const CONTACT = {
+  company: 'Nordic Rigging Company Oy',
+  businessId: '3540981-8',
   phoneHref: 'tel:+358505487766',
   phoneIntl: '+358 50 548 7766',
   email: 'sales@nordicrigging.fi',
@@ -154,6 +156,16 @@ export const CONTENT = {
         }
       }
     },
+    footer: {
+      tagline: 'Purjeveneesi paras miehistö maalla.',
+      servicesCol: 'Palvelut',
+      yardsLink: 'Telakoille',
+      contactCol: 'Yhteystiedot',
+      companyCol: 'Yritys',
+      businessId: 'Y-tunnus',
+      area: 'Varsinais-Suomi ja Uusimaa',
+      rights: 'Kaikki oikeudet pidätetään.'
+    },
     langToggle: { fi: 'FI', en: 'EN' }
   },
   en: {
@@ -299,6 +311,16 @@ export const CONTENT = {
           pricing: '€100 / h incl. VAT. Materials and yard fees separately.'
         }
       }
+    },
+    footer: {
+      tagline: "Your sailboat's best crew on land.",
+      servicesCol: 'Services',
+      yardsLink: 'For yards',
+      contactCol: 'Contact',
+      companyCol: 'Company',
+      businessId: 'Business ID',
+      area: 'Varsinais-Suomi and Uusimaa',
+      rights: 'All rights reserved.'
     },
     langToggle: { fi: 'FI', en: 'EN' }
   }
