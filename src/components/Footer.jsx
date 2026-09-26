@@ -27,16 +27,15 @@ export default function Footer() {
     <footer className="relative overflow-hidden border-t border-slate-line pt-20 pb-8 md:pt-28">
       <div className="edge relative z-10 mx-auto grid max-w-[72rem] gap-x-8 gap-y-14 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div>
-          <a href="/" onClick={goHome} className="text-ice inline-flex items-center gap-2">
-            <svg className="text-cyan h-6 w-6" viewBox="0 0 32 32" aria-hidden="true">
-              <path
-                d="M16 4.5v23M16 7.5l7.5 19M16 7.5 8.5 26.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
+          <a href="/" onClick={goHome} className="text-ice inline-flex items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className="bg-ice inline-block h-9 w-9 shrink-0"
+              style={{
+                WebkitMask: "url('/images/logo-light.png') center / contain no-repeat",
+                mask: "url('/images/logo-light.png') center / contain no-repeat",
+              }}
+            />
             <span className="tech text-[0.8rem] tracking-[0.14em]">Nordic Rigging</span>
           </a>
           <p className="text-fog/70 mt-5 max-w-[20rem] text-sm leading-relaxed">{f.tagline}</p>

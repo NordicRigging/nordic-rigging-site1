@@ -78,15 +78,7 @@ export default function Nav() {
     <div className={`nav-bar${compact ? ' is-compact' : ''}`}>
       <nav className="nav-pill" aria-label="Primary">
         <a className="nav-logo" href="/" onClick={home} aria-label={`Nordic Rigging, ${t.nav.home}`}>
-          <svg className="nav-logo__mark" viewBox="0 0 32 32" aria-hidden="true">
-            <path
-              d="M16 4.5v23M16 7.5l7.5 19M16 7.5 8.5 26.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
+          <span className="nav-logo__mark" aria-hidden="true" />
           <span className="nav-logo__name">Nordic Rigging</span>
         </a>
 

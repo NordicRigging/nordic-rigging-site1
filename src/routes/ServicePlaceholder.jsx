@@ -3,6 +3,12 @@ import { motion } from 'framer-motion'
 import { CONTACT } from '../lib/content'
 import { useLang } from '../lib/LanguageContext'
 
+const SERVICE_BACKGROUNDS = {
+  'mast-work': '/images/services/mast-work-bg.jpg',
+  'rope-stock': '/images/services/rope-stock-bg.jpg',
+  maintenance: '/images/services/maintenance-bg.jpg',
+}
+
 export default function ServicePage() {
   const { slug } = useParams()
   const { t } = useLang()
@@ -12,14 +18,26 @@ export default function ServicePage() {
   if (!s) return <NotFound />
 
   const others = Object.entries(c.items).filter(([key]) => key !== slug)
+  const bg = SERVICE_BACKGROUNDS[slug]
 
   return (
-    <main className="edge py-32 md:py-40">
+    <main className="relative z-0 overflow-hidden py-32 md:py-40">
+      {bg && (
+        <>
+          <img
+            src={bg}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -z-20 h-full w-full object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(10,24,38,0.72)_0%,rgba(7,17,25,0.88)_45%,rgba(4,7,11,0.96)_100%)]" />
+        </>
+      )}
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto w-full max-w-6xl"
+        className="edge relative mx-auto w-full max-w-6xl"
       >
         <Link to="/" className="tech text-fog/50 hover:text-cyan text-[10px] transition-colors duration-300">
           &larr; {c.back}

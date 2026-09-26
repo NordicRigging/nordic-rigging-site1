@@ -8,7 +8,7 @@ import { useLang } from '../lib/LanguageContext'
 // Each kinetic word's own scroll window within the pinned section - paired
 // positionally with content.js's services.kinetic (language-independent).
 const WINDOWS = [
-  { from: 0.04, to: 0.34 },
+  { from: 0.01, to: 0.34 },
   { from: 0.36, to: 0.65 },
   { from: 0.67, to: 0.97 },
 ]
