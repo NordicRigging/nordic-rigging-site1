@@ -11,9 +11,9 @@ const SERVICE_BACKGROUNDS = {
 }
 
 const SERVICE_BACKGROUNDS_MOBILE = {
-  'mast-work': '/images/services/mast-work-bg-mobile.jpeg',
-  'rope-stock': '/images/services/rope-stock-bg-mobile.png',
-  maintenance: '/images/services/maintenance-bg-mobile.png',
+  'mast-work': '/images/services/mast-work-bg-mobile.jpg',
+  'rope-stock': '/images/services/rope-stock-bg-mobile.jpg',
+  maintenance: '/images/services/maintenance-bg-mobile.jpg',
 }
 
 export default function ServicePage() {
