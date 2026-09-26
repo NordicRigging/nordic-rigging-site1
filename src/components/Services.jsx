@@ -167,7 +167,7 @@ export default function Services() {
         <div className="mx-auto max-w-6xl">
           <p className="tech text-fog/40 mb-12 text-[10px] md:mb-16">{t.services.eyebrow}</p>
           {isMobile ? (
-            <Carousel items={mobileCards.map((card, i) => <Card key={card.slug} card={card} index={i} />)} />
+            <Carousel items={mobileCards.map((card) => <Card key={card.slug} card={card} />)} />
           ) : (
             <AccordionGallery
               items={galleryItems}

@@ -150,24 +150,6 @@ export default function Spinlock() {
               </p>
               <GaugeWindow className="ml-auto" />
             </div>
-
-            <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
-              {/* Placeholder destinations — swap for the real URLs. */}
-              <a
-                href="#"
-                onClick={(event) => event.preventDefault()}
-                className="border-cyan/50 text-ice tech hover:bg-cyan hover:text-abyss border px-7 py-3.5 text-[10px] transition-colors duration-400 hover:border-cyan"
-              >
-                {t.spinlock.readMore}
-              </a>
-              <a
-                href="#"
-                onClick={(event) => event.preventDefault()}
-                className="border-slate-line text-fog tech hover:border-fog/40 hover:text-ice border px-7 py-3.5 text-[10px] transition-colors duration-400"
-              >
-                {t.spinlock.watchVideo}
-              </a>
-            </div>
           </motion.div>
         </div>
       </div>

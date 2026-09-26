@@ -266,6 +266,14 @@
   .is-compact .nav-pill {
     height: 44px;
   }
+
+  /* .nav-list normally carries the auto-margin that pushes everything
+     after it to the right edge, but it's hidden on mobile - without its
+     own auto-margin the burger just sits next to the logo instead of
+     flush right. */
+  .nav-burger {
+    margin-left: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
