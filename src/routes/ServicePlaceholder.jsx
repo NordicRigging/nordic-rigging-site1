@@ -9,6 +9,11 @@ const SERVICE_BACKGROUNDS = {
   maintenance: '/images/services/maintenance-bg.jpg',
 }
 
+// rope-stock's photo is far brighter than the other two - text needs a
+// scrim here to read as legibly as it does on mast-work/maintenance,
+// which stay filter-free.
+const SCRIM_SLUGS = new Set(['rope-stock'])
+
 export default function ServicePage() {
   const { slug } = useParams()
   const { t } = useLang()
@@ -23,12 +28,17 @@ export default function ServicePage() {
   return (
     <main className="relative z-0 overflow-hidden py-32 md:py-40">
       {bg && (
-        <img
-          src={bg}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
-        />
+        <>
+          <img
+            src={bg}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
+          />
+          {SCRIM_SLUGS.has(slug) && (
+            <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(10,24,38,0.72)_0%,rgba(7,17,25,0.88)_45%,rgba(4,7,11,0.96)_100%)]" />
+          )}
+        </>
       )}
       <motion.div
         initial={{ opacity: 0, y: 24 }}
