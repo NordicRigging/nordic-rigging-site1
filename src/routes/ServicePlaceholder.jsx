@@ -2,6 +2,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CONTACT } from '../lib/content'
 import { useLang } from '../lib/LanguageContext'
+import { useMediaQuery } from '../hooks/use-media-query'
 
 const SERVICE_BACKGROUNDS = {
   'mast-work': '/images/services/mast-work-bg.jpg',
@@ -9,16 +10,23 @@ const SERVICE_BACKGROUNDS = {
   maintenance: '/images/services/maintenance-bg.jpg',
 }
 
+const SERVICE_BACKGROUNDS_MOBILE = {
+  'mast-work': '/images/services/mast-work-bg-mobile.jpeg',
+  'rope-stock': '/images/services/rope-stock-bg-mobile.png',
+  maintenance: '/images/services/maintenance-bg-mobile.png',
+}
+
 export default function ServicePage() {
   const { slug } = useParams()
   const { t } = useLang()
+  const isMobile = useMediaQuery('(max-width: 767px)')
   const c = t.servicePage
   const s = c.items[slug]
 
   if (!s) return <NotFound />
 
   const others = Object.entries(c.items).filter(([key]) => key !== slug)
-  const bg = SERVICE_BACKGROUNDS[slug]
+  const bg = isMobile ? SERVICE_BACKGROUNDS_MOBILE[slug] : SERVICE_BACKGROUNDS[slug]
 
   return (
     <main className="relative z-0 overflow-hidden py-32 md:py-40">
