@@ -15,7 +15,7 @@ export const CONTENT = {
   fi: {
     htmlLang: 'fi',
     meta: {
-      title: 'Nordic Rigging — Takilointi ja mastotyöt, Turku',
+      title: 'Nordic Rigging | Rikaus ja mastotyöt, Turku',
       description: 'Purjeveneesi paras miehistö maalla. Mastotyöt, köysivarasto ja huolto Turusta käsin, koko Saaristomerellä.'
     },
     hud: { headingLabel: 'SUUNTA' },
@@ -47,7 +47,7 @@ export const CONTENT = {
     spinlock: {
       eyebrow: 'Mitattu, ei arvioitu',
       title: 'Spinlock Rig-Sense Pro',
-      body: 'Mittaamme takilan jännityksen newtonin tarkkuudella sen sijaan että arvioisimme sen tuntumalta.',
+      body: 'Mittaamme rikin jännityksen prosentin tarkkuudella sen sijaan että arvioisimme sen tuntumalta.',
       readMore: 'Lue lisää',
       watchVideo: 'Katso video'
     },
@@ -55,7 +55,7 @@ export const CONTENT = {
       eyebrow: 'Turku, Suomi',
       sentences: [
         'Nordic Rigging on isä ja poika.',
-        'Työskentelemme takiloiden parissa Turusta käsin, veneillä jotka purjehtivat Saaristomerellä.',
+        'Työskentelemme rikien parissa Turusta käsin, veneillä jotka purjehtivat Saaristomerellä.',
         'Kaksi ihmistä, yksi standardi.'
       ]
     },
@@ -171,7 +171,7 @@ export const CONTENT = {
   en: {
     htmlLang: 'en',
     meta: {
-      title: 'Nordic Rigging — Mast Work & Rigging, Turku',
+      title: 'Nordic Rigging | Mast Work & Rigging, Turku',
       description: "Your sailboat's best crew on land. Mast work, rope stock and maintenance out of Turku, across the archipelago."
     },
     hud: { headingLabel: 'HDG' },
@@ -203,7 +203,7 @@ export const CONTENT = {
     spinlock: {
       eyebrow: 'Measured, not estimated',
       title: 'Spinlock Rig-Sense Pro',
-      body: 'We measure rig tension to the newton instead of estimating it by feel.',
+      body: 'We measure rig tension to within one percent instead of estimating it by feel.',
       readMore: 'Read more',
       watchVideo: 'Watch video'
     },
