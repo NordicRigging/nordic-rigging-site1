@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, createContext, useContext } from 'react'
+import { Link } from 'react-router-dom'
 import { IconArrowNarrowLeft, IconArrowNarrowRight, IconX } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { cn } from '../lib/utils'
@@ -35,7 +36,7 @@ export function Carousel({ items, initialScroll = 0 }) {
 
   const handleCardClose = (index) => {
     if (!carouselRef.current) return
-    const cardWidth = 230
+    const cardWidth = 304
     const gap = 16
     carouselRef.current.scrollTo({ left: (cardWidth + gap) * (index + 1), behavior: 'smooth' })
     setCurrentIndex(index)
@@ -102,7 +103,10 @@ export function Card({ card, index }) {
     }
     document.body.style.overflow = open ? 'hidden' : ''
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', onKeyDown)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
@@ -142,7 +146,22 @@ export function Card({ card, index }) {
               </button>
               <p className="tech text-cyan mt-5 text-[10px]">{card.category}</p>
               <p className="display-md text-ice mt-3 text-[clamp(1.7rem,7vw,2.4rem)]">{card.title}</p>
-              <div className="mt-6">{card.content}</div>
+              <div className="mt-6 space-y-5">
+                <p className="text-fog text-base leading-relaxed">{card.description}</p>
+                {card.outcome && (
+                  <p className="text-fog/90 text-sm leading-relaxed">
+                    <strong className="text-ice">{card.outcomeLabel}:</strong> {card.outcome}
+                  </p>
+                )}
+                {card.link && (
+                  <Link
+                    to={card.link}
+                    className="border-cyan/50 text-ice tech hover:bg-cyan hover:text-abyss inline-block border px-6 py-3 text-[10px] transition-colors duration-300"
+                  >
+                    {card.ctaLabel}
+                  </Link>
+                )}
+              </div>
             </motion.div>
           </div>
         )}
@@ -150,15 +169,22 @@ export function Card({ card, index }) {
       <button
         type="button"
         onClick={handleOpen}
-        className="border-slate-line relative z-10 flex h-[26rem] w-[17rem] flex-col items-start justify-end overflow-hidden rounded-3xl border text-left"
+        className="border-slate-line relative z-10 flex w-[19rem] flex-col overflow-hidden rounded-3xl border text-left"
       >
-        <BlurImage src={card.src} alt={card.title} className="absolute inset-0 z-0 object-cover" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-2/3 bg-gradient-to-t from-[rgba(4,7,11,0.92)] via-[rgba(4,7,11,0.35)] to-transparent" />
-        <div className="relative z-20 p-6">
+        <div className="relative h-52 w-full shrink-0 overflow-hidden">
+          <BlurImage src={card.src} alt={card.title} className="absolute inset-0 h-full w-full object-cover" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgba(4,7,11,0.5)] to-transparent" />
+        </div>
+        <div className="bg-navy-900 flex flex-1 flex-col p-6">
           <p className="tech text-cyan text-[10px]">{card.category}</p>
-          <p className="display-md text-ice mt-2 max-w-[14rem] text-[clamp(1.35rem,5.5vw,1.7rem)] [text-wrap:balance]">
-            {card.title}
-          </p>
+          <p className="display-md text-ice mt-2 text-[clamp(1.4rem,5.5vw,1.7rem)] [text-wrap:balance]">{card.title}</p>
+          <p className="text-fog mt-4 text-sm leading-relaxed">{card.description}</p>
+          {card.outcome && (
+            <p className="text-fog/90 mt-4 text-sm leading-relaxed">
+              <strong className="text-ice">{card.outcomeLabel}:</strong> {card.outcome}
+            </p>
+          )}
+          {card.ctaLabel && <p className="tech text-cyan mt-6 text-[10px]">{card.ctaLabel} &rarr;</p>}
         </div>
       </button>
     </>

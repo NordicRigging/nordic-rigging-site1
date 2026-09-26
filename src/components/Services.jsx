@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { motion, useMotionValueEvent, useScroll, useTransform } from 'framer-motion'
 import ScrubVideo from './ScrubVideo'
 import AccordionGallery from './AccordionGallery'
@@ -121,29 +120,17 @@ export default function Services() {
     link: `/services/${slug}`,
   }))
 
-  // Same data as galleryItems, shaped for the mobile-only card carousel
-  // (Carousel/Card expect pre-built <Card> elements, not raw data).
+  // Same data as galleryItems, shaped for the mobile-only card carousel.
   const mobileCards = Object.entries(t.servicePage.items).map(([slug, item], i) => ({
     slug,
     category: `${String(i + 1).padStart(2, '0')} · ${t.services.eyebrow}`,
     title: item.name,
     src: SERVICE_IMAGES[slug],
-    content: (
-      <div className="space-y-6">
-        <p className="text-fog text-base leading-relaxed">{item.short}</p>
-        {item.outcome && (
-          <p className="text-fog/90 text-sm leading-relaxed">
-            <strong className="text-ice">{t.servicePage.outcomeTitle}:</strong> {item.outcome}
-          </p>
-        )}
-        <Link
-          to={`/services/${slug}`}
-          className="border-cyan/50 text-ice tech hover:bg-cyan hover:text-abyss inline-block border px-6 py-3 text-[10px] transition-colors duration-300"
-        >
-          {t.servicePage.readMore}
-        </Link>
-      </div>
-    ),
+    description: item.short,
+    outcome: item.outcome,
+    outcomeLabel: t.servicePage.outcomeTitle,
+    ctaLabel: t.servicePage.readMore,
+    link: `/services/${slug}`,
   }))
 
   return (

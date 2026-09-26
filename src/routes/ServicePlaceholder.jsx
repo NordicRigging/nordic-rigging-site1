@@ -27,6 +27,12 @@ export default function ServicePage() {
 
   const others = Object.entries(c.items).filter(([key]) => key !== slug)
   const bg = isMobile ? SERVICE_BACKGROUNDS_MOBILE[slug] : SERVICE_BACKGROUNDS[slug]
+  // Mobile: fixed to the viewport, since <main>'s box is as tall as all its
+  // content (way past one screen) - absolute+h-full sized the image to that
+  // whole scrollable height, which made object-cover crop away most of the
+  // image's width. Desktop hasn't shown this problem, so it keeps the
+  // original absolute behavior untouched.
+  const bgPosition = isMobile ? 'fixed' : 'absolute'
 
   return (
     <main className="relative z-0 overflow-hidden py-32 md:py-40">
@@ -36,9 +42,11 @@ export default function ServicePage() {
             src={bg}
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
+            className={`pointer-events-none ${bgPosition} inset-0 -z-10 h-full w-full object-cover`}
           />
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(8,16,26,0.4)_0%,rgba(6,13,21,0.55)_50%,rgba(4,9,15,0.7)_100%)]" />
+          <div
+            className={`pointer-events-none ${bgPosition} inset-0 -z-10 bg-[linear-gradient(180deg,rgba(8,16,26,0.4)_0%,rgba(6,13,21,0.55)_50%,rgba(4,9,15,0.7)_100%)]`}
+          />
         </>
       )}
       <motion.div
